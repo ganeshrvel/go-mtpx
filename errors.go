@@ -20,7 +20,18 @@ type NoStorageError struct {
 	error
 }
 
-
 type ListDirectoryError struct {
+	error
+}
+
+type FileNotFoundError struct {
+	error
+}
+
+type InvalidPathError struct {
+	error
+}
+
+type FileObjectError struct {
 	error
 }

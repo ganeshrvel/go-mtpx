@@ -15,13 +15,15 @@ type StorageData struct {
 }
 
 type FileInfo struct {
-	Info         *mtp.ObjectInfo
-	Size         int64
-	IsDir        bool
-	ModTime      time.Time
-	Name         string
-	FullPath     string //todo
-	ParentPath   string //todo
-	Extension    string
-	ParentObject uint32
+	Size       int64
+	IsDir      bool
+	ModTime    time.Time
+	Name       string
+	FullPath   string //todo
+	ParentPath string //todo
+	Extension  string
+	ParentId   uint32
+	ObjectId   uint32
+
+	Info *mtp.ObjectInfo
 }
