@@ -138,15 +138,16 @@ func GetObjectIdFromPath(dev *mtp.Device, storageId uint32, filePath string) (ui
 
 	var result = uint32(mtp.GOH_ROOT_PARENT)
 	var resultCount = 0
+	const skipIndex = 1
 
-	for i, fName := range splittedFilePath[1:] {
+	for i, fName := range splittedFilePath[skipIndex:] {
 		objectId, isDir, err := GetObjectIdFromFilename(dev, storageId, result, fName)
 
 		if err != nil {
 			return 0, err
 		}
 
-		if !isDir && indexExists(splittedFilePath, i+2) {
+		if !isDir && indexExists(splittedFilePath, i+1+skipIndex) {
 			return 0, InvalidPathError{error: fmt.Errorf("path not found: %s", _filePath)}
 		}
 
