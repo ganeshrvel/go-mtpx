@@ -73,13 +73,13 @@ func FetchStorages(dev *mtp.Device) ([]StorageData, error) {
 	return result, nil
 }
 
-func ListDirectory(dev *mtp.Device, storageId uint32) (*[]MtpFileInfo, error) {
+func ListDirectory(dev *mtp.Device, storageId uint32) (*[]FileInfo, error) {
 	handles := mtp.Uint32Array{}
 	if err := dev.GetObjectHandles(storageId, mtp.GOH_ALL_ASSOCS, mtp.GOH_ROOT_PARENT, &handles); err != nil {
 		return nil, ListDirectoryError{error: err}
 	}
 
-	var fileInfoList []MtpFileInfo
+	var fileInfoList []FileInfo
 
 	for _, handle := range handles.Values {
 		obj := mtp.ObjectInfo{}
@@ -109,7 +109,7 @@ func ListDirectory(dev *mtp.Device, storageId uint32) (*[]MtpFileInfo, error) {
 
 		isDir := isDirectoryObject(&obj)
 
-		fi := MtpFileInfo{
+		fi := FileInfo{
 			Info:         &obj,
 			Size:         size,
 			IsDir:        isDir,

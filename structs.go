@@ -14,7 +14,7 @@ type StorageData struct {
 	info mtp.StorageInfo
 }
 
-type MtpFileInfo struct {
+type FileInfo struct {
 	Info         *mtp.ObjectInfo
 	Size         int64
 	IsDir        bool
