@@ -19,3 +19,8 @@ type StorageInfoError struct {
 type NoStorageError struct {
 	error
 }
+
+
+type ListDirectoryError struct {
+	error
+}
