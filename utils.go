@@ -30,15 +30,17 @@ func isObjectADir(obj *mtp.ObjectInfo) bool {
 }
 
 func fixDirSlash(absFilepath string) string {
-	if !strings.HasPrefix(absFilepath, "/") {
-		absFilepath = fmt.Sprintf("%s%s", "/", absFilepath)
+	_absFilepath := absFilepath
+
+	if !strings.HasPrefix(_absFilepath, "/") {
+		_absFilepath = fmt.Sprintf("%s%s", "/", _absFilepath)
 	}
 
-	if absFilepath != "/" && strings.HasSuffix(absFilepath, "/") {
-		absFilepath = strings.TrimSuffix(absFilepath, "/")
+	if _absFilepath != "/" && strings.HasSuffix(_absFilepath, "/") {
+		_absFilepath = strings.TrimSuffix(_absFilepath, "/")
 	}
 
-	return absFilepath
+	return _absFilepath
 }
 
 func indexExists(arr interface{}, index int) bool {
