@@ -18,7 +18,7 @@ CGO_CFLAGS='-Wno-deprecated-declarations' go build -o build/mtpx .
 # copy libusb
 cp lib/libusb-1.0.0.dylib build/libusb-1.0.0.dylib
 
-# execute
+# Run
 DYLD_LIBRARY_PATH=./build ./build/mtpx
 ```
 
@@ -53,5 +53,6 @@ go run ./
 Build mtpx
 ```shell script
 CGO_CFLAGS='-Wno-deprecated-declarations' go build -o build/mtpx . && cp libusb.dylib build/libusb.dylib
+
 ./build/mtpx
 ```
