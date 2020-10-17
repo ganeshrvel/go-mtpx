@@ -199,7 +199,7 @@ func GetObjectIdFromPath(dev *mtp.Device, storageId uint32, filePath string) (ui
 			switch err.(type) {
 			case FileNotFoundError:
 				return 0, InvalidPathError{
-					error: fmt.Errorf("path not found: %s\nreason: %v", _filePath, err),
+					error: fmt.Errorf("path not found: %s\nreason: %v", filePath, err),
 				}
 
 			default:
@@ -208,7 +208,7 @@ func GetObjectIdFromPath(dev *mtp.Device, storageId uint32, filePath string) (ui
 		}
 
 		if !isDir && indexExists(splittedFilePath, i+1+skipIndex) {
-			return 0, InvalidPathError{error: fmt.Errorf("path not found: %s", _filePath)}
+			return 0, InvalidPathError{error: fmt.Errorf("path not found: %s", filePath)}
 		}
 
 		result = objectId
@@ -216,7 +216,7 @@ func GetObjectIdFromPath(dev *mtp.Device, storageId uint32, filePath string) (ui
 	}
 
 	if resultCount < 1 {
-		return 0, InvalidPathError{error: fmt.Errorf("file not found: %s", _filePath)}
+		return 0, InvalidPathError{error: fmt.Errorf("file not found: %s", filePath)}
 	}
 
 	return result, nil
@@ -249,12 +249,12 @@ func main() {
 
 	sid := storages[0].sid
 
-	/*files, err := ListDirectory(dev, sid, mtp.GOH_ROOT_PARENT, "")
+	files, err := ListDirectory(dev, sid, 0, "/test/")
 	if err != nil {
 		log.Panic(err)
 	}
 
-	pretty.Println(files)*/
+	pretty.Println(files)
 
 	/*fileObj, err := GetObjectIdFromPath(dev, sid, "/tests/s")
 	if err != nil {
@@ -266,10 +266,10 @@ func main() {
 	pretty.Println(fileObj)
 	*/
 
-	exists := FileExists(dev, sid, "/tests/s")
+	/*exists := FileExists(dev, sid, "/tests/test.txt")
 
 	pretty.Println("======\n")
 
-	pretty.Println("Does File exists:", exists)
+	pretty.Println("Does File exists:", exists)*/
 	Dispose(dev)
 }
