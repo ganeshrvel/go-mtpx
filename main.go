@@ -32,7 +32,7 @@ func Initialize(init Init) (*mtp.Device, error) {
 
 // close the mtp device
 func Dispose(dev *mtp.Device) {
-	defer dev.Close()
+	dev.Close()
 }
 
 // fetch device info
