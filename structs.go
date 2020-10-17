@@ -19,8 +19,8 @@ type FileInfo struct {
 	IsDir      bool
 	ModTime    time.Time
 	Name       string
-	FullPath   string //todo
-	ParentPath string //todo
+	FullPath   string
+	ParentPath string
 	Extension  string
 	ParentId   uint32
 	ObjectId   uint32

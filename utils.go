@@ -29,6 +29,15 @@ func isObjectADir(obj *mtp.ObjectInfo) bool {
 	return obj.ObjectFormat == mtp.OFC_Association
 }
 
+func getFullPath(parentPath, filename string) string {
+	pathSep := "/"
+	if parentPath == "/" {
+		pathSep = ""
+	}
+
+	return fmt.Sprintf("%s%s%s", parentPath, pathSep, filename)
+}
+
 func fixDirSlash(absFilepath string) string {
 	_absFilepath := absFilepath
 

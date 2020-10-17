@@ -76,15 +76,17 @@ func FetchStorages(dev *mtp.Device) ([]StorageData, error) {
 }
 
 // fetch file info using object id
-func FetchFile(dev *mtp.Device, objectId uint32) (*FileInfo, error) {
+func FetchFile(dev *mtp.Device, objectId uint32, parentPath string) (*FileInfo, error) {
 	obj := mtp.ObjectInfo{}
 	if err := dev.GetObjectInfo(objectId, &obj); err != nil {
 		return nil, FileObjectError{error: err}
 	}
 
 	size, _ := GetFileSize(dev, &obj, objectId)
-
 	isDir := isObjectADir(&obj)
+	filename := obj.Filename
+	_parentPath := fixDirSlash(parentPath)
+	fullPath := getFullPath(_parentPath, filename)
 
 	return &FileInfo{
 		Info:       &obj,
@@ -92,26 +94,41 @@ func FetchFile(dev *mtp.Device, objectId uint32) (*FileInfo, error) {
 		IsDir:      isDir,
 		ModTime:    obj.ModificationDate,
 		Name:       obj.Filename,
-		FullPath:   "", //todo
-		ParentPath: "", //todo
+		FullPath:   fullPath,
+		ParentPath: _parentPath,
 		Extension:  extension(obj.Filename, isDir),
 		ParentId:   obj.ParentObject,
 		ObjectId:   objectId,
 	}, nil
 }
 
-// list a directory
-func ListDirectory(dev *mtp.Device, storageId uint32) (*[]FileInfo, error) {
+// list the contents in a directory
+// [objectId] and [parentPath] are optional parameters
+// if [objectId] is not available then parentPath is used to fetch objectId
+// dont leave both [objectId] and [parentPath] empty
+func ListDirectory(dev *mtp.Device, storageId, objectId uint32, parentPath string) (*[]FileInfo, error) {
+	_objectId := objectId
+
+	// if objectId is not available then fetch the objectId from parentPath
+	if _objectId == 0 {
+		objId, err := GetObjectIdFromPath(dev, storageId, parentPath)
+
+		if err != nil {
+			return nil, err
+		}
+
+		_objectId = objId
+	}
+
 	handles := mtp.Uint32Array{}
-	if err := dev.GetObjectHandles(storageId, mtp.GOH_ALL_ASSOCS, mtp.GOH_ROOT_PARENT, &handles); err != nil {
+	if err := dev.GetObjectHandles(storageId, mtp.GOH_ALL_ASSOCS, _objectId, &handles); err != nil {
 		return nil, ListDirectoryError{error: err}
 	}
 
 	var fileInfoList []FileInfo
 
 	for _, objectId := range handles.Values {
-
-		fi, err := FetchFile(dev, objectId)
+		fi, err := FetchFile(dev, objectId, parentPath)
 
 		if err != nil {
 			continue
@@ -224,14 +241,14 @@ func main() {
 
 	sid := storages[0].sid
 
-	files, err := ListDirectory(dev, sid)
+	files, err := ListDirectory(dev, sid, mtp.GOH_ROOT_PARENT, "")
 	if err != nil {
 		log.Panic(err)
 	}
 
 	pretty.Println(files)
 
-	fileObj, err := GetObjectIdFromPath(dev, sid, "/tests/s")
+	/*fileObj, err := GetObjectIdFromPath(dev, sid, "/tests/s")
 	if err != nil {
 		log.Panic(err)
 	}
@@ -239,6 +256,6 @@ func main() {
 	pretty.Println("======\n")
 
 	pretty.Println(fileObj)
-
+	*/
 	Dispose(dev)
 }
