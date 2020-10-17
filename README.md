@@ -9,6 +9,20 @@ xcode-select --install
 ```
 
 Install and setup libusb
+
+Method 1:
+```shell script
+# build the binary
+CGO_CFLAGS='-Wno-deprecated-declarations' go build -o build/mtpx .
+
+# copy libusb
+cp lib/libusb-1.0.0.dylib build/libusb-1.0.0.dylib
+
+# execute
+DYLD_LIBRARY_PATH=./build ./build/mtpx
+```
+
+Method 2:
 ```shell script
 brew install libusb
 
