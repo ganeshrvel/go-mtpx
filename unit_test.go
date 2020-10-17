@@ -27,4 +27,39 @@ func TestUtils(t *testing.T) {
 			So(dirList[i], ShouldEqual, dir)
 		}
 	})
+
+	Convey("Test getFullPath", t, func() {
+		type s struct {
+			parentPath, filename, fullPath string
+		}
+
+		sl := []s{
+			s{
+				parentPath: "/",
+				filename:   "abc",
+				fullPath:   "/abc",
+			},
+			s{
+				parentPath: "//",
+				filename:   "abc",
+				fullPath:   "///abc",
+			},
+			s{
+				parentPath: "/",
+				filename:   "abc/",
+				fullPath:   "/abc/",
+			},
+			s{
+				parentPath: "/xyz",
+				filename:   "abc/",
+				fullPath:   "/xyz/abc/",
+			},
+		}
+
+		for i, f := range sl {
+			fullPath := getFullPath(f.parentPath, f.filename)
+
+			So(sl[i].fullPath, ShouldEqual, fullPath)
+		}
+	})
 }
