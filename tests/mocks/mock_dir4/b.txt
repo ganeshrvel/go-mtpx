@@ -1,1 +1,0 @@
-mock_dir1/a.txt
