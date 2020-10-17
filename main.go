@@ -75,6 +75,31 @@ func FetchStorages(dev *mtp.Device) ([]StorageData, error) {
 	return result, nil
 }
 
+// fetch file info using object id
+func FetchFile(dev *mtp.Device, objectId uint32) (*FileInfo, error) {
+	obj := mtp.ObjectInfo{}
+	if err := dev.GetObjectInfo(objectId, &obj); err != nil {
+		return nil, FileObjectError{error: err}
+	}
+
+	size, _ := GetFileSize(dev, &obj, objectId)
+
+	isDir := isObjectADir(&obj)
+
+	return &FileInfo{
+		Info:       &obj,
+		Size:       size,
+		IsDir:      isDir,
+		ModTime:    obj.ModificationDate,
+		Name:       obj.Filename,
+		FullPath:   "", //todo
+		ParentPath: "", //todo
+		Extension:  extension(obj.Filename, isDir),
+		ParentId:   obj.ParentObject,
+		ObjectId:   objectId,
+	}, nil
+}
+
 // list a directory
 func ListDirectory(dev *mtp.Device, storageId uint32) (*[]FileInfo, error) {
 	handles := mtp.Uint32Array{}
@@ -85,25 +110,35 @@ func ListDirectory(dev *mtp.Device, storageId uint32) (*[]FileInfo, error) {
 	var fileInfoList []FileInfo
 
 	for _, objectId := range handles.Values {
-		obj := mtp.ObjectInfo{}
-		if err := dev.GetObjectInfo(objectId, &obj); err != nil {
-			log.Printf("GetObjectInfo for handle %d failed: %v", objectId, err)
 
+		fi, err := FetchFile(dev, objectId)
+
+		if err != nil {
 			continue
 		}
 
-		if obj.Filename == "" {
-			continue
-		}
-
-		size, _ := GetFileObjectSize(dev, &obj, objectId)
-
-		fi := fileObjectToFileInfo(&obj, size, objectId)
-
-		fileInfoList = append(fileInfoList, fi)
+		fileInfoList = append(fileInfoList, *fi)
 	}
 
 	return &fileInfoList, nil
+}
+
+func GetFileSize(dev *mtp.Device, obj *mtp.ObjectInfo, objectId uint32) (int64, error) {
+	var size int64
+	if obj.CompressedSize == 0xffffffff {
+		var val mtp.Uint64Value
+		if err := dev.GetObjectPropValue(objectId, mtp.OPC_ObjectSize, &val); err != nil {
+			return 0, FileObjectError{
+				fmt.Errorf("GetObjectPropValue handle %d failed: %v", objectId, err),
+			}
+		}
+
+		size = int64(val.Value)
+	} else {
+		size = int64(obj.CompressedSize)
+	}
+
+	return size, nil
 }
 
 func GetObjectIdFromFilename(dev *mtp.Device, storageId uint32, parentId uint32, filename string) (objectID uint32, isDir bool, error error) {
@@ -144,7 +179,15 @@ func GetObjectIdFromPath(dev *mtp.Device, storageId uint32, filePath string) (ui
 		objectId, isDir, err := GetObjectIdFromFilename(dev, storageId, result, fName)
 
 		if err != nil {
-			return 0, err
+			switch err.(type) {
+			case FileNotFoundError:
+				return 0, InvalidPathError{
+					error: fmt.Errorf("path not found: %s\nreason: %v", _filePath, err),
+				}
+
+			default:
+				return 0, err
+			}
 		}
 
 		if !isDir && indexExists(splittedFilePath, i+1+skipIndex) {
@@ -156,45 +199,10 @@ func GetObjectIdFromPath(dev *mtp.Device, storageId uint32, filePath string) (ui
 	}
 
 	if resultCount < 1 {
-		return 0, FileNotFoundError{error: fmt.Errorf("file not found: %s", _filePath)}
+		return 0, InvalidPathError{error: fmt.Errorf("file not found: %s", _filePath)}
 	}
 
 	return result, nil
-}
-
-func fileObjectToFileInfo(obj *mtp.ObjectInfo, size int64, objectId uint32) FileInfo {
-	isDir := isObjectADir(obj)
-
-	return FileInfo{
-		Info:       obj,
-		Size:       size,
-		IsDir:      isDir,
-		ModTime:    obj.ModificationDate,
-		Name:       obj.Filename,
-		FullPath:   "", //todo
-		ParentPath: "", //todo
-		Extension:  extension(obj.Filename, isDir),
-		ParentId:   obj.ParentObject,
-		ObjectId:   objectId,
-	}
-}
-
-func GetFileObjectSize(dev *mtp.Device, obj *mtp.ObjectInfo, objectId uint32) (int64, error) {
-	var size int64
-	if obj.CompressedSize == 0xffffffff {
-		var val mtp.Uint64Value
-		if err := dev.GetObjectPropValue(objectId, mtp.OPC_ObjectSize, &val); err != nil {
-			return 0, FileObjectError{
-				fmt.Errorf("GetObjectPropValue handle %d failed: %v", objectId, err),
-			}
-		}
-
-		size = int64(val.Value)
-	} else {
-		size = int64(obj.CompressedSize)
-	}
-
-	return size, nil
 }
 
 func main() {
@@ -216,17 +224,20 @@ func main() {
 
 	sid := storages[0].sid
 
-	//files, err := ListDirectory(dev, sid)
-	//if err != nil {
-	//	log.Panic(err)
-	//}
+	files, err := ListDirectory(dev, sid)
+	if err != nil {
+		log.Panic(err)
+	}
 
-	fileObj, err := GetObjectIdFromPath(dev, sid, "/heyyy")
+	pretty.Println(files)
+
+	fileObj, err := GetObjectIdFromPath(dev, sid, "/tests/s")
 	if err != nil {
 		log.Panic(err)
 	}
 
 	pretty.Println("======\n")
+
 	pretty.Println(fileObj)
 
 	Dispose(dev)
