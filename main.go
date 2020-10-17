@@ -222,6 +222,14 @@ func GetObjectIdFromPath(dev *mtp.Device, storageId uint32, filePath string) (ui
 	return result, nil
 }
 
+func FileExists(dev *mtp.Device, storageId uint32, filePath string) bool {
+	if _, err := GetObjectIdFromPath(dev, storageId, filePath); err != nil {
+		return false
+	}
+
+	return true
+}
+
 func main() {
 	dev, err := Initialize(Init{})
 
@@ -241,12 +249,12 @@ func main() {
 
 	sid := storages[0].sid
 
-	files, err := ListDirectory(dev, sid, mtp.GOH_ROOT_PARENT, "")
+	/*files, err := ListDirectory(dev, sid, mtp.GOH_ROOT_PARENT, "")
 	if err != nil {
 		log.Panic(err)
 	}
 
-	pretty.Println(files)
+	pretty.Println(files)*/
 
 	/*fileObj, err := GetObjectIdFromPath(dev, sid, "/tests/s")
 	if err != nil {
@@ -257,5 +265,11 @@ func main() {
 
 	pretty.Println(fileObj)
 	*/
+
+	exists := FileExists(dev, sid, "/tests/s")
+
+	pretty.Println("======\n")
+
+	pretty.Println("Does File exists:", exists)
 	Dispose(dev)
 }
