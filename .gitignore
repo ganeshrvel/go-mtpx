@@ -1,4 +1,4 @@
-tests/mocks-build/*
+tests/mtp-test-files-build/*
 .idea
 /.idea/
 resources

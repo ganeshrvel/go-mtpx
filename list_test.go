@@ -20,8 +20,8 @@ func TestListDirectory(t *testing.T) {
 	sid := storages[0].sid
 
 	Convey("Testing valid file | with objectId | ListDirectory", t, func() {
-		// test the directory '/mocks'
-		files, err := ListDirectory(dev, sid, ParentObjectId, "/mocks")
+		// test the directory '/mtp-test-files'
+		files, err := ListDirectory(dev, sid, ParentObjectId, "/mtp-test-files")
 
 		So(err, ShouldBeNil)
 		So(files, ShouldNotBeNil)
@@ -37,36 +37,36 @@ func TestListDirectory(t *testing.T) {
 	})
 
 	Convey("Testing valid file | without objectId | ListDirectory", t, func() {
-		// test the directory '/mocks'
-		files, err := ListDirectory(dev, sid, 0, "/mocks")
+		// test the directory '/mtp-test-files'
+		files, err := ListDirectory(dev, sid, 0, "/mtp-test-files")
 
 		So(err, ShouldBeNil)
 		So(files, ShouldNotBeNil)
 		So(len(*files), ShouldEqual, 4)
 
-		// test the directory '/mocks/'
-		files, err = ListDirectory(dev, sid, 0, "/mocks/")
+		// test the directory '/mtp-test-files/'
+		files, err = ListDirectory(dev, sid, 0, "/mtp-test-files/")
 
 		So(err, ShouldBeNil)
 		So(files, ShouldNotBeNil)
 		So(len(*files), ShouldEqual, 4)
 
-		// test the directory 'mocks/'
-		files, err = ListDirectory(dev, sid, 0, "mocks/")
+		// test the directory 'mtp-test-files/'
+		files, err = ListDirectory(dev, sid, 0, "mtp-test-files/")
 
 		So(err, ShouldBeNil)
 		So(files, ShouldNotBeNil)
 		So(len(*files), ShouldEqual, 4)
 
-		// test the directory 'mocks'
-		files, err = ListDirectory(dev, sid, 0, "mocks")
+		// test the directory 'mtp-test-files'
+		files, err = ListDirectory(dev, sid, 0, "mtp-test-files")
 
 		So(err, ShouldBeNil)
 		So(files, ShouldNotBeNil)
 		So(len(*files), ShouldEqual, 4)
 
-		// test the directory 'mocks/mock_dir3/'
-		files, err = ListDirectory(dev, sid, 0, "mocks/mock_dir3/")
+		// test the directory 'mtp-test-files/mock_dir3/'
+		files, err = ListDirectory(dev, sid, 0, "mtp-test-files/mock_dir3/")
 
 		So(err, ShouldBeNil)
 		So(files, ShouldNotBeNil)
@@ -74,8 +74,8 @@ func TestListDirectory(t *testing.T) {
 	})
 
 	Convey("Testing valid file | ListDirectory", t, func() {
-		// test the directory '/mocks/mock_dir1/1'
-		files, err := ListDirectory(dev, sid, 0, "/mocks/mock_dir1/1")
+		// test the directory '/mtp-test-files/mock_dir1/1'
+		files, err := ListDirectory(dev, sid, 0, "/mtp-test-files/mock_dir1/1")
 
 		So(err, ShouldBeNil)
 
@@ -90,7 +90,7 @@ func TestListDirectory(t *testing.T) {
 		So(_files[0].Extension, ShouldEqual, "txt")
 		So(_files[0].Size, ShouldEqual, 8)
 		So(_files[0].IsDir, ShouldEqual, false)
-		So(_files[0].FullPath, ShouldEqual, "/mocks/mock_dir1/1/a.txt")
+		So(_files[0].FullPath, ShouldEqual, "/mtp-test-files/mock_dir1/1/a.txt")
 		So(_files[0].ModTime.Year(), ShouldBeGreaterThanOrEqualTo, 2020)
 	})
 
@@ -102,15 +102,15 @@ func TestListDirectory(t *testing.T) {
 		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
 		So(files, ShouldBeNil)
 
-		// test the directory '/mocks'
-		files, err = ListDirectory(dev, sid, 0, "/mocks/a.txt")
+		// test the directory '/mtp-test-files'
+		files, err = ListDirectory(dev, sid, 0, "/mtp-test-files/a.txt")
 
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
 		So(files, ShouldBeNil)
 
-		// test the directory '/mocks/fake'
-		files, err = ListDirectory(dev, sid, 0, "/mocks/fake")
+		// test the directory '/mtp-test-files/fake'
+		files, err = ListDirectory(dev, sid, 0, "/mtp-test-files/fake")
 
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, InvalidPathError{})

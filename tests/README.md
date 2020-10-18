@@ -1,9 +1,9 @@
-To run tests copy the `tests/mocks` to your phone's `root`
+To run tests copy the `tests/mtp-test-files` to your phone's `root`
 
 It should look like: 
 ```
 / 
- - mocks
+ - mtp-test-files
     - mock_dir1
     - mock_dir2
     - mock_dir3

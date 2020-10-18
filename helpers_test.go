@@ -20,57 +20,57 @@ func TestGetObjectUsingPath(t *testing.T) {
 	sid := storages[0].sid
 
 	Convey("Testing valid file | GetObjectUsingPath", t, func() {
-		// test the directory '/mocks'
-		objId, isDir, err := GetObjectUsingPath(dev, sid, "/mocks")
+		// test the directory '/mtp-test-files'
+		objId, isDir, err := GetObjectUsingPath(dev, sid, "/mtp-test-files")
 
 		So(err, ShouldBeNil)
 		So(objId, ShouldBeGreaterThan, 0)
 		So(isDir, ShouldEqual, true)
 
-		// test the directory '/mocks/'
-		objId, isDir, err = GetObjectUsingPath(dev, sid, "/mocks/")
+		// test the directory '/mtp-test-files/'
+		objId, isDir, err = GetObjectUsingPath(dev, sid, "/mtp-test-files/")
 
 		So(err, ShouldBeNil)
 		So(objId, ShouldEqual, objId)
 		So(isDir, ShouldEqual, true)
 
-		// test the directory 'mocks/'
-		objId, isDir, err = GetObjectUsingPath(dev, sid, "mocks/")
+		// test the directory 'mtp-test-files/'
+		objId, isDir, err = GetObjectUsingPath(dev, sid, "mtp-test-files/")
 
 		So(err, ShouldBeNil)
 		So(objId, ShouldEqual, objId)
 		So(isDir, ShouldEqual, true)
 
-		// test the directory 'mocks'
-		objId, isDir, err = GetObjectUsingPath(dev, sid, "mocks")
+		// test the directory 'mtp-test-files'
+		objId, isDir, err = GetObjectUsingPath(dev, sid, "mtp-test-files")
 
 		So(err, ShouldBeNil)
 		So(objId, ShouldEqual, objId)
 		So(isDir, ShouldEqual, true)
 
-		// test the file '/mocks/a.txt'
-		objId, isDir, err = GetObjectUsingPath(dev, sid, "/mocks/a.txt")
+		// test the file '/mtp-test-files/a.txt'
+		objId, isDir, err = GetObjectUsingPath(dev, sid, "/mtp-test-files/a.txt")
 
 		So(err, ShouldBeNil)
 		So(objId, ShouldBeGreaterThan, 0)
 		So(isDir, ShouldEqual, false)
 
-		// test the file '/mocks/mock_dir1/a.txt'
-		objId, isDir, err = GetObjectUsingPath(dev, sid, "/mocks/mock_dir1/a.txt")
+		// test the file '/mtp-test-files/mock_dir1/a.txt'
+		objId, isDir, err = GetObjectUsingPath(dev, sid, "/mtp-test-files/mock_dir1/a.txt")
 
 		So(err, ShouldBeNil)
 		So(objId, ShouldBeGreaterThan, 0)
 		So(isDir, ShouldEqual, false)
 
-		// test the file 'mocks/a.txt'
-		objId, isDir, err = GetObjectUsingPath(dev, sid, "mocks/a.txt")
+		// test the file 'mtp-test-files/a.txt'
+		objId, isDir, err = GetObjectUsingPath(dev, sid, "mtp-test-files/a.txt")
 
 		So(err, ShouldBeNil)
 		So(objId, ShouldEqual, objId)
 		So(isDir, ShouldEqual, false)
 
-		// test the file 'mocks/a.txt/'
-		objId, isDir, err = GetObjectUsingPath(dev, sid, "mocks/a.txt/")
+		// test the file 'mtp-test-files/a.txt/'
+		objId, isDir, err = GetObjectUsingPath(dev, sid, "mtp-test-files/a.txt/")
 
 		So(err, ShouldBeNil)
 		So(objId, ShouldEqual, objId)
@@ -86,16 +86,16 @@ func TestGetObjectUsingPath(t *testing.T) {
 		So(objId, ShouldEqual, 0)
 		So(isDir, ShouldEqual, false)
 
-		// test the file 'mocks/b'
-		objId, isDir, err = GetObjectUsingPath(dev, sid, "mocks/b")
+		// test the file 'mtp-test-files/b'
+		objId, isDir, err = GetObjectUsingPath(dev, sid, "mtp-test-files/b")
 
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
 		So(objId, ShouldEqual, 0)
 		So(isDir, ShouldEqual, false)
 
-		// test the file 'mocks/b'
-		objId, isDir, err = GetObjectUsingPath(dev, sid, "mocks/a.txt/1")
+		// test the file 'mtp-test-files/b'
+		objId, isDir, err = GetObjectUsingPath(dev, sid, "mtp-test-files/a.txt/1")
 
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
@@ -120,14 +120,14 @@ func TestGetObjectUsingParentId(t *testing.T) {
 	sid := storages[0].sid
 
 	Convey("Testing valid file | GetObjectUsingParentId", t, func() {
-		// test the directory '/mocks'
-		objId, isDir, err := GetObjectUsingParentId(dev, sid, ParentObjectId, "mocks")
+		// test the directory '/mtp-test-files'
+		objId, isDir, err := GetObjectUsingParentId(dev, sid, ParentObjectId, "mtp-test-files")
 
 		So(err, ShouldBeNil)
 		So(objId, ShouldBeGreaterThan, 0)
 		So(isDir, ShouldEqual, true)
 
-		// test the file '/mocks/a.txt'
+		// test the file '/mtp-test-files/a.txt'
 		objId, isDir, err = GetObjectUsingParentId(dev, sid, objId, "a.txt")
 
 		So(err, ShouldBeNil)
@@ -144,16 +144,16 @@ func TestGetObjectUsingParentId(t *testing.T) {
 		So(objId, ShouldEqual, 0)
 		So(isDir, ShouldEqual, false)
 
-		// test the file '/mocks'
-		objId, isDir, err = GetObjectUsingParentId(dev, sid, ParentObjectId, "/mocks")
+		// test the file '/mtp-test-files'
+		objId, isDir, err = GetObjectUsingParentId(dev, sid, ParentObjectId, "/mtp-test-files")
 
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, FileNotFoundError{})
 		So(objId, ShouldEqual, 0)
 		So(isDir, ShouldEqual, false)
 
-		// test the file 'mocks/'
-		objId, isDir, err = GetObjectUsingParentId(dev, sid, ParentObjectId, "mocks/")
+		// test the file 'mtp-test-files/'
+		objId, isDir, err = GetObjectUsingParentId(dev, sid, ParentObjectId, "mtp-test-files/")
 
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, FileNotFoundError{})
@@ -178,24 +178,24 @@ func TestFileExists(t *testing.T) {
 	sid := storages[0].sid
 
 	Convey("Testing valid file | FileExists", t, func() {
-		// test the directory '/mocks'
-		exists := FileExists(dev, sid, "/mocks/")
+		// test the directory '/mtp-test-files'
+		exists := FileExists(dev, sid, "/mtp-test-files/")
 		So(exists, ShouldEqual, true)
 
-		// test the file '/mocks/a.txt'
-		exists = FileExists(dev, sid, "/mocks/a.txt")
+		// test the file '/mtp-test-files/a.txt'
+		exists = FileExists(dev, sid, "/mtp-test-files/a.txt")
 		So(exists, ShouldEqual, true)
 
-		// test the directory 'mocks/'
-		exists = FileExists(dev, sid, "mocks/")
+		// test the directory 'mtp-test-files/'
+		exists = FileExists(dev, sid, "mtp-test-files/")
 		So(exists, ShouldEqual, true)
 
-		// test the directory 'mocks'
-		exists = FileExists(dev, sid, "mocks")
+		// test the directory 'mtp-test-files'
+		exists = FileExists(dev, sid, "mtp-test-files")
 		So(exists, ShouldEqual, true)
 
-		// test the file '/mocks/a.txt/'
-		exists = FileExists(dev, sid, "/mocks/a.txt/")
+		// test the file '/mtp-test-files/a.txt/'
+		exists = FileExists(dev, sid, "/mtp-test-files/a.txt/")
 		So(exists, ShouldEqual, true)
 	})
 
@@ -204,8 +204,8 @@ func TestFileExists(t *testing.T) {
 		exists := FileExists(dev, sid, "/fake/")
 		So(exists, ShouldEqual, false)
 
-		// test the file '/mocks/fake.txt'
-		exists = FileExists(dev, sid, "/mocks/fake.txt")
+		// test the file '/mtp-test-files/fake.txt'
+		exists = FileExists(dev, sid, "/mtp-test-files/fake.txt")
 		So(exists, ShouldEqual, false)
 	})
 
