@@ -30,8 +30,8 @@ func isObjectADir(obj *mtp.ObjectInfo) bool {
 }
 
 func getFullPath(parentPath, filename string) string {
-	pathSep := "/"
-	if parentPath == "/" {
+	pathSep := PathSep
+	if parentPath == PathSep {
 		pathSep = ""
 	}
 
@@ -41,12 +41,12 @@ func getFullPath(parentPath, filename string) string {
 func fixDirSlash(absFilepath string) string {
 	_absFilepath := absFilepath
 
-	if !strings.HasPrefix(_absFilepath, "/") {
-		_absFilepath = fmt.Sprintf("%s%s", "/", _absFilepath)
+	if !strings.HasPrefix(_absFilepath, PathSep) {
+		_absFilepath = fmt.Sprintf("%s%s", PathSep, _absFilepath)
 	}
 
-	if _absFilepath != "/" && strings.HasSuffix(_absFilepath, "/") {
-		_absFilepath = strings.TrimSuffix(_absFilepath, "/")
+	if _absFilepath != PathSep && strings.HasSuffix(_absFilepath, PathSep) {
+		_absFilepath = strings.TrimSuffix(_absFilepath, PathSep)
 	}
 
 	return _absFilepath
