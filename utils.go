@@ -29,11 +29,16 @@ func getFullPath(parentPath, filename string) string {
 	if parentPath == PathSep {
 		pathSep = ""
 	}
+	if strings.HasSuffix(parentPath, PathSep) {
+		pathSep = ""
+	}
 
-	return fmt.Sprintf("%s%s%s", parentPath, pathSep, filename)
+	_fullPath := fmt.Sprintf("%s%s%s", parentPath, pathSep, filename)
+
+	return fixSlash(_fullPath)
 }
 
-func fixDirSlash(absFilepath string) string {
+func fixSlash(absFilepath string) string {
 	_absFilepath := absFilepath
 
 	if !strings.HasPrefix(_absFilepath, PathSep) {

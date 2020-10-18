@@ -24,8 +24,8 @@ func GetFileSize(dev *mtp.Device, obj *mtp.ObjectInfo, objectId uint32) (int64, 
 	return size, nil
 }
 
-func GetObjectUsingPath(dev *mtp.Device, storageId uint32, filePath string) (objectId uint32, isDir bool, error error) {
-	_filePath := fixDirSlash(filePath)
+func GetPathObject(dev *mtp.Device, storageId uint32, filePath string) (objectId uint32, isDir bool, error error) {
+	_filePath := fixSlash(filePath)
 
 	splittedFilePath := strings.Split(_filePath, PathSep)
 
@@ -39,7 +39,7 @@ func GetObjectUsingPath(dev *mtp.Device, storageId uint32, filePath string) (obj
 	const skipIndex = 1
 
 	for i, fName := range splittedFilePath[skipIndex:] {
-		objectId, _isDir, err := GetObjectUsingParentId(dev, storageId, parentId, fName)
+		objectId, _isDir, err := GetParentObject(dev, storageId, parentId, fName)
 
 		if err != nil {
 			switch err.(type) {
@@ -69,7 +69,7 @@ func GetObjectUsingPath(dev *mtp.Device, storageId uint32, filePath string) (obj
 	return parentId, isDir, nil
 }
 
-func GetObjectUsingParentId(dev *mtp.Device, storageId uint32, parentId uint32, filename string) (objectId uint32, isDir bool, error error) {
+func GetParentObject(dev *mtp.Device, storageId uint32, parentId uint32, filename string) (objectId uint32, isDir bool, error error) {
 	handles := mtp.Uint32Array{}
 	if err := dev.GetObjectHandles(storageId, mtp.GOH_ALL_ASSOCS, parentId, &handles); err != nil {
 		return 0, false, FileObjectError{error: err}
@@ -90,12 +90,14 @@ func GetObjectUsingParentId(dev *mtp.Device, storageId uint32, parentId uint32, 
 	return 0, false, FileNotFoundError{error: fmt.Errorf("file not found: %s", filename)}
 }
 
-func FileExists(dev *mtp.Device, storageId uint32, filePath string) bool {
-	if _, _, err := GetObjectUsingPath(dev, storageId, filePath); err != nil {
-		return false
+func FileExists(dev *mtp.Device, storageId uint32, filePath string) (exists bool, objectId uint32) {
+	objectId, _, err := GetPathObject(dev, storageId, filePath)
+
+	if err != nil {
+		return false, objectId
 	}
 
-	return true
+	return true, objectId
 }
 
 func isObjectADir(obj *mtp.ObjectInfo) bool {

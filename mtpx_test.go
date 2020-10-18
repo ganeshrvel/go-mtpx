@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	. "github.com/smartystreets/goconvey/convey"
 	"log"
+	"math/rand"
 	"testing"
 )
 
@@ -42,28 +44,28 @@ func TestListDirectory(t *testing.T) {
 
 		So(err, ShouldBeNil)
 		So(files, ShouldNotBeNil)
-		So(len(*files), ShouldEqual, 4)
+		So(len(*files), ShouldBeGreaterThan, 0)
 
 		// test the directory '/mtp-test-files/'
 		files, err = ListDirectory(dev, sid, 0, "/mtp-test-files/")
 
 		So(err, ShouldBeNil)
 		So(files, ShouldNotBeNil)
-		So(len(*files), ShouldEqual, 4)
+		So(len(*files), ShouldBeGreaterThan, 0)
 
 		// test the directory 'mtp-test-files/'
 		files, err = ListDirectory(dev, sid, 0, "mtp-test-files/")
 
 		So(err, ShouldBeNil)
 		So(files, ShouldNotBeNil)
-		So(len(*files), ShouldEqual, 4)
+		So(len(*files), ShouldBeGreaterThan, 0)
 
 		// test the directory 'mtp-test-files'
 		files, err = ListDirectory(dev, sid, 0, "mtp-test-files")
 
 		So(err, ShouldBeNil)
 		So(files, ShouldNotBeNil)
-		So(len(*files), ShouldEqual, 4)
+		So(len(*files), ShouldBeGreaterThan, 0)
 
 		// test the directory 'mtp-test-files/mock_dir3/'
 		files, err = ListDirectory(dev, sid, 0, "mtp-test-files/mock_dir3/")
@@ -115,6 +117,66 @@ func TestListDirectory(t *testing.T) {
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
 		So(files, ShouldBeNil)
+	})
+
+	Dispose(dev)
+}
+
+func TestMakeDirectory(t *testing.T) {
+	dev, err := Initialize(Init{})
+	if err != nil {
+		log.Panic(err)
+	}
+
+	storages, err := FetchStorages(dev)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	sid := storages[0].sid
+
+	var objectId uint32
+	Convey("Creating a new dir | MakeDirectory", t, func() {
+		// test the directory '/mtp-test-files/test-MakeDirectory'
+		_objectId, err := MakeDirectory(dev, sid, "/mtp-test-files", "test-MakeDirectory")
+
+		objectId = _objectId
+
+		So(err, ShouldBeNil)
+		So(objectId, ShouldBeGreaterThan, 0)
+	})
+
+	Convey("Testing MakeDirectory for an existing directory | MakeDirectory", t, func() {
+		// test the directory '/mtp-test-files/test-MakeDirectory'
+		objectId, err := MakeDirectory(dev, sid, "/mtp-test-files", "test-MakeDirectory")
+
+		So(err, ShouldBeNil)
+		So(objectId, ShouldEqual, objectId)
+	})
+
+	Convey("Creating a new random dir | MakeDirectory", t, func() {
+		// test the directory '/mtp-test-files/test-MakeDirectory/{random}'
+		filename := fmt.Sprintf("%x", rand.Int31())
+
+		objectId, err := MakeDirectory(dev, sid, "/mtp-test-files/test-MakeDirectory", filename)
+
+		So(err, ShouldBeNil)
+		So(objectId, ShouldBeGreaterThan, 0)
+
+		exists, _existingObjectId := FileExists(dev, sid, getFullPath("/mtp-test-files/test-MakeDirectory", filename))
+
+		So(err, ShouldBeNil)
+		So(exists, ShouldEqual, true)
+		So(_existingObjectId, ShouldEqual, objectId)
+	})
+
+	Convey("invalid path | MakeDirectory | It should throw an error", t, func() {
+		// test the directory '/fake/test'
+		objectId, err := MakeDirectory(dev, sid, "fake", "test")
+
+		So(err, ShouldBeError)
+		So(objectId, ShouldEqual, 0)
+		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
 	})
 
 	Dispose(dev)

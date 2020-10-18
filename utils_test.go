@@ -21,14 +21,14 @@ func TestUtils(t *testing.T) {
 		}
 	})
 
-	Convey("Test fixDirSlash", t, func() {
-		filenameList := []string{"", "/", "//", "/xyz", "//xyz", "/xyz/", "/xyz//", "xyz/", "xyz", "xyz/124", "xyz/124/", "/xyz/124/"}
-		dirList := []string{"/", "/", "/", "/xyz", "//xyz", "/xyz", "/xyz/", "/xyz", "/xyz", "/xyz/124", "/xyz/124", "/xyz/124"}
+	Convey("Test fixSlash", t, func() {
+		filenameList := []string{"", "/", "//", "/abc", "//bcd", "/cde/", "/def//", "efg/", "fgh", "ghi/124", "hij/124/", "/ijk/124/"}
+		dirList := []string{"/", "/", "/", "/abc", "//bcd", "/cde", "/def/", "/efg", "/fgh", "/ghi/124", "/hij/124", "/ijk/124"}
 
 		for i, f := range filenameList {
-			dir := fixDirSlash(f)
+			dir := fixSlash(f)
 
-			So(dirList[i], ShouldEqual, dir)
+			So(dir, ShouldEqual, dirList[i])
 		}
 	})
 
@@ -45,25 +45,30 @@ func TestUtils(t *testing.T) {
 			},
 			s{
 				parentPath: "//",
-				filename:   "abc",
-				fullPath:   "///abc",
+				filename:   "bcd",
+				fullPath:   "//bcd",
 			},
 			s{
 				parentPath: "/",
-				filename:   "abc/",
-				fullPath:   "/abc/",
+				filename:   "cde/",
+				fullPath:   "/cde",
 			},
 			s{
-				parentPath: "/xyz",
+				parentPath: "/def",
 				filename:   "abc/",
-				fullPath:   "/xyz/abc/",
+				fullPath:   "/def/abc",
+			},
+			s{
+				parentPath: "/efg/",
+				filename:   "abc/",
+				fullPath:   "/efg/abc",
 			},
 		}
 
 		for i, f := range sl {
 			fullPath := getFullPath(f.parentPath, f.filename)
 
-			So(sl[i].fullPath, ShouldEqual, fullPath)
+			So(fullPath, ShouldEqual, sl[i].fullPath)
 		}
 	})
 }

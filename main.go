@@ -5,6 +5,7 @@ import (
 	mtp "github.com/ganeshrvel/go-mtpfs/mtp"
 	"github.com/kr/pretty"
 	"log"
+	"time"
 )
 
 // initialize the mtp device
@@ -84,7 +85,7 @@ func FetchFile(dev *mtp.Device, objectId uint32, parentPath string) (*FileInfo, 
 	size, _ := GetFileSize(dev, &obj, objectId)
 	isDir := isObjectADir(&obj)
 	filename := obj.Filename
-	_parentPath := fixDirSlash(parentPath)
+	_parentPath := fixSlash(parentPath)
 	fullPath := getFullPath(_parentPath, filename)
 
 	return &FileInfo{
@@ -111,7 +112,7 @@ func ListDirectory(dev *mtp.Device, storageId, objectId uint32, parentPath strin
 
 	// if objectId is not available then fetch the objectId from parentPath
 	if _objectId == 0 {
-		objId, isDir, err := GetObjectUsingPath(dev, storageId, parentPath)
+		objId, isDir, err := GetPathObject(dev, storageId, parentPath)
 
 		if err != nil {
 			return nil, err
@@ -119,7 +120,7 @@ func ListDirectory(dev *mtp.Device, storageId, objectId uint32, parentPath strin
 
 		// if the object is not a directory throw an error
 		if !isDir {
-			return nil, InvalidPathError{error: fmt.Errorf("invalid path: %s", parentPath)}
+			return nil, InvalidPathError{error: fmt.Errorf("invalid path: %s. The object is not a directory", parentPath)}
 		}
 
 		_objectId = objId
@@ -133,7 +134,7 @@ func ListDirectory(dev *mtp.Device, storageId, objectId uint32, parentPath strin
 
 			// if the object is not a directory throw an error
 			if !f.IsDir {
-				return nil, InvalidPathError{error: fmt.Errorf("invalid path: %s", parentPath)}
+				return nil, InvalidPathError{error: fmt.Errorf("invalid path: %s. The object is not a directory", parentPath)}
 			}
 		}
 	}
@@ -158,6 +159,42 @@ func ListDirectory(dev *mtp.Device, storageId, objectId uint32, parentPath strin
 	return &fileInfoList, nil
 }
 
+func MakeDirectory(dev *mtp.Device, storageId uint32, parentPath, filename string) (objectId uint32, error error) {
+	parentObjectId, isDir, err := GetPathObject(dev, storageId, parentPath)
+
+	if err != nil {
+		return 0, err
+	}
+
+	if !isDir {
+		return 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The object is not a directory", parentPath)}
+	}
+
+	fullPath := getFullPath(parentPath, filename)
+
+	exist, _objectId := FileExists(dev, storageId, fullPath)
+
+	if exist {
+		return _objectId, nil
+	}
+
+	send := mtp.ObjectInfo{
+		StorageID:        storageId,
+		ObjectFormat:     mtp.OFC_Association,
+		ParentObject:     parentObjectId,
+		Filename:         filename,
+		CompressedSize:   uint32(0),
+		ModificationDate: time.Now(),
+	}
+
+	_, _, handle, err := dev.SendObjectInfo(storageId, parentObjectId, &send)
+	if err != nil {
+		return 0, SendObjectError{error: err}
+	}
+
+	return handle, nil
+}
+
 func main() {
 	dev, err := Initialize(Init{})
 
@@ -177,15 +214,22 @@ func main() {
 
 	sid := storages[0].sid
 
-	files, err := ListDirectory(dev, sid, 0, "/test/")
+	objectId, err := MakeDirectory(dev, sid, "/", "name")
 	if err != nil {
 		log.Panic(err)
 	}
 
-	pretty.Println(files)
+	pretty.Println(objectId)
+
+	/*	files, err := ListDirectory(dev, sid, 0, "/test/")
+		if err != nil {
+			log.Panic(err)
+		}
+
+		pretty.Println(files)*/
 
 	/*
-		fileObj, err := GetObjectUsingPath(dev, sid, "/tests/s")
+		fileObj, err := GetPathObject(dev, sid, "/tests/s")
 		if err != nil {
 			log.Panic(err)
 		}

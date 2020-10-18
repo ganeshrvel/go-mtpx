@@ -35,3 +35,7 @@ type InvalidPathError struct {
 type FileObjectError struct {
 	error
 }
+
+type SendObjectError struct {
+	error
+}
