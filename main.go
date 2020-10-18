@@ -75,91 +75,7 @@ func FetchStorages(dev *mtp.Device) ([]StorageData, error) {
 	return result, nil
 }
 
-// fetch file info using object id
-func FetchFile(dev *mtp.Device, objectId uint32, parentPath string) (*FileInfo, error) {
-	obj := mtp.ObjectInfo{}
-	if err := dev.GetObjectInfo(objectId, &obj); err != nil {
-		return nil, FileObjectError{error: err}
-	}
-
-	size, _ := GetFileSize(dev, &obj, objectId)
-	isDir := isObjectADir(&obj)
-	filename := obj.Filename
-	_parentPath := fixSlash(parentPath)
-	fullPath := getFullPath(_parentPath, filename)
-
-	return &FileInfo{
-		Info:       &obj,
-		Size:       size,
-		IsDir:      isDir,
-		ModTime:    obj.ModificationDate,
-		Name:       obj.Filename,
-		FullPath:   fullPath,
-		ParentPath: _parentPath,
-		Extension:  extension(obj.Filename, isDir),
-		ParentId:   obj.ParentObject,
-		ObjectId:   objectId,
-	}, nil
-}
-
-// List the contents in a directory
-// [objectId] and [parentPath] are optional parameters
-// if [objectId] is not available then parentPath is used to fetch objectId
-// dont leave both [objectId] and [parentPath] empty
-// Tips: use [objectId] whenever possible to avoid traversing down the file tree
-func ListDirectory(dev *mtp.Device, storageId, objectId uint32, parentPath string) (*[]FileInfo, error) {
-	_objectId := objectId
-
-	// if objectId is not available then fetch the objectId from parentPath
-	if _objectId == 0 {
-		objId, isDir, err := GetPathObject(dev, storageId, parentPath)
-
-		if err != nil {
-			return nil, err
-		}
-
-		// if the object is not a directory throw an error
-		if !isDir {
-			return nil, InvalidPathError{error: fmt.Errorf("invalid path: %s. The object is not a directory", parentPath)}
-		}
-
-		_objectId = objId
-	} else {
-		if _objectId != ParentObjectId {
-			f, err := FetchFile(dev, _objectId, parentPath)
-
-			if err != nil {
-				return nil, err
-			}
-
-			// if the object is not a directory throw an error
-			if !f.IsDir {
-				return nil, InvalidPathError{error: fmt.Errorf("invalid path: %s. The object is not a directory", parentPath)}
-			}
-		}
-	}
-
-	handles := mtp.Uint32Array{}
-	if err := dev.GetObjectHandles(storageId, mtp.GOH_ALL_ASSOCS, _objectId, &handles); err != nil {
-		return nil, ListDirectoryError{error: err}
-	}
-
-	var fileInfoList []FileInfo
-
-	for _, objectId := range handles.Values {
-		fi, err := FetchFile(dev, objectId, parentPath)
-
-		if err != nil {
-			continue
-		}
-
-		fileInfoList = append(fileInfoList, *fi)
-	}
-
-	return &fileInfoList, nil
-}
-
-func MakeDirectory(dev *mtp.Device, storageId uint32, parentPath, filename string) (objectId uint32, error error) {
+func MakeDirectory(dev *mtp.Device, storageId uint32, parentPath, filename string) (rObjectId uint32, rError error) {
 	if filename == "" {
 		return 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The filename cannot be empty", parentPath)}
 	}
@@ -191,7 +107,7 @@ func MakeDirectory(dev *mtp.Device, storageId uint32, parentPath, filename strin
 	return handleMakeDirectory(dev, storageId, parentId, filename)
 }
 
-func MakeDirectoryRecursive(dev *mtp.Device, storageId uint32, filePath string) (objectId uint32, error error) {
+func MakeDirectoryRecursive(dev *mtp.Device, storageId uint32, filePath string) (rObjectId uint32, rError error) {
 	_filePath := fixSlash(filePath)
 
 	if _filePath == PathSep {
@@ -235,6 +151,95 @@ func MakeDirectoryRecursive(dev *mtp.Device, storageId uint32, filePath string) 
 	return parentId, nil
 }
 
+// fetch file info using object id
+func FetchFile(dev *mtp.Device, objectId uint32, parentPath string) (*FileInfo, error) {
+	obj := mtp.ObjectInfo{}
+	if err := dev.GetObjectInfo(objectId, &obj); err != nil {
+		return nil, FileObjectError{error: err}
+	}
+
+	size, _ := GetFileSize(dev, &obj, objectId)
+	isDir := isObjectADir(&obj)
+	filename := obj.Filename
+	_parentPath := fixSlash(parentPath)
+	fullPath := getFullPath(_parentPath, filename)
+
+	return &FileInfo{
+		Info:       &obj,
+		Size:       size,
+		IsDir:      isDir,
+		ModTime:    obj.ModificationDate,
+		Name:       obj.Filename,
+		FullPath:   fullPath,
+		ParentPath: _parentPath,
+		Extension:  extension(obj.Filename, isDir),
+		ParentId:   obj.ParentObject,
+		ObjectId:   objectId,
+	}, nil
+}
+
+// List the contents in a directory
+// [objectId] and [fullPath] are optional parameters
+// if [objectId] is not available then parentPath is used to fetch objectId
+// dont leave both [objectId] and [fullPath] empty
+// Tips: use [objectId] whenever possible to avoid traversing down the file tree
+func ListDirectory(dev *mtp.Device, storageId, objectId uint32, fullPath string) (*[]FileInfo, error) {
+	_objectId, err := fetchObject(dev, storageId, objectId, fullPath)
+
+	if err != nil {
+		return nil, err
+	}
+
+	handles := mtp.Uint32Array{}
+	if err := dev.GetObjectHandles(storageId, mtp.GOH_ALL_ASSOCS, _objectId, &handles); err != nil {
+		return nil, ListDirectoryError{error: err}
+	}
+
+	var fileInfoList []FileInfo
+
+	for _, objectId := range handles.Values {
+		fi, err := FetchFile(dev, objectId, fullPath)
+
+		if err != nil {
+			continue
+		}
+
+		fileInfoList = append(fileInfoList, *fi)
+	}
+
+	return &fileInfoList, nil
+}
+
+//func FetchDirectoryTree(dev *mtp.Device, storageId, objectId uint32, fullPath string, dirListing *DirectoryTree) error {
+//	_dirListing := *dirListing
+//	_objectId, err := fetchObject(dev, storageId, objectId, fullPath)
+//
+//	if err != nil {
+//		return err
+//	}
+//
+//	handles := mtp.Uint32Array{}
+//	if err := dev.GetObjectHandles(storageId, mtp.GOH_ALL_ASSOCS, _objectId, &handles); err != nil {
+//		return ListDirectoryError{error: err}
+//	}
+//
+//	_dirListing[_objectId] = DirectoryInfo{
+//		FileInfo: nil,
+//		children: &[]DirectoryTree,
+//	}
+//
+//	for handle, objectId := range handles.Values {
+//		fi, err := FetchFile(dev, objectId, fullPath)
+//
+//		if err != nil {
+//			continue
+//		}
+//
+//	}
+//
+//	return nil
+//}
+
 func main() {
 	dev, err := Initialize(Init{})
 
@@ -253,13 +258,22 @@ func main() {
 	}
 
 	sid := storages[0].sid
+	pretty.Println(sid)
 
-	objectId, err := MakeDirectory(dev, sid, "/", "name")
+	var dirListing DirectoryTree
+	/*err = FetchDirectoryTree(dev, sid, 0, "/mtp-test-files", &dirListing)
+	if err != nil {
+		log.Panic(err)
+	}
+	*/
+	pretty.Println(dirListing)
+
+	/*objectId, err := MakeDirectory(dev, sid, "/", "name")
 	if err != nil {
 		log.Panic(err)
 	}
 
-	pretty.Println(objectId)
+	pretty.Println(objectId)*/
 
 	/*	files, err := ListDirectory(dev, sid, 0, "/test/")
 		if err != nil {

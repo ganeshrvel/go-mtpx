@@ -25,7 +25,7 @@ func GetFileSize(dev *mtp.Device, obj *mtp.ObjectInfo, objectId uint32) (int64, 
 	return size, nil
 }
 
-func GetPathObject(dev *mtp.Device, storageId uint32, filePath string) (objectId uint32, isDir bool, error error) {
+func GetPathObject(dev *mtp.Device, storageId uint32, filePath string) (rObjectId uint32, rIsDir bool, rError error) {
 	_filePath := fixSlash(filePath)
 
 	if _filePath == PathSep {
@@ -35,7 +35,7 @@ func GetPathObject(dev *mtp.Device, storageId uint32, filePath string) (objectId
 	splittedFilePath := strings.Split(_filePath, PathSep)
 
 	var parentId = uint32(ParentObjectId)
-	isDir = true
+	isDir := true
 	var resultCount = 0
 	const skipIndex = 1
 
@@ -70,7 +70,7 @@ func GetPathObject(dev *mtp.Device, storageId uint32, filePath string) (objectId
 	return parentId, isDir, nil
 }
 
-func GetParentObject(dev *mtp.Device, storageId uint32, parentId uint32, filename string) (objectId uint32, isDir bool, error error) {
+func GetParentObject(dev *mtp.Device, storageId uint32, parentId uint32, filename string) (rObjectId uint32, rIsDir bool, rError error) {
 	handles := mtp.Uint32Array{}
 	if err := dev.GetObjectHandles(storageId, mtp.GOH_ALL_ASSOCS, parentId, &handles); err != nil {
 		return 0, false, FileObjectError{error: err}
@@ -91,7 +91,7 @@ func GetParentObject(dev *mtp.Device, storageId uint32, parentId uint32, filenam
 	return 0, false, FileNotFoundError{error: fmt.Errorf("file not found: %s", filename)}
 }
 
-func FileExists(dev *mtp.Device, storageId uint32, filePath string) (exists bool, isDir bool, objectId uint32) {
+func FileExists(dev *mtp.Device, storageId uint32, filePath string) (rRxists bool, rIsDir bool, rObjectId uint32) {
 	objectId, isDir, err := GetPathObject(dev, storageId, filePath)
 
 	if err != nil {
@@ -104,7 +104,8 @@ func FileExists(dev *mtp.Device, storageId uint32, filePath string) (exists bool
 func isObjectADir(obj *mtp.ObjectInfo) bool {
 	return obj.ObjectFormat == mtp.OFC_Association
 }
-func handleMakeDirectory(dev *mtp.Device, storageId, parentId uint32, filename string) (objectId uint32, error error) {
+
+func handleMakeDirectory(dev *mtp.Device, storageId, parentId uint32, filename string) (rObjectId uint32, rError error) {
 	send := mtp.ObjectInfo{
 		StorageID:        storageId,
 		ObjectFormat:     mtp.OFC_Association,
@@ -120,4 +121,39 @@ func handleMakeDirectory(dev *mtp.Device, storageId, parentId uint32, filename s
 	}
 
 	return handle, nil
+}
+
+func fetchObject(dev *mtp.Device, storageId, objectId uint32, parentPath string) (rObjectId uint32, rError error) {
+	_objectId := objectId
+
+	// if objectId is not available then fetch the objectId from parentPath
+	if _objectId == 0 {
+		objId, isDir, err := GetPathObject(dev, storageId, parentPath)
+
+		if err != nil {
+			return 0, err
+		}
+
+		// if the object is not a directory throw an error
+		if !isDir {
+			return 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The object is not a directory", parentPath)}
+		}
+
+		_objectId = objId
+	} else {
+		if _objectId != ParentObjectId {
+			f, err := FetchFile(dev, _objectId, parentPath)
+
+			if err != nil {
+				return 0, err
+			}
+
+			// if the object is not a directory throw an error
+			if !f.IsDir {
+				return 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The object is not a directory", parentPath)}
+			}
+		}
+	}
+
+	return _objectId, nil
 }

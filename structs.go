@@ -27,3 +27,11 @@ type FileInfo struct {
 
 	Info *mtp.ObjectInfo
 }
+
+type DirectoryTree map[uint32]DirectoryInfo
+
+type DirectoryInfo struct {
+	*FileInfo
+
+	children *[]DirectoryTree
+}
