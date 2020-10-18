@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/ganeshrvel/go-mtpfs/mtp"
 	"strings"
+	"time"
 )
 
 func GetFileSize(dev *mtp.Device, obj *mtp.ObjectInfo, objectId uint32) (int64, error) {
@@ -27,11 +28,11 @@ func GetFileSize(dev *mtp.Device, obj *mtp.ObjectInfo, objectId uint32) (int64, 
 func GetPathObject(dev *mtp.Device, storageId uint32, filePath string) (objectId uint32, isDir bool, error error) {
 	_filePath := fixSlash(filePath)
 
-	splittedFilePath := strings.Split(_filePath, PathSep)
-
 	if _filePath == PathSep {
 		return ParentObjectId, true, nil
 	}
+
+	splittedFilePath := strings.Split(_filePath, PathSep)
 
 	var parentId = uint32(ParentObjectId)
 	isDir = true
@@ -90,16 +91,33 @@ func GetParentObject(dev *mtp.Device, storageId uint32, parentId uint32, filenam
 	return 0, false, FileNotFoundError{error: fmt.Errorf("file not found: %s", filename)}
 }
 
-func FileExists(dev *mtp.Device, storageId uint32, filePath string) (exists bool, objectId uint32) {
-	objectId, _, err := GetPathObject(dev, storageId, filePath)
+func FileExists(dev *mtp.Device, storageId uint32, filePath string) (exists bool, isDir bool, objectId uint32) {
+	objectId, isDir, err := GetPathObject(dev, storageId, filePath)
 
 	if err != nil {
-		return false, objectId
+		return false, isDir, objectId
 	}
 
-	return true, objectId
+	return true, isDir, objectId
 }
 
 func isObjectADir(obj *mtp.ObjectInfo) bool {
 	return obj.ObjectFormat == mtp.OFC_Association
+}
+func handleMakeDirectory(dev *mtp.Device, storageId, parentId uint32, filename string) (objectId uint32, error error) {
+	send := mtp.ObjectInfo{
+		StorageID:        storageId,
+		ObjectFormat:     mtp.OFC_Association,
+		ParentObject:     parentId,
+		Filename:         filename,
+		CompressedSize:   uint32(0),
+		ModificationDate: time.Now(),
+	}
+
+	_, _, handle, err := dev.SendObjectInfo(storageId, parentId, &send)
+	if err != nil {
+		return 0, SendObjectError{error: err}
+	}
+
+	return handle, nil
 }

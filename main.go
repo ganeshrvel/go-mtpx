@@ -5,7 +5,7 @@ import (
 	mtp "github.com/ganeshrvel/go-mtpfs/mtp"
 	"github.com/kr/pretty"
 	"log"
-	"time"
+	"strings"
 )
 
 // initialize the mtp device
@@ -160,39 +160,79 @@ func ListDirectory(dev *mtp.Device, storageId, objectId uint32, parentPath strin
 }
 
 func MakeDirectory(dev *mtp.Device, storageId uint32, parentPath, filename string) (objectId uint32, error error) {
-	parentObjectId, isDir, err := GetPathObject(dev, storageId, parentPath)
+	if filename == "" {
+		return 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The filename cannot be empty", parentPath)}
+	}
+
+	parentId, isDir, err := GetPathObject(dev, storageId, parentPath)
 
 	if err != nil {
 		return 0, err
 	}
 
+	// if the object exists but if it's a file then throw an error
 	if !isDir {
 		return 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The object is not a directory", parentPath)}
 	}
 
 	fullPath := getFullPath(parentPath, filename)
 
-	exist, _objectId := FileExists(dev, storageId, fullPath)
+	exist, isDir, _objectId := FileExists(dev, storageId, fullPath)
 
 	if exist {
+		// if the object exists but if it's a file then throw an error
+		if !isDir {
+			return 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The object is not a directory", parentPath)}
+		}
+
 		return _objectId, nil
 	}
 
-	send := mtp.ObjectInfo{
-		StorageID:        storageId,
-		ObjectFormat:     mtp.OFC_Association,
-		ParentObject:     parentObjectId,
-		Filename:         filename,
-		CompressedSize:   uint32(0),
-		ModificationDate: time.Now(),
+	return handleMakeDirectory(dev, storageId, parentId, filename)
+}
+
+func MakeDirectoryRecursive(dev *mtp.Device, storageId uint32, filePath string) (objectId uint32, error error) {
+	_filePath := fixSlash(filePath)
+
+	if _filePath == PathSep {
+		return ParentObjectId, nil
 	}
 
-	_, _, handle, err := dev.SendObjectInfo(storageId, parentObjectId, &send)
-	if err != nil {
-		return 0, SendObjectError{error: err}
+	splittedFilePath := strings.Split(_filePath, PathSep)
+
+	var parentId = uint32(ParentObjectId)
+	const skipIndex = 1
+
+	for _, fName := range splittedFilePath[skipIndex:] {
+		// fetch the parent object and
+		_parentId, isDir, err := GetParentObject(dev, storageId, parentId, fName)
+
+		if err != nil {
+			switch err.(type) {
+			case FileNotFoundError:
+				// if object does not exists then create a new directory
+				_newObjectId, err := handleMakeDirectory(dev, storageId, parentId, fName)
+				if err != nil {
+					return 0, err
+				}
+
+				parentId = _newObjectId
+
+				continue
+			default:
+				return 0, err
+			}
+		}
+
+		// if the object exists but if it's a file then throw an error
+		if !isDir {
+			return 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The object is not a directory", fName)}
+		}
+
+		parentId = _parentId
 	}
 
-	return handle, nil
+	return parentId, nil
 }
 
 func main() {

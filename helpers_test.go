@@ -179,41 +179,48 @@ func TestFileExists(t *testing.T) {
 
 	Convey("Testing valid file | FileExists", t, func() {
 		// test the directory '/mtp-test-files'
-		exists, objectId := FileExists(dev, sid, "/mtp-test-files/")
+		exists, isDir, objectId := FileExists(dev, sid, "/mtp-test-files/")
 		So(exists, ShouldEqual, true)
 		So(objectId, ShouldBeGreaterThan, 0)
+		So(isDir, ShouldEqual, true)
 
 		// test the file '/mtp-test-files/a.txt'
-		exists, objectId = FileExists(dev, sid, "/mtp-test-files/a.txt")
+		exists, isDir, objectId = FileExists(dev, sid, "/mtp-test-files/a.txt")
 		So(exists, ShouldEqual, true)
 		So(objectId, ShouldBeGreaterThan, 0)
+		So(isDir, ShouldEqual, false)
 
 		// test the directory 'mtp-test-files/'
-		exists, objectId = FileExists(dev, sid, "mtp-test-files/")
+		exists, isDir, objectId = FileExists(dev, sid, "mtp-test-files/")
 		So(exists, ShouldEqual, true)
 		So(objectId, ShouldBeGreaterThan, 0)
+		So(isDir, ShouldEqual, true)
 
 		// test the directory 'mtp-test-files'
-		exists, objectId = FileExists(dev, sid, "mtp-test-files")
+		exists, isDir, objectId = FileExists(dev, sid, "mtp-test-files")
 		So(exists, ShouldEqual, true)
 		So(objectId, ShouldBeGreaterThan, 0)
+		So(isDir, ShouldEqual, true)
 
 		// test the file '/mtp-test-files/a.txt/'
-		exists, objectId = FileExists(dev, sid, "/mtp-test-files/a.txt/")
+		exists, isDir, objectId = FileExists(dev, sid, "/mtp-test-files/a.txt/")
 		So(exists, ShouldEqual, true)
 		So(objectId, ShouldBeGreaterThan, 0)
+		So(isDir, ShouldEqual, false)
 	})
 
 	Convey("Testing non existing file | FileExists | Should throw error", t, func() {
 		// test the directory '/fake'
-		exists, objectId := FileExists(dev, sid, "/fake/")
+		exists, isDir, objectId := FileExists(dev, sid, "/fake/")
 		So(exists, ShouldEqual, false)
 		So(objectId, ShouldEqual, 0)
+		So(isDir, ShouldEqual, false)
 
 		// test the file '/mtp-test-files/fake.txt'
-		exists, objectId = FileExists(dev, sid, "/mtp-test-files/fake.txt")
+		exists, isDir, objectId = FileExists(dev, sid, "/mtp-test-files/fake.txt")
 		So(exists, ShouldEqual, false)
 		So(objectId, ShouldEqual, 0)
+		So(isDir, ShouldEqual, false)
 	})
 
 	Dispose(dev)
