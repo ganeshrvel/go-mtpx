@@ -101,22 +101,41 @@ func FetchFile(dev *mtp.Device, objectId uint32, parentPath string) (*FileInfo, 
 	}, nil
 }
 
-// list the contents in a directory
+// List the contents in a directory
 // [objectId] and [parentPath] are optional parameters
 // if [objectId] is not available then parentPath is used to fetch objectId
 // dont leave both [objectId] and [parentPath] empty
+// Tips: use [objectId] whenever possible to avoid traversing down the file tree
 func ListDirectory(dev *mtp.Device, storageId, objectId uint32, parentPath string) (*[]FileInfo, error) {
 	_objectId := objectId
 
 	// if objectId is not available then fetch the objectId from parentPath
 	if _objectId == 0 {
-		objId, err := GetObjectIdFromPath(dev, storageId, parentPath)
+		objId, isDir, err := GetObjectUsingPath(dev, storageId, parentPath)
 
 		if err != nil {
 			return nil, err
 		}
 
+		// if the object is not a directory throw an error
+		if !isDir {
+			return nil, InvalidPathError{error: fmt.Errorf("invalid path: %s", parentPath)}
+		}
+
 		_objectId = objId
+	} else {
+		if _objectId != ParentObjectId {
+			f, err := FetchFile(dev, _objectId, parentPath)
+
+			if err != nil {
+				return nil, err
+			}
+
+			// if the object is not a directory throw an error
+			if !f.IsDir {
+				return nil, InvalidPathError{error: fmt.Errorf("invalid path: %s", parentPath)}
+			}
+		}
 	}
 
 	handles := mtp.Uint32Array{}
@@ -166,13 +185,13 @@ func main() {
 	pretty.Println(files)
 
 	/*
-	fileObj, err := GetObjectIdFromPath(dev, sid, "/tests/s")
-	if err != nil {
-		log.Panic(err)
-	}
+		fileObj, err := GetObjectUsingPath(dev, sid, "/tests/s")
+		if err != nil {
+			log.Panic(err)
+		}
 
-	pretty.Println("======\n")
-	pretty.Println(fileObj)
+		pretty.Println("======\n")
+		pretty.Println(fileObj)
 	*/
 
 	/*exists := FileExists(dev, sid, "/tests/test.txt")

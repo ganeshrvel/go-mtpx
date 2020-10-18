@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/ganeshrvel/go-mtpfs/mtp"
 	"log"
 	"path/filepath"
 	"strings"
@@ -23,10 +22,6 @@ func extension(filename string, isDir bool) string {
 	}
 
 	return extension
-}
-
-func isObjectADir(obj *mtp.ObjectInfo) bool {
-	return obj.ObjectFormat == mtp.OFC_Association
 }
 
 func getFullPath(parentPath, filename string) string {

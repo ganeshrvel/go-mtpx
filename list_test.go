@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestGetObjectIdFromPath(t *testing.T) {
+func TestListDirectory(t *testing.T) {
 	dev, err := Initialize(Init{})
 	if err != nil {
 		log.Panic(err)
@@ -19,183 +19,102 @@ func TestGetObjectIdFromPath(t *testing.T) {
 
 	sid := storages[0].sid
 
-	Convey("Testing valid file | GetObjectIdFromPath", t, func() {
+	Convey("Testing valid file | with objectId | ListDirectory", t, func() {
 		// test the directory '/mocks'
-		objId, err := GetObjectIdFromPath(dev, sid, "/mocks")
+		files, err := ListDirectory(dev, sid, ParentObjectId, "/mocks")
 
 		So(err, ShouldBeNil)
-		So(objId, ShouldBeGreaterThan, 0)
+		So(files, ShouldNotBeNil)
+		So(len(*files), ShouldBeGreaterThan, 0)
+
+		// test the directory '/fake'
+		files, err = ListDirectory(dev, sid, ParentObjectId, "/fake")
+
+		So(err, ShouldBeNil)
+		So(files, ShouldNotBeNil)
+		So(len(*files), ShouldBeGreaterThan, 0)
+
+	})
+
+	Convey("Testing valid file | without objectId | ListDirectory", t, func() {
+		// test the directory '/mocks'
+		files, err := ListDirectory(dev, sid, 0, "/mocks")
+
+		So(err, ShouldBeNil)
+		So(files, ShouldNotBeNil)
+		So(len(*files), ShouldEqual, 4)
 
 		// test the directory '/mocks/'
-		objId, err = GetObjectIdFromPath(dev, sid, "/mocks/")
+		files, err = ListDirectory(dev, sid, 0, "/mocks/")
 
 		So(err, ShouldBeNil)
-		So(objId, ShouldEqual, objId)
+		So(files, ShouldNotBeNil)
+		So(len(*files), ShouldEqual, 4)
 
 		// test the directory 'mocks/'
-		objId, err = GetObjectIdFromPath(dev, sid, "mocks/")
+		files, err = ListDirectory(dev, sid, 0, "mocks/")
 
 		So(err, ShouldBeNil)
-		So(objId, ShouldEqual, objId)
+		So(files, ShouldNotBeNil)
+		So(len(*files), ShouldEqual, 4)
 
 		// test the directory 'mocks'
-		objId, err = GetObjectIdFromPath(dev, sid, "mocks")
+		files, err = ListDirectory(dev, sid, 0, "mocks")
 
 		So(err, ShouldBeNil)
-		So(objId, ShouldEqual, objId)
+		So(files, ShouldNotBeNil)
+		So(len(*files), ShouldEqual, 4)
 
-		// test the file '/mocks/a.txt'
-		objId, err = GetObjectIdFromPath(dev, sid, "/mocks/a.txt")
-
-		So(err, ShouldBeNil)
-		So(objId, ShouldBeGreaterThan, 0)
-
-		// test the file '/mocks/mock_dir1/a.txt'
-		objId, err = GetObjectIdFromPath(dev, sid, "/mocks/mock_dir1/a.txt")
+		// test the directory 'mocks/mock_dir3/'
+		files, err = ListDirectory(dev, sid, 0, "mocks/mock_dir3/")
 
 		So(err, ShouldBeNil)
-		So(objId, ShouldBeGreaterThan, 0)
-
-		// test the file 'mocks/a.txt'
-		objId, err = GetObjectIdFromPath(dev, sid, "mocks/a.txt")
-
-		So(err, ShouldBeNil)
-		So(objId, ShouldEqual, objId)
-
-		// test the file 'mocks/a.txt/'
-		objId, err = GetObjectIdFromPath(dev, sid, "mocks/a.txt/")
-
-		So(err, ShouldBeNil)
-		So(objId, ShouldEqual, objId)
+		So(files, ShouldNotBeNil)
+		So(len(*files), ShouldEqual, 5)
 	})
 
-	Convey("Testing non exisiting file | GetObjectIdFromPath | It should throw an error", t, func() {
-		// test the file 'fake_file'
-		objId, err := GetObjectIdFromPath(dev, sid, "fake_file")
-
-		So(err, ShouldBeError)
-		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
-		So(objId, ShouldEqual, 0)
-
-		// test the file 'mocks/b'
-		objId, err = GetObjectIdFromPath(dev, sid, "mocks/b")
-
-		So(err, ShouldBeError)
-		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
-		So(objId, ShouldEqual, 0)
-
-		// test the file 'mocks/b'
-		objId, err = GetObjectIdFromPath(dev, sid, "mocks/a.txt/1")
-
-		So(err, ShouldBeError)
-		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
-		So(objId, ShouldEqual, 0)
-	})
-
-	Dispose(dev)
-}
-
-func TestGetObjectIdFromFilename(t *testing.T) {
-	dev, err := Initialize(Init{})
-	if err != nil {
-		log.Panic(err)
-	}
-
-	storages, err := FetchStorages(dev)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	sid := storages[0].sid
-
-	Convey("Testing valid file | GetObjectIdFromFilename", t, func() {
-		// test the directory '/mocks'
-		objId, isDir, err := GetObjectIdFromFilename(dev, sid, ParentObjectId, "mocks")
+	Convey("Testing valid file | ListDirectory", t, func() {
+		// test the directory '/mocks/mock_dir1/1'
+		files, err := ListDirectory(dev, sid, 0, "/mocks/mock_dir1/1")
 
 		So(err, ShouldBeNil)
-		So(objId, ShouldBeGreaterThan, 0)
-		So(isDir, ShouldEqual, true)
 
-		// test the file '/mocks/a.txt'
-		objId, isDir, err = GetObjectIdFromFilename(dev, sid, objId, "a.txt")
+		_files := *files
 
-		So(err, ShouldBeNil)
-		So(objId, ShouldEqual, objId)
-		So(isDir, ShouldEqual, false)
+		So(_files, ShouldNotBeNil)
+		So(len(_files), ShouldEqual, 1)
+		So(_files[0].ObjectId, ShouldBeGreaterThan, 0)
+		So(_files[0].Name, ShouldEqual, "a.txt")
+		So(_files[0].ParentId, ShouldBeGreaterThan, 0)
+		So(_files[0].Info.Filename, ShouldEqual, "a.txt")
+		So(_files[0].Extension, ShouldEqual, "txt")
+		So(_files[0].Size, ShouldEqual, 8)
+		So(_files[0].IsDir, ShouldEqual, false)
+		So(_files[0].FullPath, ShouldEqual, "/mocks/mock_dir1/1/a.txt")
+		So(_files[0].ModTime.Year(), ShouldBeGreaterThanOrEqualTo, 2020)
 	})
 
-	Convey("Testing non exisiting file | GetObjectIdFromFilename | It should throw an error", t, func() {
-		// test the file 'fake_file'
-		objId, isDir, err := GetObjectIdFromFilename(dev, sid, ParentObjectId, "fake_file")
-
-		So(err, ShouldBeError)
-		So(err, ShouldHaveSameTypeAs, FileNotFoundError{})
-		So(objId, ShouldEqual, 0)
-		So(isDir, ShouldEqual, false)
-
-		// test the file '/mocks'
-		objId, isDir, err = GetObjectIdFromFilename(dev, sid, ParentObjectId, "/mocks")
-
-		So(err, ShouldBeError)
-		So(err, ShouldHaveSameTypeAs, FileNotFoundError{})
-		So(objId, ShouldEqual, 0)
-		So(isDir, ShouldEqual, false)
-
-		// test the file 'mocks/'
-		objId, isDir, err = GetObjectIdFromFilename(dev, sid, ParentObjectId, "mocks/")
-
-		So(err, ShouldBeError)
-		So(err, ShouldHaveSameTypeAs, FileNotFoundError{})
-		So(objId, ShouldEqual, 0)
-		So(isDir, ShouldEqual, false)
-	})
-
-	Dispose(dev)
-}
-
-func TestFileExists(t *testing.T) {
-	dev, err := Initialize(Init{})
-	if err != nil {
-		log.Panic(err)
-	}
-
-	storages, err := FetchStorages(dev)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	sid := storages[0].sid
-
-	Convey("Testing valid file | FileExists", t, func() {
-		// test the directory '/mocks'
-		exists := FileExists(dev, sid, "/mocks/")
-		So(exists, ShouldEqual, true)
-
-		// test the file '/mocks/a.txt'
-		exists = FileExists(dev, sid, "/mocks/a.txt")
-		So(exists, ShouldEqual, true)
-
-		// test the directory 'mocks/'
-		exists = FileExists(dev, sid, "mocks/")
-		So(exists, ShouldEqual, true)
-
-		// test the directory 'mocks'
-		exists = FileExists(dev, sid, "mocks")
-		So(exists, ShouldEqual, true)
-
-		// test the file '/mocks/a.txt/'
-		exists = FileExists(dev, sid, "/mocks/a.txt/")
-		So(exists, ShouldEqual, true)
-	})
-
-	Convey("Testing non existing file | FileExists | Should throw error", t, func() {
+	Convey("Testing non exisiting file | ListDirectory | It should throw an error", t, func() {
 		// test the directory '/fake'
-		exists := FileExists(dev, sid, "/fake/")
-		So(exists, ShouldEqual, false)
+		files, err := ListDirectory(dev, sid, 0, "/fake")
 
-		// test the file '/mocks/fake.txt'
-		exists = FileExists(dev, sid, "/mocks/fake.txt")
-		So(exists, ShouldEqual, false)
+		So(err, ShouldBeError)
+		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
+		So(files, ShouldBeNil)
+
+		// test the directory '/mocks'
+		files, err = ListDirectory(dev, sid, 0, "/mocks/a.txt")
+
+		So(err, ShouldBeError)
+		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
+		So(files, ShouldBeNil)
+
+		// test the directory '/mocks/fake'
+		files, err = ListDirectory(dev, sid, 0, "/mocks/fake")
+
+		So(err, ShouldBeError)
+		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
+		So(files, ShouldBeNil)
 	})
 
 	Dispose(dev)

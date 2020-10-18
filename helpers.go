@@ -24,58 +24,52 @@ func GetFileSize(dev *mtp.Device, obj *mtp.ObjectInfo, objectId uint32) (int64, 
 	return size, nil
 }
 
-func GetObjectIdFromPath(dev *mtp.Device, storageId uint32, filePath string) (uint32, error) {
+func GetObjectUsingPath(dev *mtp.Device, storageId uint32, filePath string) (objectId uint32, isDir bool, error error) {
 	_filePath := fixDirSlash(filePath)
 
 	splittedFilePath := strings.Split(_filePath, PathSep)
 
 	if _filePath == PathSep {
-		return ParentObjectId, nil
+		return ParentObjectId, true, nil
 	}
 
-	var result = uint32(ParentObjectId)
+	var parentId = uint32(ParentObjectId)
+	isDir = true
 	var resultCount = 0
 	const skipIndex = 1
 
 	for i, fName := range splittedFilePath[skipIndex:] {
-		objectId, isDir, err := GetObjectIdFromFilename(dev, storageId, result, fName)
+		objectId, _isDir, err := GetObjectUsingParentId(dev, storageId, parentId, fName)
 
 		if err != nil {
 			switch err.(type) {
 			case FileNotFoundError:
-				return 0, InvalidPathError{
+				return 0, false, InvalidPathError{
 					error: fmt.Errorf("path not found: %s\nreason: %v", filePath, err),
 				}
 
 			default:
-				return 0, err
+				return 0, false, err
 			}
 		}
 
-		if !isDir && indexExists(splittedFilePath, i+1+skipIndex) {
-			return 0, InvalidPathError{error: fmt.Errorf("path not found: %s", filePath)}
+		if !_isDir && indexExists(splittedFilePath, i+1+skipIndex) {
+			return 0, false, InvalidPathError{error: fmt.Errorf("path not found: %s", filePath)}
 		}
 
-		result = objectId
+		parentId = objectId
+		isDir = _isDir
 		resultCount += 1
 	}
 
 	if resultCount < 1 {
-		return 0, InvalidPathError{error: fmt.Errorf("file not found: %s", filePath)}
+		return 0, false, InvalidPathError{error: fmt.Errorf("file not found: %s", filePath)}
 	}
 
-	return result, nil
+	return parentId, isDir, nil
 }
 
-func FileExists(dev *mtp.Device, storageId uint32, filePath string) bool {
-	if _, err := GetObjectIdFromPath(dev, storageId, filePath); err != nil {
-		return false
-	}
-
-	return true
-}
-
-func GetObjectIdFromFilename(dev *mtp.Device, storageId uint32, parentId uint32, filename string) (objectID uint32, isDir bool, error error) {
+func GetObjectUsingParentId(dev *mtp.Device, storageId uint32, parentId uint32, filename string) (objectId uint32, isDir bool, error error) {
 	handles := mtp.Uint32Array{}
 	if err := dev.GetObjectHandles(storageId, mtp.GOH_ALL_ASSOCS, parentId, &handles); err != nil {
 		return 0, false, FileObjectError{error: err}
@@ -94,4 +88,16 @@ func GetObjectIdFromFilename(dev *mtp.Device, storageId uint32, parentId uint32,
 	}
 
 	return 0, false, FileNotFoundError{error: fmt.Errorf("file not found: %s", filename)}
+}
+
+func FileExists(dev *mtp.Device, storageId uint32, filePath string) bool {
+	if _, _, err := GetObjectUsingPath(dev, storageId, filePath); err != nil {
+		return false
+	}
+
+	return true
+}
+
+func isObjectADir(obj *mtp.ObjectInfo) bool {
+	return obj.ObjectFormat == mtp.OFC_Association
 }
