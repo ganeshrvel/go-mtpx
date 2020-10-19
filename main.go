@@ -85,7 +85,7 @@ func MakeDirectory(dev *mtp.Device, storageId uint32, parentPath, name string) (
 		return 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The name cannot be empty", parentPath)}
 	}
 
-	parentId, isDir, err := GetPathObject(dev, storageId, parentPath)
+	parentId, isDir, err := GetObjectFromPath(dev, storageId, parentPath)
 
 	if err != nil {
 		return 0, err
@@ -128,7 +128,7 @@ func MakeDirectoryRecursive(dev *mtp.Device, storageId uint32, filePath string) 
 
 	for _, fName := range splittedFilePath[skipIndex:] {
 		// fetch the parent object and
-		_parentId, isDir, err := GetNestedFileObject(dev, storageId, parentId, fName)
+		_parentId, isDir, err := GetObjectFromParentIdAndFilename(dev, storageId, parentId, fName)
 
 		if err != nil {
 			switch err.(type) {
@@ -164,7 +164,7 @@ func MakeDirectoryRecursive(dev *mtp.Device, storageId uint32, filePath string) 
 // dont leave both [objectId] and [fullPath] empty
 // Tips: use [objectId] whenever possible to avoid traversing down the whole file tree to process and find the [objectId]
 func ListDirectory(dev *mtp.Device, storageId, objectId uint32, fullPath string) (*[]FileInfo, error) {
-	_objectId, err := processAndFetchObject(dev, storageId, objectId, fullPath)
+	_objectId, err := GetObjectFromObjectIdOrPath(dev, storageId, objectId, fullPath)
 
 	if err != nil {
 		return nil, err
@@ -178,7 +178,7 @@ func ListDirectory(dev *mtp.Device, storageId, objectId uint32, fullPath string)
 	var fileInfoList []FileInfo
 
 	for _, objectId := range handles.Values {
-		fi, err := FetchObject(dev, objectId, fullPath)
+		fi, err := GetObjectFromObjectId(dev, objectId, fullPath)
 
 		if err != nil {
 			continue
@@ -205,12 +205,12 @@ func FetchDirectoryTree(dev *mtp.Device, storageId, objectId uint32, fullPath st
 	dl := _dirTree[objectId]
 
 	// fetch the objectId from [objectId] and/or [fullPath] parameters
-	objId, err := processAndFetchObject(dev, storageId, objectId, fullPath)
+	objId, err := GetObjectFromObjectIdOrPath(dev, storageId, objectId, fullPath)
 	if err != nil {
 		return err
 	}
 
-	fi, err := FetchObject(dev, objId, fullPath)
+	fi, err := GetObjectFromObjectId(dev, objId, fullPath)
 	if err != nil {
 		return err
 	}
@@ -263,7 +263,7 @@ func main() {
 		pretty.Println("Listing directory test: ", files)*/
 
 	/*
-		fileObj, err := GetPathObject(dev, sid, "/tests/s")
+		fileObj, err := GetObjectFromPath(dev, sid, "/tests/s")
 		if err != nil {
 			log.Panic(err)
 		}

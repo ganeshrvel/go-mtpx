@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestGetPathObject(t *testing.T) {
+func TestGetObjectFromPath(t *testing.T) {
 	dev, err := Initialize(Init{})
 	if err != nil {
 		log.Panic(err)
@@ -19,67 +19,67 @@ func TestGetPathObject(t *testing.T) {
 
 	sid := storages[0].sid
 
-	Convey("Testing valid file | GetPathObject", t, func() {
+	Convey("Testing valid file | GetObjectFromPath", t, func() {
 		// test the directory '/mtp-test-files'
-		objId, isDir, err := GetPathObject(dev, sid, "/mtp-test-files")
+		objId, isDir, err := GetObjectFromPath(dev, sid, "/mtp-test-files")
 
 		So(err, ShouldBeNil)
 		So(objId, ShouldBeGreaterThan, 0)
 		So(isDir, ShouldEqual, true)
 
 		// test the directory '/mtp-test-files/'
-		objId, isDir, err = GetPathObject(dev, sid, "/mtp-test-files/")
+		objId, isDir, err = GetObjectFromPath(dev, sid, "/mtp-test-files/")
 
 		So(err, ShouldBeNil)
 		So(objId, ShouldEqual, objId)
 		So(isDir, ShouldEqual, true)
 
 		// test the directory 'mtp-test-files/'
-		objId, isDir, err = GetPathObject(dev, sid, "mtp-test-files/")
+		objId, isDir, err = GetObjectFromPath(dev, sid, "mtp-test-files/")
 
 		So(err, ShouldBeNil)
 		So(objId, ShouldEqual, objId)
 		So(isDir, ShouldEqual, true)
 
 		// test the directory 'mtp-test-files'
-		objId, isDir, err = GetPathObject(dev, sid, "mtp-test-files")
+		objId, isDir, err = GetObjectFromPath(dev, sid, "mtp-test-files")
 
 		So(err, ShouldBeNil)
 		So(objId, ShouldEqual, objId)
 		So(isDir, ShouldEqual, true)
 
 		// test the file '/mtp-test-files/a.txt'
-		objId, isDir, err = GetPathObject(dev, sid, "/mtp-test-files/a.txt")
+		objId, isDir, err = GetObjectFromPath(dev, sid, "/mtp-test-files/a.txt")
 
 		So(err, ShouldBeNil)
 		So(objId, ShouldBeGreaterThan, 0)
 		So(isDir, ShouldEqual, false)
 
 		// test the file '/mtp-test-files/mock_dir1/a.txt'
-		objId, isDir, err = GetPathObject(dev, sid, "/mtp-test-files/mock_dir1/a.txt")
+		objId, isDir, err = GetObjectFromPath(dev, sid, "/mtp-test-files/mock_dir1/a.txt")
 
 		So(err, ShouldBeNil)
 		So(objId, ShouldBeGreaterThan, 0)
 		So(isDir, ShouldEqual, false)
 
 		// test the file 'mtp-test-files/a.txt'
-		objId, isDir, err = GetPathObject(dev, sid, "mtp-test-files/a.txt")
+		objId, isDir, err = GetObjectFromPath(dev, sid, "mtp-test-files/a.txt")
 
 		So(err, ShouldBeNil)
 		So(objId, ShouldEqual, objId)
 		So(isDir, ShouldEqual, false)
 
 		// test the file 'mtp-test-files/a.txt/'
-		objId, isDir, err = GetPathObject(dev, sid, "mtp-test-files/a.txt/")
+		objId, isDir, err = GetObjectFromPath(dev, sid, "mtp-test-files/a.txt/")
 
 		So(err, ShouldBeNil)
 		So(objId, ShouldEqual, objId)
 		So(isDir, ShouldEqual, false)
 	})
 
-	Convey("Testing non exisiting file | GetPathObject | It should throw an error", t, func() {
+	Convey("Testing non exisiting file | GetObjectFromPath | It should throw an error", t, func() {
 		// test the file 'fake_file'
-		objId, isDir, err := GetPathObject(dev, sid, "fake_file")
+		objId, isDir, err := GetObjectFromPath(dev, sid, "fake_file")
 
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
@@ -87,7 +87,7 @@ func TestGetPathObject(t *testing.T) {
 		So(isDir, ShouldEqual, false)
 
 		// test the file 'mtp-test-files/b'
-		objId, isDir, err = GetPathObject(dev, sid, "mtp-test-files/b")
+		objId, isDir, err = GetObjectFromPath(dev, sid, "mtp-test-files/b")
 
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
@@ -95,7 +95,7 @@ func TestGetPathObject(t *testing.T) {
 		So(isDir, ShouldEqual, false)
 
 		// test the file 'mtp-test-files/b'
-		objId, isDir, err = GetPathObject(dev, sid, "mtp-test-files/a.txt/1")
+		objId, isDir, err = GetObjectFromPath(dev, sid, "mtp-test-files/a.txt/1")
 
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
@@ -106,7 +106,7 @@ func TestGetPathObject(t *testing.T) {
 	Dispose(dev)
 }
 
-func TestGetNestedFileObject(t *testing.T) {
+func TestGetObjectFromParentIdAndFilename(t *testing.T) {
 	dev, err := Initialize(Init{})
 	if err != nil {
 		log.Panic(err)
@@ -119,25 +119,25 @@ func TestGetNestedFileObject(t *testing.T) {
 
 	sid := storages[0].sid
 
-	Convey("Testing valid file | GetNestedFileObject", t, func() {
+	Convey("Testing valid file | GetObjectFromParentIdAndFilename", t, func() {
 		// test the directory '/mtp-test-files'
-		objId, isDir, err := GetNestedFileObject(dev, sid, ParentObjectId, "mtp-test-files")
+		objId, isDir, err := GetObjectFromParentIdAndFilename(dev, sid, ParentObjectId, "mtp-test-files")
 
 		So(err, ShouldBeNil)
 		So(objId, ShouldBeGreaterThan, 0)
 		So(isDir, ShouldEqual, true)
 
 		// test the file '/mtp-test-files/a.txt'
-		objId, isDir, err = GetNestedFileObject(dev, sid, objId, "a.txt")
+		objId, isDir, err = GetObjectFromParentIdAndFilename(dev, sid, objId, "a.txt")
 
 		So(err, ShouldBeNil)
 		So(objId, ShouldEqual, objId)
 		So(isDir, ShouldEqual, false)
 	})
 
-	Convey("Testing non exisiting file | GetNestedFileObject | It should throw an error", t, func() {
+	Convey("Testing non exisiting file | GetObjectFromParentIdAndFilename | It should throw an error", t, func() {
 		// test the file 'fake_file'
-		objId, isDir, err := GetNestedFileObject(dev, sid, ParentObjectId, "fake_file")
+		objId, isDir, err := GetObjectFromParentIdAndFilename(dev, sid, ParentObjectId, "fake_file")
 
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, FileNotFoundError{})
@@ -145,7 +145,7 @@ func TestGetNestedFileObject(t *testing.T) {
 		So(isDir, ShouldEqual, false)
 
 		// test the file '/mtp-test-files'
-		objId, isDir, err = GetNestedFileObject(dev, sid, ParentObjectId, "/mtp-test-files")
+		objId, isDir, err = GetObjectFromParentIdAndFilename(dev, sid, ParentObjectId, "/mtp-test-files")
 
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, FileNotFoundError{})
@@ -153,7 +153,7 @@ func TestGetNestedFileObject(t *testing.T) {
 		So(isDir, ShouldEqual, false)
 
 		// test the file 'mtp-test-files/'
-		objId, isDir, err = GetNestedFileObject(dev, sid, ParentObjectId, "mtp-test-files/")
+		objId, isDir, err = GetObjectFromParentIdAndFilename(dev, sid, ParentObjectId, "mtp-test-files/")
 
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, FileNotFoundError{})

@@ -26,8 +26,48 @@ func GetFileSize(dev *mtp.Device, obj *mtp.ObjectInfo, objectId uint32) (int64, 
 	return size, nil
 }
 
+// fetch an object using [objectId]
+// [parentPath] is required to keep track of the [fullPath] of the object
+func GetObjectFromObjectId(dev *mtp.Device, objectId uint32, parentPath string) (*FileInfo, error) {
+	obj := mtp.ObjectInfo{}
+
+	// if the [objectId] is root then return the basic root directory information
+	if objectId == ParentObjectId {
+		return &FileInfo{
+			Size:     0,
+			IsDir:    true,
+			FullPath: "/",
+			ObjectId: ParentObjectId,
+			Info:     &mtp.ObjectInfo{},
+		}, nil
+	}
+
+	if err := dev.GetObjectInfo(objectId, &obj); err != nil {
+		return nil, FileObjectError{error: err}
+	}
+
+	size, _ := GetFileSize(dev, &obj, objectId)
+	isDir := isObjectADir(&obj)
+	filename := obj.Filename
+	_parentPath := fixSlash(parentPath)
+	fullPath := getFullPath(_parentPath, filename)
+
+	return &FileInfo{
+		Info:       &obj,
+		Size:       size,
+		IsDir:      isDir,
+		ModTime:    obj.ModificationDate,
+		Name:       obj.Filename,
+		FullPath:   fullPath,
+		ParentPath: _parentPath,
+		Extension:  extension(obj.Filename, isDir),
+		ParentId:   obj.ParentObject,
+		ObjectId:   objectId,
+	}, nil
+}
+
 // fetch the object information using [fullPath]
-func GetPathObject(dev *mtp.Device, storageId uint32, fullPath string) (rObjectId uint32, rIsDir bool, rError error) {
+func GetObjectFromPath(dev *mtp.Device, storageId uint32, fullPath string) (rObjectId uint32, rIsDir bool, rError error) {
 	_filePath := fixSlash(fullPath)
 
 	if _filePath == PathSep {
@@ -42,7 +82,7 @@ func GetPathObject(dev *mtp.Device, storageId uint32, fullPath string) (rObjectI
 	const skipIndex = 1
 
 	for i, fName := range splittedFilePath[skipIndex:] {
-		objectId, _isDir, err := GetNestedFileObject(dev, storageId, parentId, fName)
+		objectId, _isDir, err := GetObjectFromParentIdAndFilename(dev, storageId, parentId, fName)
 
 		if err != nil {
 			switch err.(type) {
@@ -72,9 +112,45 @@ func GetPathObject(dev *mtp.Device, storageId uint32, fullPath string) (rObjectI
 	return parentId, isDir, nil
 }
 
+// fetch an object using [objectId] and/or [fullPath]
+func GetObjectFromObjectIdOrPath(dev *mtp.Device, storageId, objectId uint32, fullPath string) (rObjectId uint32, rError error) {
+	_objectId := objectId
+
+	// if objectId is not available then fetch the objectId from fullPath
+	if _objectId == 0 {
+		objId, isDir, err := GetObjectFromPath(dev, storageId, fullPath)
+
+		if err != nil {
+			return 0, err
+		}
+
+		// if the object is not a directory throw an error
+		if !isDir {
+			return 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The object is not a directory", fullPath)}
+		}
+
+		_objectId = objId
+	} else {
+		if _objectId != ParentObjectId {
+			f, err := GetObjectFromObjectId(dev, _objectId, fullPath)
+
+			if err != nil {
+				return 0, err
+			}
+
+			// if the object is not a directory throw an error
+			if !f.IsDir {
+				return 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The object is not a directory", fullPath)}
+			}
+		}
+	}
+
+	return _objectId, nil
+}
+
 // fetch the object using [parentId] and [filename]
 // it matches the [filename] to the list of files in the directory
-func GetNestedFileObject(dev *mtp.Device, storageId uint32, parentId uint32, filename string) (rObjectId uint32, rIsDir bool, rError error) {
+func GetObjectFromParentIdAndFilename(dev *mtp.Device, storageId uint32, parentId uint32, filename string) (rObjectId uint32, rIsDir bool, rError error) {
 	handles := mtp.Uint32Array{}
 	if err := dev.GetObjectHandles(storageId, mtp.GOH_ALL_ASSOCS, parentId, &handles); err != nil {
 		return 0, false, FileObjectError{error: err}
@@ -95,50 +171,10 @@ func GetNestedFileObject(dev *mtp.Device, storageId uint32, parentId uint32, fil
 	return 0, false, FileNotFoundError{error: fmt.Errorf("file not found: %s", filename)}
 }
 
-// fetch an object using [objectId]
-// [parentPath] is required to keep track of the [fullPath] of the object
-func FetchObject(dev *mtp.Device, objectId uint32, parentPath string) (*FileInfo, error) {
-	obj := mtp.ObjectInfo{}
-
-	// if the [objectId] is root then return the basic root directory information
-	if objectId == ParentObjectId {
-		return &FileInfo{
-			Size:       0,
-			IsDir:      true,
-			FullPath: "/",
-			ObjectId:   ParentObjectId,
-			Info:       &mtp.ObjectInfo{},
-		}, nil
-	}
-
-	if err := dev.GetObjectInfo(objectId, &obj); err != nil {
-		return nil, FileObjectError{error: err}
-	}
-
-	size, _ := GetFileSize(dev, &obj, objectId)
-	isDir := isObjectADir(&obj)
-	filename := obj.Filename
-	_parentPath := fixSlash(parentPath)
-	fullPath := getFullPath(_parentPath, filename)
-
-	return &FileInfo{
-		Info:       &obj,
-		Size:       size,
-		IsDir:      isDir,
-		ModTime:    obj.ModificationDate,
-		Name:       obj.Filename,
-		FullPath:   fullPath,
-		ParentPath: _parentPath,
-		Extension:  extension(obj.Filename, isDir),
-		ParentId:   obj.ParentObject,
-		ObjectId:   objectId,
-	}, nil
-}
-
 // check if a file exists
 // returns exists: bool, isDir: bool, objectId: uint32
 func FileExists(dev *mtp.Device, storageId uint32, filePath string) (rExists bool, rIsDir bool, rObjectId uint32) {
-	objectId, isDir, err := GetPathObject(dev, storageId, filePath)
+	objectId, isDir, err := GetObjectFromPath(dev, storageId, filePath)
 
 	if err != nil {
 		return false, isDir, objectId
@@ -171,49 +207,13 @@ func handleMakeDirectory(dev *mtp.Device, storageId, parentId uint32, filename s
 	return handle, nil
 }
 
-// fetch an object using [objectId] and/or [fullPath]
-func processAndFetchObject(dev *mtp.Device, storageId, objectId uint32, fullPath string) (rObjectId uint32, rError error) {
-	_objectId := objectId
-
-	// if objectId is not available then fetch the objectId from fullPath
-	if _objectId == 0 {
-		objId, isDir, err := GetPathObject(dev, storageId, fullPath)
-
-		if err != nil {
-			return 0, err
-		}
-
-		// if the object is not a directory throw an error
-		if !isDir {
-			return 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The object is not a directory", fullPath)}
-		}
-
-		_objectId = objId
-	} else {
-		if _objectId != ParentObjectId {
-			f, err := FetchObject(dev, _objectId, fullPath)
-
-			if err != nil {
-				return 0, err
-			}
-
-			// if the object is not a directory throw an error
-			if !f.IsDir {
-				return 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The object is not a directory", fullPath)}
-			}
-		}
-	}
-
-	return _objectId, nil
-}
-
 // helper function to fetch the contents inside a directory
 // [objectId] and [fullPath] are optional parameters
 // if [objectId] is not available then [fullPath] will be used to fetch the [objectId]
 // dont leave both [objectId] and [fullPath] empty
 // Tips: use [objectId] whenever possible to avoid traversing down the whole file tree to process and find the [objectId]
 func processFetchDirectoryTree(dev *mtp.Device, storageId, objectId uint32, fullPath string, dirInfo *DirectoryInfo) error {
-	_objectId, err := processAndFetchObject(dev, storageId, objectId, fullPath)
+	_objectId, err := GetObjectFromObjectIdOrPath(dev, storageId, objectId, fullPath)
 
 	if err != nil {
 		return err
@@ -225,7 +225,7 @@ func processFetchDirectoryTree(dev *mtp.Device, storageId, objectId uint32, full
 	}
 
 	for _, objectId := range handles.Values {
-		fi, err := FetchObject(dev, objectId, fullPath)
+		fi, err := GetObjectFromObjectId(dev, objectId, fullPath)
 		if err != nil {
 			continue
 		}
