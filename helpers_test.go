@@ -106,7 +106,7 @@ func TestGetPathObject(t *testing.T) {
 	Dispose(dev)
 }
 
-func TestGetParentObject(t *testing.T) {
+func TestGetNestedFileObject(t *testing.T) {
 	dev, err := Initialize(Init{})
 	if err != nil {
 		log.Panic(err)
@@ -119,25 +119,25 @@ func TestGetParentObject(t *testing.T) {
 
 	sid := storages[0].sid
 
-	Convey("Testing valid file | GetParentObject", t, func() {
+	Convey("Testing valid file | GetNestedFileObject", t, func() {
 		// test the directory '/mtp-test-files'
-		objId, isDir, err := GetParentObject(dev, sid, ParentObjectId, "mtp-test-files")
+		objId, isDir, err := GetNestedFileObject(dev, sid, ParentObjectId, "mtp-test-files")
 
 		So(err, ShouldBeNil)
 		So(objId, ShouldBeGreaterThan, 0)
 		So(isDir, ShouldEqual, true)
 
 		// test the file '/mtp-test-files/a.txt'
-		objId, isDir, err = GetParentObject(dev, sid, objId, "a.txt")
+		objId, isDir, err = GetNestedFileObject(dev, sid, objId, "a.txt")
 
 		So(err, ShouldBeNil)
 		So(objId, ShouldEqual, objId)
 		So(isDir, ShouldEqual, false)
 	})
 
-	Convey("Testing non exisiting file | GetParentObject | It should throw an error", t, func() {
+	Convey("Testing non exisiting file | GetNestedFileObject | It should throw an error", t, func() {
 		// test the file 'fake_file'
-		objId, isDir, err := GetParentObject(dev, sid, ParentObjectId, "fake_file")
+		objId, isDir, err := GetNestedFileObject(dev, sid, ParentObjectId, "fake_file")
 
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, FileNotFoundError{})
@@ -145,7 +145,7 @@ func TestGetParentObject(t *testing.T) {
 		So(isDir, ShouldEqual, false)
 
 		// test the file '/mtp-test-files'
-		objId, isDir, err = GetParentObject(dev, sid, ParentObjectId, "/mtp-test-files")
+		objId, isDir, err = GetNestedFileObject(dev, sid, ParentObjectId, "/mtp-test-files")
 
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, FileNotFoundError{})
@@ -153,7 +153,7 @@ func TestGetParentObject(t *testing.T) {
 		So(isDir, ShouldEqual, false)
 
 		// test the file 'mtp-test-files/'
-		objId, isDir, err = GetParentObject(dev, sid, ParentObjectId, "mtp-test-files/")
+		objId, isDir, err = GetNestedFileObject(dev, sid, ParentObjectId, "mtp-test-files/")
 
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, FileNotFoundError{})

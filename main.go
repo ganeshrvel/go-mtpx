@@ -75,9 +75,14 @@ func FetchStorages(dev *mtp.Device) ([]StorageData, error) {
 	return result, nil
 }
 
-func MakeDirectory(dev *mtp.Device, storageId uint32, parentPath, filename string) (rObjectId uint32, rError error) {
-	if filename == "" {
-		return 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The filename cannot be empty", parentPath)}
+// create a new directory using [parentPath] and [name]
+// this is non recursive
+// if the parentpath does not exists then an error will be thrown
+// [parentPath] -> path to the parent directory
+// [name] -> directory name
+func MakeDirectory(dev *mtp.Device, storageId uint32, parentPath, name string) (rObjectId uint32, rError error) {
+	if name == "" {
+		return 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The name cannot be empty", parentPath)}
 	}
 
 	parentId, isDir, err := GetPathObject(dev, storageId, parentPath)
@@ -91,7 +96,7 @@ func MakeDirectory(dev *mtp.Device, storageId uint32, parentPath, filename strin
 		return 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The object is not a directory", parentPath)}
 	}
 
-	fullPath := getFullPath(parentPath, filename)
+	fullPath := getFullPath(parentPath, name)
 
 	exist, isDir, _objectId := FileExists(dev, storageId, fullPath)
 
@@ -104,9 +109,11 @@ func MakeDirectory(dev *mtp.Device, storageId uint32, parentPath, filename strin
 		return _objectId, nil
 	}
 
-	return handleMakeDirectory(dev, storageId, parentId, filename)
+	return handleMakeDirectory(dev, storageId, parentId, name)
 }
 
+// create a new directory recursively using [filePath]
+// The path will be created if it does not exists
 func MakeDirectoryRecursive(dev *mtp.Device, storageId uint32, filePath string) (rObjectId uint32, rError error) {
 	_filePath := fixSlash(filePath)
 
@@ -121,7 +128,7 @@ func MakeDirectoryRecursive(dev *mtp.Device, storageId uint32, filePath string) 
 
 	for _, fName := range splittedFilePath[skipIndex:] {
 		// fetch the parent object and
-		_parentId, isDir, err := GetParentObject(dev, storageId, parentId, fName)
+		_parentId, isDir, err := GetNestedFileObject(dev, storageId, parentId, fName)
 
 		if err != nil {
 			switch err.(type) {
@@ -151,40 +158,13 @@ func MakeDirectoryRecursive(dev *mtp.Device, storageId uint32, filePath string) 
 	return parentId, nil
 }
 
-// fetch file info using object id
-func FetchFile(dev *mtp.Device, objectId uint32, parentPath string) (*FileInfo, error) {
-	obj := mtp.ObjectInfo{}
-	if err := dev.GetObjectInfo(objectId, &obj); err != nil {
-		return nil, FileObjectError{error: err}
-	}
-
-	size, _ := GetFileSize(dev, &obj, objectId)
-	isDir := isObjectADir(&obj)
-	filename := obj.Filename
-	_parentPath := fixSlash(parentPath)
-	fullPath := getFullPath(_parentPath, filename)
-
-	return &FileInfo{
-		Info:       &obj,
-		Size:       size,
-		IsDir:      isDir,
-		ModTime:    obj.ModificationDate,
-		Name:       obj.Filename,
-		FullPath:   fullPath,
-		ParentPath: _parentPath,
-		Extension:  extension(obj.Filename, isDir),
-		ParentId:   obj.ParentObject,
-		ObjectId:   objectId,
-	}, nil
-}
-
 // List the contents in a directory
 // [objectId] and [fullPath] are optional parameters
-// if [objectId] is not available then parentPath is used to fetch objectId
+// if [objectId] is not available then [fullPath] will be used to fetch the [objectId]
 // dont leave both [objectId] and [fullPath] empty
-// Tips: use [objectId] whenever possible to avoid traversing down the file tree
+// Tips: use [objectId] whenever possible to avoid traversing down the whole file tree to process and find the [objectId]
 func ListDirectory(dev *mtp.Device, storageId, objectId uint32, fullPath string) (*[]FileInfo, error) {
-	_objectId, err := fetchObject(dev, storageId, objectId, fullPath)
+	_objectId, err := processAndFetchObject(dev, storageId, objectId, fullPath)
 
 	if err != nil {
 		return nil, err
@@ -198,7 +178,7 @@ func ListDirectory(dev *mtp.Device, storageId, objectId uint32, fullPath string)
 	var fileInfoList []FileInfo
 
 	for _, objectId := range handles.Values {
-		fi, err := FetchFile(dev, objectId, fullPath)
+		fi, err := FetchObject(dev, objectId, fullPath)
 
 		if err != nil {
 			continue
@@ -210,44 +190,34 @@ func ListDirectory(dev *mtp.Device, storageId, objectId uint32, fullPath string)
 	return &fileInfoList, nil
 }
 
-func FetchDirectoryTree(dev *mtp.Device, storageId, parentId uint32, fullPath string, dirInfo *DirectoryInfo) error {
-	_objectId, err := fetchObject(dev, storageId, parentId, fullPath)
+// List the contents in a directory
+// use [recursive] to fetch the whole nested tree
+// [objectId] and [fullPath] are optional parameters
+// if [objectId] is not available then [fullPath] will be used to fetch the [objectId]
+// dont leave both [objectId] and [fullPath] empty
+// Tips: use [objectId] whenever possible to avoid traversing down the whole file tree to process and find the [objectId]
+func FetchDirectoryTree(dev *mtp.Device, storageId, objectId uint32, fullPath string, dirTree *DirectoryTree) error {
+	_dirTree := *dirTree
+	_dirTree[objectId] = &DirectoryInfo{
+		FileInfo: &FileInfo{},
+		Children: []*DirectoryTree{},
+	}
+	dl := _dirTree[objectId]
 
+	// fetch the objectId from [objectId] and/or [fullPath] parameters
+	objId, err := processAndFetchObject(dev, storageId, objectId, fullPath)
 	if err != nil {
 		return err
 	}
 
-	handles := mtp.Uint32Array{}
-	if err := dev.GetObjectHandles(storageId, mtp.GOH_ALL_ASSOCS, _objectId, &handles); err != nil {
-		return ListDirectoryError{error: err}
+	fi, err := FetchObject(dev, objId, fullPath)
+	if err != nil {
+		return err
 	}
 
-	for _, objectId := range handles.Values {
-		fi, err := FetchFile(dev, objectId, fullPath)
-		if err != nil {
-			continue
-		}
+	dl.FileInfo = fi
 
-		dirListing := DirectoryTree{}
-		dirListing[objectId] = &DirectoryInfo{
-			FileInfo: fi,
-			Children: []*DirectoryTree{},
-		}
-
-		dirInfo.Children = append(dirInfo.Children, &dirListing)
-		dl := dirListing[objectId]
-
-		if !fi.IsDir {
-			continue
-		}
-
-		err = FetchDirectoryTree(dev, storageId, objectId, fi.FullPath, dl)
-		if err != nil {
-			continue
-		}
-	}
-
-	return nil
+	return processFetchDirectoryTree(dev, storageId, objId, fullPath, dl)
 }
 
 func main() {
@@ -270,20 +240,13 @@ func main() {
 	sid := storages[0].sid
 	pretty.Println("storage id: ", sid)
 
-	dirListing := DirectoryTree{}
-	dirListing[ParentObjectId] = &DirectoryInfo{
-		FileInfo: &FileInfo{},
-		Children: []*DirectoryTree{},
-	}
-
-	dl := dirListing[ParentObjectId]
-
-	err = FetchDirectoryTree(dev, sid, 0, "/", dl)
+	dirListing := &DirectoryTree{}
+	err = FetchDirectoryTree(dev, sid, 0, "/", dirListing)
 	if err != nil {
 		log.Panic(err)
 	}
 
-	pretty.Println(dl)
+	pretty.Println(dirListing)
 
 	/*objectId, err := MakeDirectory(dev, sid, "/", "name")
 	if err != nil {
