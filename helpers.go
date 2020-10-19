@@ -213,17 +213,20 @@ func handleMakeDirectory(dev *mtp.Device, storageId, parentId uint32, filename s
 // if [objectId] is not available then [fullPath] will be used to fetch the [objectId]
 // dont leave both [objectId] and [fullPath] empty
 // Tips: use [objectId] whenever possible to avoid traversing down the whole file tree to process and find the [objectId]
-func processFetchDirectoryTree(dev *mtp.Device, storageId, objectId uint32, fullPath string, recursive bool, dirInfo *DirectoryInfo) error {
+// returns total number of objects
+func processFetchDirectoryTree(dev *mtp.Device, storageId, objectId uint32, fullPath string, recursive bool, dirInfo *DirectoryInfo) (rTotalFiles int, rError error) {
 	_objectId, err := GetObjectFromObjectIdOrPath(dev, storageId, objectId, fullPath)
 
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	handles := mtp.Uint32Array{}
 	if err := dev.GetObjectHandles(storageId, mtp.GOH_ALL_ASSOCS, _objectId, &handles); err != nil {
-		return ListDirectoryError{error: err}
+		return 0, ListDirectoryError{error: err}
 	}
+
+	totalFiles := 0
 
 	for _, objectId := range handles.Values {
 		fi, err := GetObjectFromObjectId(dev, objectId, fullPath)
@@ -250,11 +253,13 @@ func processFetchDirectoryTree(dev *mtp.Device, storageId, objectId uint32, full
 			continue
 		}
 
-		err = processFetchDirectoryTree(dev, storageId, objectId, fi.FullPath, recursive, dl)
+		_totalFiles, err := processFetchDirectoryTree(dev, storageId, objectId, fi.FullPath, recursive, dl)
 		if err != nil {
 			continue
 		}
+
+		totalFiles += _totalFiles
 	}
 
-	return nil
+	return totalFiles + len(dirInfo.Children), nil
 }

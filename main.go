@@ -197,28 +197,34 @@ func ListDirectory(dev *mtp.Device, storageId, objectId uint32, fullPath string)
 // if [objectId] is not available then [fullPath] will be used to fetch the [objectId]
 // dont leave both [objectId] and [fullPath] empty
 // Tips: use [objectId] whenever possible to avoid traversing down the whole file tree to process and find the [objectId]
-func FetchDirectoryTree(dev *mtp.Device, storageId, objectId uint32, fullPath string, recursive bool, dirTree *DirectoryTree) error {
-	_dirTree := *dirTree
-	_dirTree[objectId] = &DirectoryInfo{
-		FileInfo: &FileInfo{},
-		Children: []*DirectoryTree{},
-	}
-	dl := _dirTree[objectId]
-
+// returns total number of objects
+func FetchDirectoryTree(dev *mtp.Device, storageId, objectId uint32, fullPath string, recursive bool, dirTree *DirectoryTree) (rObjectId uint32, rTotalFiles int, rError error) {
 	// fetch the objectId from [objectId] and/or [fullPath] parameters
 	objId, err := GetObjectFromObjectIdOrPath(dev, storageId, objectId, fullPath)
 	if err != nil {
-		return err
+		return objId, 0, err
 	}
 
 	fi, err := GetObjectFromObjectId(dev, objId, fullPath)
 	if err != nil {
-		return err
+		return objId, 0, err
 	}
+
+	_dirTree := *dirTree
+	_dirTree[objId] = &DirectoryInfo{
+		FileInfo: &FileInfo{},
+		Children: []*DirectoryTree{},
+	}
+	dl := _dirTree[objId]
 
 	dl.FileInfo = fi
 
-	return processFetchDirectoryTree(dev, storageId, objId, fullPath, recursive, dl)
+	totalFiles, err := processFetchDirectoryTree(dev, storageId, objId, fullPath, recursive, dl)
+	if err != nil {
+		return objId, 0, err
+	}
+
+	return objId, totalFiles, nil
 }
 
 func main() {
@@ -242,12 +248,14 @@ func main() {
 	pretty.Println("storage id: ", sid)
 
 	dirListing := &DirectoryTree{}
-	err = FetchDirectoryTree(dev, sid, 0, "/mtp-test-files", false, dirListing)
+	objectId, totalFiles, err := FetchDirectoryTree(dev, sid, 0, "/mtp-test-files/mock_dir1/3", false, dirListing)
 	if err != nil {
 		log.Panic(err)
 	}
-
 	pretty.Println(dirListing)
+
+	pretty.Println("totalFiles: ", totalFiles)
+	pretty.Println("objectId: ", objectId)
 
 	/*objectId, err := MakeDirectory(dev, sid, "/", "name")
 	if err != nil {

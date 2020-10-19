@@ -33,5 +33,5 @@ type DirectoryTree map[uint32]*DirectoryInfo
 type DirectoryInfo struct {
 	*FileInfo
 
-	Children []*DirectoryTree
+	Children   []*DirectoryTree
 }
