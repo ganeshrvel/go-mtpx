@@ -208,11 +208,12 @@ func handleMakeDirectory(dev *mtp.Device, storageId, parentId uint32, filename s
 }
 
 // helper function to fetch the contents inside a directory
+// use [recursive] to fetch the whole nested tree
 // [objectId] and [fullPath] are optional parameters
 // if [objectId] is not available then [fullPath] will be used to fetch the [objectId]
 // dont leave both [objectId] and [fullPath] empty
 // Tips: use [objectId] whenever possible to avoid traversing down the whole file tree to process and find the [objectId]
-func processFetchDirectoryTree(dev *mtp.Device, storageId, objectId uint32, fullPath string, dirInfo *DirectoryInfo) error {
+func processFetchDirectoryTree(dev *mtp.Device, storageId, objectId uint32, fullPath string, recursive bool, dirInfo *DirectoryInfo) error {
 	_objectId, err := GetObjectFromObjectIdOrPath(dev, storageId, objectId, fullPath)
 
 	if err != nil {
@@ -239,11 +240,17 @@ func processFetchDirectoryTree(dev *mtp.Device, storageId, objectId uint32, full
 		dirInfo.Children = append(dirInfo.Children, &dirListing)
 		dl := dirListing[objectId]
 
+		// don't traverse down the tree if [recursive] is false
+		if !recursive {
+			continue
+		}
+
+		// don't traverse down the tree if the object is not a directory
 		if !fi.IsDir {
 			continue
 		}
 
-		err = processFetchDirectoryTree(dev, storageId, objectId, fi.FullPath, dl)
+		err = processFetchDirectoryTree(dev, storageId, objectId, fi.FullPath, recursive, dl)
 		if err != nil {
 			continue
 		}

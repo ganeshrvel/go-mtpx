@@ -158,6 +158,7 @@ func MakeDirectoryRecursive(dev *mtp.Device, storageId uint32, filePath string) 
 	return parentId, nil
 }
 
+// todo remove this
 // List the contents in a directory
 // [objectId] and [fullPath] are optional parameters
 // if [objectId] is not available then [fullPath] will be used to fetch the [objectId]
@@ -196,7 +197,7 @@ func ListDirectory(dev *mtp.Device, storageId, objectId uint32, fullPath string)
 // if [objectId] is not available then [fullPath] will be used to fetch the [objectId]
 // dont leave both [objectId] and [fullPath] empty
 // Tips: use [objectId] whenever possible to avoid traversing down the whole file tree to process and find the [objectId]
-func FetchDirectoryTree(dev *mtp.Device, storageId, objectId uint32, fullPath string, dirTree *DirectoryTree) error {
+func FetchDirectoryTree(dev *mtp.Device, storageId, objectId uint32, fullPath string, recursive bool, dirTree *DirectoryTree) error {
 	_dirTree := *dirTree
 	_dirTree[objectId] = &DirectoryInfo{
 		FileInfo: &FileInfo{},
@@ -217,7 +218,7 @@ func FetchDirectoryTree(dev *mtp.Device, storageId, objectId uint32, fullPath st
 
 	dl.FileInfo = fi
 
-	return processFetchDirectoryTree(dev, storageId, objId, fullPath, dl)
+	return processFetchDirectoryTree(dev, storageId, objId, fullPath, recursive, dl)
 }
 
 func main() {
@@ -241,7 +242,7 @@ func main() {
 	pretty.Println("storage id: ", sid)
 
 	dirListing := &DirectoryTree{}
-	err = FetchDirectoryTree(dev, sid, 0, "/", dirListing)
+	err = FetchDirectoryTree(dev, sid, 0, "/mtp-test-files", false, dirListing)
 	if err != nil {
 		log.Panic(err)
 	}
