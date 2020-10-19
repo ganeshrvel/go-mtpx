@@ -1,58 +1,41 @@
-go-mtpx
-
-
-
 macOS setup
 
 ```shell script
 xcode-select --install
 ```
 
-Install and setup libusb
+Install GoLang from: https://golang.org/doc/install
 
-Method 1:
+
+Git clone:
+```shell script
+git clone https://github.com/ganeshrvel/go-mtpx
+cd go-mtpx
+git fetch
+git checkout test/samsung
+```
+
+
+Build:
 ```shell script
 # build the binary
-CGO_CFLAGS='-Wno-deprecated-declarations' go build -o build/mtpx .
-
-# copy libusb
-cp lib/libusb-1.0.0.dylib build/libusb-1.0.0.dylib
+./scripts/build.sh
 
 # Run
 DYLD_LIBRARY_PATH=./build ./build/mtpx
 ```
 
-Method 2:
+If the above steps didn't work then:
 ```shell script
-brew install libusb
+# install brew
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
 
-# find the location where libusb is installed
-brew info libusb
+# brew update
+brew update
 
-# run: sudo install_name_tool -id "@executable_path/libusb.dylib" /usr/local/Cellar/libusb/<version>/lib/libusb-1.0.0.dylib
+# brew install libusb
 
-# eg: /usr/local/Cellar/libusb/1.0.23
-sudo install_name_tool -id "@executable_path/libusb.dylib" /usr/local/Cellar/libusb/1.0.23/lib/libusb-1.0.0.dylib
+./scripts/build.sh
 
-# copy the dynamic library to the project
-cp /usr/local/Cellar/libusb/1.0.23/lib/libusb-1.0.0.dylib ./libusb.dylib
-
-# confirm whether the libusb.dylib is portable
-otool -L libusb.dylib
-
-# the output should look: libusb.dylib: @executable_path/libusb.dylib 
-
-git add libusb.dylib
-```
-
-Run mtpx
-```shell script
-go run ./
-```
-
-Build mtpx
-```shell script
-CGO_CFLAGS='-Wno-deprecated-declarations' go build -o build/mtpx . && cp libusb.dylib build/libusb.dylib
-
-./build/mtpx
+./build
 ```
