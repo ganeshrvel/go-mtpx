@@ -225,3 +225,66 @@ func TestFileExists(t *testing.T) {
 
 	Dispose(dev)
 }
+
+func TestGetObjectFromObjectIdOrPath(t *testing.T) {
+	dev, err := Initialize(Init{})
+	if err != nil {
+		log.Panic(err)
+	}
+
+	storages, err := FetchStorages(dev)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	sid := storages[0].sid
+
+	Convey("Testing valid files | GetObjectFromObjectIdOrPath", t, func() {
+		// objectId=0 && fullPath="/mtp-test-files/"
+		objectId, err := GetObjectFromObjectIdOrPath(dev, sid, 0, "/mtp-test-files/")
+		So(err, ShouldBeNil)
+		So(objectId, ShouldBeGreaterThan, 0)
+
+		// objectId=0 && fullPath="mtp-test-files/"
+		objectId, err = GetObjectFromObjectIdOrPath(dev, sid, 0, "mtp-test-files/")
+		So(err, ShouldBeNil)
+		So(objectId, ShouldBeGreaterThan, 0)
+
+		// objectId=0 && fullPath="mtp-test-files"
+		objectId, err = GetObjectFromObjectIdOrPath(dev, sid, 0, "mtp-test-files")
+		So(err, ShouldBeNil)
+		So(objectId, ShouldBeGreaterThan, 0)
+
+		// objectId=parentId && fullPath="mtp-test-files"
+		objectId, err = GetObjectFromObjectIdOrPath(dev, sid, ParentObjectId, "mtp-test-files")
+		So(err, ShouldBeNil)
+		So(objectId, ShouldEqual, ParentObjectId)
+
+		// objectId=parentId && fullPath=""
+		objectId, err = GetObjectFromObjectIdOrPath(dev, sid, ParentObjectId, "")
+		So(err, ShouldBeNil)
+		So(objectId, ShouldEqual, ParentObjectId)
+	})
+
+	Convey("Testing invalid files | GetObjectFromObjectIdOrPath", t, func() {
+		// objectId=0 && fullPath=""
+		objectId, err := GetObjectFromObjectIdOrPath(dev, sid, 0, "")
+		So(err, ShouldBeError)
+		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
+		So(objectId, ShouldEqual, 0)
+
+		// objectId=fake && fullPath=""
+		objectId, err = GetObjectFromObjectIdOrPath(dev, sid, 1234567, "")
+		So(err, ShouldBeError)
+		So(err, ShouldHaveSameTypeAs, FileObjectError{})
+		So(objectId, ShouldEqual, 0)
+
+		// objectId=0 && fullPath="/fake"
+		objectId, err = GetObjectFromObjectIdOrPath(dev, sid, 0, "/fake")
+		So(err, ShouldBeError)
+		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
+		So(objectId, ShouldEqual, 0)
+	})
+
+	Dispose(dev)
+}

@@ -210,16 +210,9 @@ func FetchDirectoryTree(dev *mtp.Device, storageId, objectId uint32, fullPath st
 		return objId, 0, err
 	}
 
-	_dirTree := *dirTree
-	_dirTree[objId] = &DirectoryInfo{
-		FileInfo: &FileInfo{},
-		Children: []*DirectoryTree{},
-	}
-	dl := _dirTree[objId]
+	dirTree.FileInfo = fi
 
-	dl.FileInfo = fi
-
-	totalFiles, err := processFetchDirectoryTree(dev, storageId, objId, fullPath, recursive, dl)
+	totalFiles, err := processFetchDirectoryTree(dev, storageId, objId, fullPath, recursive, dirTree)
 	if err != nil {
 		return objId, 0, err
 	}
@@ -248,7 +241,7 @@ func main() {
 	pretty.Println("storage id: ", sid)
 
 	dirListing := &DirectoryTree{}
-	objectId, totalFiles, err := FetchDirectoryTree(dev, sid, 0, "/mtp-test-files/mock_dir1/3", false, dirListing)
+	objectId, totalFiles, err := FetchDirectoryTree(dev, sid, 0, "", true, dirListing)
 	if err != nil {
 		log.Panic(err)
 	}

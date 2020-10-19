@@ -286,190 +286,190 @@ func TestMakeDirectoryRecursive(t *testing.T) {
 	Dispose(dev)
 }
 
-func TestFetchDirectoryTree(t *testing.T) {
-	dev, err := Initialize(Init{})
-	if err != nil {
-		log.Panic(err)
-	}
-
-	storages, err := FetchStorages(dev)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	sid := storages[0].sid
-
-	Convey("Testing valid directory | with objectId | objectId should be picked up instead of fullPath | FetchDirectoryTree", t, func() {
-		// test the root directory [ParentObjectId] | empty [fullPath]
-		dirListing := &DirectoryTree{}
-		objectId, totalFiles, err := FetchDirectoryTree(dev, sid, ParentObjectId, "", false, dirListing)
-
-		So(err, ShouldBeNil)
-		So(dirListing, ShouldNotBeNil)
-		So(totalFiles, ShouldBeGreaterThan, 0)
-		So(objectId, ShouldEqual, ParentObjectId)
-		pDirListing := *dirListing
-
-		So(len(pDirListing[ParentObjectId].Children), ShouldBeGreaterThan, 0)
-
-		// test the root directory [ParentObjectId] | [fullPath]='/fake'
-		dirListing = &DirectoryTree{}
-		objectId, totalFiles, err = FetchDirectoryTree(dev, sid, ParentObjectId, "/fake", false, dirListing)
-
-		So(err, ShouldBeNil)
-		So(dirListing, ShouldNotBeNil)
-		So(totalFiles, ShouldBeGreaterThan, 0)
-		So(objectId, ShouldEqual, ParentObjectId)
-		pDirListing = *dirListing
-
-		So(len(pDirListing[ParentObjectId].Children), ShouldBeGreaterThan, 0)
-	})
-
-	Convey("Testing valid directory | without objectId | fullPath should be picked up instead of objectId | FetchDirectoryTree", t, func() {
-		/////////////////
-		// test the directory '/mtp-test-files'
-		/////////////////
-		dirListing := &DirectoryTree{}
-		fullPath := "/mtp-test-files"
-
-		objectId1, totalFiles1, err := FetchDirectoryTree(dev, sid, 0, fullPath, false, dirListing)
-
-		So(err, ShouldBeNil)
-		So(dirListing, ShouldNotBeNil)
-		So(totalFiles1, ShouldBeGreaterThanOrEqualTo, 4)
-		pDirListing := *dirListing
-
-		// test if [objectId] == [objectId1] of '/mtp-test-files'
-		objIdFromPath, _, err := GetObjectFromPath(dev, sid, fullPath)
-		So(err, ShouldBeNil)
-
-		So(objectId1, ShouldEqual, objIdFromPath)
-
-		So(len(pDirListing[objectId1].Children), ShouldEqual, totalFiles1)
-
-		/////////////////
-		// test the directory '/mtp-test-files/'
-		/////////////////
-		dirListing = &DirectoryTree{}
-		fullPath = "/mtp-test-files/"
-
-		objectId2, totalFiles2, err := FetchDirectoryTree(dev, sid, 0, fullPath, false, dirListing)
-
-		So(err, ShouldBeNil)
-		So(dirListing, ShouldNotBeNil)
-		So(totalFiles2, ShouldBeGreaterThanOrEqualTo, totalFiles1)
-		pDirListing = *dirListing
-
-		// test if [objectId2] == [objectId1] of [fullPath]
-		objIdFromPath, _, err = GetObjectFromPath(dev, sid, fullPath)
-		So(err, ShouldBeNil)
-
-		So(objectId1, ShouldEqual, objIdFromPath)
-		So(objectId1, ShouldEqual, objectId2)
-
-		So(len(pDirListing[objectId1].Children), ShouldEqual, totalFiles2)
-
-		/////////////////
-		// test the directory 'mtp-test-files/'
-		/////////////////
-		dirListing = &DirectoryTree{}
-		fullPath = "mtp-test-files/"
-
-		objectId3, totalFiles3, err := FetchDirectoryTree(dev, sid, 0, fullPath, false, dirListing)
-
-		So(err, ShouldBeNil)
-		So(dirListing, ShouldNotBeNil)
-		So(totalFiles3, ShouldBeGreaterThanOrEqualTo, totalFiles1)
-		pDirListing = *dirListing
-
-		// test if [objectId3] == [objectId] of [fullPath]
-		objIdFromPath, _, err = GetObjectFromPath(dev, sid, fullPath)
-		So(err, ShouldBeNil)
-
-		So(objectId3, ShouldEqual, objIdFromPath)
-
-		So(len(pDirListing[objectId3].Children), ShouldEqual, totalFiles3)
-
-		/////////////////
-		// test the directory 'mtp-test-files/mock_dir3/'
-		/////////////////
-		dirListing = &DirectoryTree{}
-		fullPath = "mtp-test-files/mock_dir3/"
-
-		objectId4, totalFiles4, err := FetchDirectoryTree(dev, sid, 0, fullPath, false, dirListing)
-
-		So(err, ShouldBeNil)
-		So(dirListing, ShouldNotBeNil)
-		So(totalFiles4, ShouldBeGreaterThanOrEqualTo, totalFiles1)
-		pDirListing = *dirListing
-
-		// test if [objectId4] == [objectId] of [fullPath]
-		objIdFromPath, _, err = GetObjectFromPath(dev, sid, fullPath)
-		So(err, ShouldBeNil)
-
-		So(objectId4, ShouldEqual, objIdFromPath)
-
-		So(len(pDirListing[objectId4].Children), ShouldEqual, 5)
-	})
-
-	Convey("Testing valid directory | recursive=false | ListDirectory", t, func() {
-		// test the directory '/mtp-test-files/mock_dir1/1'
-		fullPath := "/mtp-test-files/mock_dir1/1"
-
-		dirListing := &DirectoryTree{}
-
-		objectId, totalFiles, err := FetchDirectoryTree(dev, sid, 0, fullPath, false, dirListing)
-
-		So(err, ShouldBeNil)
-
-		pDirListing := *dirListing
-		parentObject := pDirListing[objectId]
-
-
-		So(parentObject, ShouldNotBeNil)
-		So(len(parentObject.Children), ShouldEqual, totalFiles)
-		So(len(parentObject.Children), ShouldEqual, 1)
-		So(parentObject.ObjectId, ShouldEqual, objectId)
-
-		/*for _, f := range parentObject.Children {
-			_f := *f
-
-			pretty.Println(_f[1234].)
-		}*/
-
-		/*So(_file0.ObjectId, ShouldBeGreaterThan, 0)
-		So(_files[0].Name, ShouldEqual, "a.txt")
-		So(_files[0].ParentId, ShouldBeGreaterThan, 0)
-		So(_files[0].Info.Filename, ShouldEqual, "a.txt")
-		So(_files[0].Extension, ShouldEqual, "txt")
-		So(_files[0].Size, ShouldEqual, 8)
-		So(_files[0].IsDir, ShouldEqual, false)
-		So(_files[0].FullPath, ShouldEqual, "/mtp-test-files/mock_dir1/1/a.txt")
-		So(_files[0].ModTime.Year(), ShouldBeGreaterThanOrEqualTo, 2020)*/
-	})
-
-	/*Convey("Testing non exisiting file | ListDirectory | It should throw an error", t, func() {
-		// test the directory '/fake'
-		files, err := ListDirectory(dev, sid, 0, "/fake")
-
-		So(err, ShouldBeError)
-		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
-		So(files, ShouldBeNil)
-
-		// test the directory '/mtp-test-files'
-		files, err = ListDirectory(dev, sid, 0, "/mtp-test-files/a.txt")
-
-		So(err, ShouldBeError)
-		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
-		So(files, ShouldBeNil)
-
-		// test the directory '/mtp-test-files/fake'
-		files, err = ListDirectory(dev, sid, 0, "/mtp-test-files/fake")
-
-		So(err, ShouldBeError)
-		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
-		So(files, ShouldBeNil)
-	})*/
-
-	Dispose(dev)
-}
+//func TestFetchDirectoryTree(t *testing.T) {
+//	dev, err := Initialize(Init{})
+//	if err != nil {
+//		log.Panic(err)
+//	}
+//
+//	storages, err := FetchStorages(dev)
+//	if err != nil {
+//		log.Panic(err)
+//	}
+//
+//	sid := storages[0].sid
+//
+//	Convey("Testing valid directory | with objectId | objectId should be picked up instead of fullPath | FetchDirectoryTree", t, func() {
+//		// test the root directory [ParentObjectId] | empty [fullPath]
+//		dirListing := &DirectoryTree{}
+//		objectId, totalFiles, err := FetchDirectoryTree(dev, sid, ParentObjectId, "", false, dirListing)
+//
+//		So(err, ShouldBeNil)
+//		So(dirListing, ShouldNotBeNil)
+//		So(totalFiles, ShouldBeGreaterThan, 0)
+//		So(objectId, ShouldEqual, ParentObjectId)
+//		pDirListing := *dirListing
+//
+//		So(len(pDirListing[ParentObjectId].Children), ShouldBeGreaterThan, 0)
+//
+//		// test the root directory [ParentObjectId] | [fullPath]='/fake'
+//		dirListing = &DirectoryTree{}
+//		objectId, totalFiles, err = FetchDirectoryTree(dev, sid, ParentObjectId, "/fake", false, dirListing)
+//
+//		So(err, ShouldBeNil)
+//		So(dirListing, ShouldNotBeNil)
+//		So(totalFiles, ShouldBeGreaterThan, 0)
+//		So(objectId, ShouldEqual, ParentObjectId)
+//		pDirListing = *dirListing
+//
+//		So(len(pDirListing[ParentObjectId].Children), ShouldBeGreaterThan, 0)
+//	})
+//
+//	Convey("Testing valid directory | without objectId | fullPath should be picked up instead of objectId | FetchDirectoryTree", t, func() {
+//		/////////////////
+//		// test the directory '/mtp-test-files'
+//		/////////////////
+//		dirListing := &DirectoryTree{}
+//		fullPath := "/mtp-test-files"
+//
+//		objectId1, totalFiles1, err := FetchDirectoryTree(dev, sid, 0, fullPath, false, dirListing)
+//
+//		So(err, ShouldBeNil)
+//		So(dirListing, ShouldNotBeNil)
+//		So(totalFiles1, ShouldBeGreaterThanOrEqualTo, 4)
+//		pDirListing := *dirListing
+//
+//		// test if [objectId] == [objectId1] of '/mtp-test-files'
+//		objIdFromPath, _, err := GetObjectFromPath(dev, sid, fullPath)
+//		So(err, ShouldBeNil)
+//
+//		So(objectId1, ShouldEqual, objIdFromPath)
+//
+//		So(len(pDirListing[objectId1].Children), ShouldEqual, totalFiles1)
+//
+//		/////////////////
+//		// test the directory '/mtp-test-files/'
+//		/////////////////
+//		dirListing = &DirectoryTree{}
+//		fullPath = "/mtp-test-files/"
+//
+//		objectId2, totalFiles2, err := FetchDirectoryTree(dev, sid, 0, fullPath, false, dirListing)
+//
+//		So(err, ShouldBeNil)
+//		So(dirListing, ShouldNotBeNil)
+//		So(totalFiles2, ShouldBeGreaterThanOrEqualTo, totalFiles1)
+//		pDirListing = *dirListing
+//
+//		// test if [objectId2] == [objectId1] of [fullPath]
+//		objIdFromPath, _, err = GetObjectFromPath(dev, sid, fullPath)
+//		So(err, ShouldBeNil)
+//
+//		So(objectId1, ShouldEqual, objIdFromPath)
+//		So(objectId1, ShouldEqual, objectId2)
+//
+//		So(len(pDirListing[objectId1].Children), ShouldEqual, totalFiles2)
+//
+//		/////////////////
+//		// test the directory 'mtp-test-files/'
+//		/////////////////
+//		dirListing = &DirectoryTree{}
+//		fullPath = "mtp-test-files/"
+//
+//		objectId3, totalFiles3, err := FetchDirectoryTree(dev, sid, 0, fullPath, false, dirListing)
+//
+//		So(err, ShouldBeNil)
+//		So(dirListing, ShouldNotBeNil)
+//		So(totalFiles3, ShouldBeGreaterThanOrEqualTo, totalFiles1)
+//		pDirListing = *dirListing
+//
+//		// test if [objectId3] == [objectId] of [fullPath]
+//		objIdFromPath, _, err = GetObjectFromPath(dev, sid, fullPath)
+//		So(err, ShouldBeNil)
+//
+//		So(objectId3, ShouldEqual, objIdFromPath)
+//
+//		So(len(pDirListing[objectId3].Children), ShouldEqual, totalFiles3)
+//
+//		/////////////////
+//		// test the directory 'mtp-test-files/mock_dir3/'
+//		/////////////////
+//		dirListing = &DirectoryTree{}
+//		fullPath = "mtp-test-files/mock_dir3/"
+//
+//		objectId4, totalFiles4, err := FetchDirectoryTree(dev, sid, 0, fullPath, false, dirListing)
+//
+//		So(err, ShouldBeNil)
+//		So(dirListing, ShouldNotBeNil)
+//		So(totalFiles4, ShouldBeGreaterThanOrEqualTo, totalFiles1)
+//		pDirListing = *dirListing
+//
+//		// test if [objectId4] == [objectId] of [fullPath]
+//		objIdFromPath, _, err = GetObjectFromPath(dev, sid, fullPath)
+//		So(err, ShouldBeNil)
+//
+//		So(objectId4, ShouldEqual, objIdFromPath)
+//
+//		So(len(pDirListing[objectId4].Children), ShouldEqual, 5)
+//	})
+//
+//	Convey("Testing valid directory | recursive=false | ListDirectory", t, func() {
+//		// test the directory '/mtp-test-files/mock_dir1/1'
+//		fullPath := "/mtp-test-files/mock_dir1/1"
+//
+//		dirListing := &DirectoryTree{}
+//
+//		objectId, totalFiles, err := FetchDirectoryTree(dev, sid, 0, fullPath, false, dirListing)
+//
+//		So(err, ShouldBeNil)
+//
+//		pDirListing := *dirListing
+//		parentObject := pDirListing[objectId]
+//
+//
+//		So(parentObject, ShouldNotBeNil)
+//		So(len(parentObject.Children), ShouldEqual, totalFiles)
+//		So(len(parentObject.Children), ShouldEqual, 1)
+//		So(parentObject.ObjectId, ShouldEqual, objectId)
+//
+//		/*for _, f := range parentObject.Children {
+//			_f := *f
+//
+//			pretty.Println(_f[1234].)
+//		}*/
+//
+//		/*So(_file0.ObjectId, ShouldBeGreaterThan, 0)
+//		So(_files[0].Name, ShouldEqual, "a.txt")
+//		So(_files[0].ParentId, ShouldBeGreaterThan, 0)
+//		So(_files[0].Info.Filename, ShouldEqual, "a.txt")
+//		So(_files[0].Extension, ShouldEqual, "txt")
+//		So(_files[0].Size, ShouldEqual, 8)
+//		So(_files[0].IsDir, ShouldEqual, false)
+//		So(_files[0].FullPath, ShouldEqual, "/mtp-test-files/mock_dir1/1/a.txt")
+//		So(_files[0].ModTime.Year(), ShouldBeGreaterThanOrEqualTo, 2020)*/
+//	})
+//
+//	/*Convey("Testing non exisiting file | ListDirectory | It should throw an error", t, func() {
+//		// test the directory '/fake'
+//		files, err := ListDirectory(dev, sid, 0, "/fake")
+//
+//		So(err, ShouldBeError)
+//		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
+//		So(files, ShouldBeNil)
+//
+//		// test the directory '/mtp-test-files'
+//		files, err = ListDirectory(dev, sid, 0, "/mtp-test-files/a.txt")
+//
+//		So(err, ShouldBeError)
+//		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
+//		So(files, ShouldBeNil)
+//
+//		// test the directory '/mtp-test-files/fake'
+//		files, err = ListDirectory(dev, sid, 0, "/mtp-test-files/fake")
+//
+//		So(err, ShouldBeError)
+//		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
+//		So(files, ShouldBeNil)
+//	})*/
+//
+//	Dispose(dev)
+//}
