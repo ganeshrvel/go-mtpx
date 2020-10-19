@@ -258,15 +258,15 @@ func main() {
 	}
 
 	sid := storages[0].sid
-	pretty.Println(sid)
+	pretty.Println("storage id: ", sid)
 
-	var dirListing DirectoryTree
+	//var dirListing DirectoryTree
 	/*err = FetchDirectoryTree(dev, sid, 0, "/mtp-test-files", &dirListing)
 	if err != nil {
 		log.Panic(err)
 	}
 	*/
-	pretty.Println(dirListing)
+	//pretty.Println(dirListing)
 
 	/*objectId, err := MakeDirectory(dev, sid, "/", "name")
 	if err != nil {
@@ -275,12 +275,12 @@ func main() {
 
 	pretty.Println(objectId)*/
 
-	/*	files, err := ListDirectory(dev, sid, 0, "/test/")
-		if err != nil {
-			log.Panic(err)
-		}
+	files, err := ListDirectory(dev, sid, 0, "/")
+	if err != nil {
+		log.Panic(err)
+	}
 
-		pretty.Println(files)*/
+	pretty.Println("Listing directory test: ", files)
 
 	/*
 		fileObj, err := GetPathObject(dev, sid, "/tests/s")
