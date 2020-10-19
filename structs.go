@@ -28,10 +28,10 @@ type FileInfo struct {
 	Info *mtp.ObjectInfo
 }
 
-type DirectoryTree map[uint32]DirectoryInfo
+type DirectoryTree map[uint32]*DirectoryInfo
 
 type DirectoryInfo struct {
-	FileInfo
+	*FileInfo
 
-	children []DirectoryTree
+	Children []*DirectoryTree
 }

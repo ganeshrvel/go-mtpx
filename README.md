@@ -1,7 +1,6 @@
 go-mtpx
 
 
-
 macOS setup
 
 ```shell script

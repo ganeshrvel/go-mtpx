@@ -210,35 +210,45 @@ func ListDirectory(dev *mtp.Device, storageId, objectId uint32, fullPath string)
 	return &fileInfoList, nil
 }
 
-//func FetchDirectoryTree(dev *mtp.Device, storageId, objectId uint32, fullPath string, dirListing *DirectoryTree) error {
-//	_dirListing := *dirListing
-//	_objectId, err := fetchObject(dev, storageId, objectId, fullPath)
-//
-//	if err != nil {
-//		return err
-//	}
-//
-//	handles := mtp.Uint32Array{}
-//	if err := dev.GetObjectHandles(storageId, mtp.GOH_ALL_ASSOCS, _objectId, &handles); err != nil {
-//		return ListDirectoryError{error: err}
-//	}
-//
-//	_dirListing[_objectId] = DirectoryInfo{
-//		FileInfo: nil,
-//		children: &[]DirectoryTree,
-//	}
-//
-//	for handle, objectId := range handles.Values {
-//		fi, err := FetchFile(dev, objectId, fullPath)
-//
-//		if err != nil {
-//			continue
-//		}
-//
-//	}
-//
-//	return nil
-//}
+func FetchDirectoryTree(dev *mtp.Device, storageId, parentId uint32, fullPath string, dirInfo *DirectoryInfo) error {
+	_objectId, err := fetchObject(dev, storageId, parentId, fullPath)
+
+	if err != nil {
+		return err
+	}
+
+	handles := mtp.Uint32Array{}
+	if err := dev.GetObjectHandles(storageId, mtp.GOH_ALL_ASSOCS, _objectId, &handles); err != nil {
+		return ListDirectoryError{error: err}
+	}
+
+	for _, objectId := range handles.Values {
+		fi, err := FetchFile(dev, objectId, fullPath)
+		if err != nil {
+			continue
+		}
+
+		dirListing := DirectoryTree{}
+		dirListing[objectId] = &DirectoryInfo{
+			FileInfo: fi,
+			Children: []*DirectoryTree{},
+		}
+
+		dirInfo.Children = append(dirInfo.Children, &dirListing)
+		dl := dirListing[objectId]
+
+		if !fi.IsDir {
+			continue
+		}
+
+		err = FetchDirectoryTree(dev, storageId, objectId, fi.FullPath, dl)
+		if err != nil {
+			continue
+		}
+	}
+
+	return nil
+}
 
 func main() {
 	dev, err := Initialize(Init{})
@@ -260,13 +270,20 @@ func main() {
 	sid := storages[0].sid
 	pretty.Println("storage id: ", sid)
 
-	//var dirListing DirectoryTree
-	/*err = FetchDirectoryTree(dev, sid, 0, "/mtp-test-files", &dirListing)
+	dirListing := DirectoryTree{}
+	dirListing[ParentObjectId] = &DirectoryInfo{
+		FileInfo: &FileInfo{},
+		Children: []*DirectoryTree{},
+	}
+
+	dl := dirListing[ParentObjectId]
+
+	err = FetchDirectoryTree(dev, sid, 0, "/", dl)
 	if err != nil {
 		log.Panic(err)
 	}
-	*/
-	//pretty.Println(dirListing)
+
+	pretty.Println(dl)
 
 	/*objectId, err := MakeDirectory(dev, sid, "/", "name")
 	if err != nil {
@@ -275,12 +292,12 @@ func main() {
 
 	pretty.Println(objectId)*/
 
-	files, err := ListDirectory(dev, sid, 0, "/")
-	if err != nil {
-		log.Panic(err)
-	}
+	/*	files, err := ListDirectory(dev, sid, 0, "/")
+		if err != nil {
+			log.Panic(err)
+		}
 
-	pretty.Println("Listing directory test: ", files)
+		pretty.Println("Listing directory test: ", files)*/
 
 	/*
 		fileObj, err := GetPathObject(dev, sid, "/tests/s")
