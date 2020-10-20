@@ -158,39 +158,6 @@ func MakeDirectoryRecursive(dev *mtp.Device, storageId uint32, filePath string) 
 	return parentId, nil
 }
 
-// todo remove this
-// List the contents in a directory
-// [objectId] and [fullPath] are optional parameters
-// if [objectId] is not available then [fullPath] will be used to fetch the [objectId]
-// dont leave both [objectId] and [fullPath] empty
-// Tips: use [objectId] whenever possible to avoid traversing down the whole file tree to process and find the [objectId]
-func ListDirectory(dev *mtp.Device, storageId, objectId uint32, fullPath string) (*[]FileInfo, error) {
-	_objectId, err := GetObjectFromObjectIdOrPath(dev, storageId, objectId, fullPath)
-
-	if err != nil {
-		return nil, err
-	}
-
-	handles := mtp.Uint32Array{}
-	if err := dev.GetObjectHandles(storageId, mtp.GOH_ALL_ASSOCS, _objectId, &handles); err != nil {
-		return nil, ListDirectoryError{error: err}
-	}
-
-	var fileInfoList []FileInfo
-
-	for _, objectId := range handles.Values {
-		fi, err := GetObjectFromObjectId(dev, objectId, fullPath)
-
-		if err != nil {
-			continue
-		}
-
-		fileInfoList = append(fileInfoList, *fi)
-	}
-
-	return &fileInfoList, nil
-}
-
 // List the contents in a directory
 // use [recursive] to fetch the whole nested tree
 // [objectId] and [fullPath] are optional parameters
@@ -248,7 +215,7 @@ func main() {
 	//pretty.Println(int64(totalFiles))
 	//
 
-	objectId, totalFiles, err := WalkDirectory(dev, sid, 0, "/", true, func(objectId uint32, fi *FileInfo) {
+	objectId, totalFiles, err := WalkDirectory(dev, sid, 0, "/mtp-test-files/mock_dir1", true, func(objectId uint32, fi *FileInfo) {
 		pretty.Println("objectId is: ", objectId)
 	})
 
