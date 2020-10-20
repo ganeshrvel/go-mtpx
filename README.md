@@ -49,14 +49,4 @@ DYLD_LIBRARY_PATH=./build ./build/mtpx
 ```
 
 
-If the above build steps failed then:
-```shell script
-# build the binary
-./scripts/build.sh
-
-# Run
-./build/mtpx
-```
-
-
 Cheers!
