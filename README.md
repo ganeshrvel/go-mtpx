@@ -37,7 +37,7 @@ git checkout test/samsung
 go get -d
 ```
 
-Connect your phone and select USB File sharing
+**Connect your phone and select USB File sharing**
 
 Build:
 ```shell script
