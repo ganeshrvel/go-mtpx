@@ -247,28 +247,32 @@ func main() {
 	//
 	//pretty.Println(int64(totalFiles))
 	//
-	//	totalFiles, err := WalkDirectory(dev, sid, 0, "/Android", true, func(objectId uint32, totalFiles int, fi *FileInfo) {
-	//		//pretty.Println("objectId: ", objectId)
-	//	})
-	//
-	//	if err != nil {
-	//		log.Panic(err)
-	//	}
-	//
-	//	pretty.Println("totalFiles: ", totalFiles)
-	//
-	_, totalFiles, err := WalkDirectory(dev, sid, 0, "/", true, func(objectId uint32, fi *FileInfo) {
-		//pretty.Println("objectId is: ", objectId)
+
+	go func() {
+		objectId, totalFiles, err := WalkDirectory(dev, sid, 0, "/", true, func(objectId uint32, fi *FileInfo) {
+			//pretty.Println("objectId is: ", objectId)
+		})
+
+		if err != nil {
+			log.Panic(err)
+		}
+
+		pretty.Println("go routine totalFiles: ", totalFiles)
+		pretty.Println("go routine objectId: ", objectId)
+	}()
+
+	objectId, totalFiles, err := WalkDirectory(dev, sid, 0, "/", true, func(objectId uint32, fi *FileInfo) {
+		pretty.Println("objectId is: ", objectId)
 	})
 
 	if err != nil {
 		log.Panic(err)
 	}
-	//pretty.Println(dirListing)
-	//
-	pretty.Println("totalFiles: ", totalFiles)
-	//pretty.Println("objectId: ", objectId)
 
+	pretty.Println("totalFiles: ", totalFiles)
+	pretty.Println("objectId: ", objectId)
+
+	///MakeDirectory
 	//objectId, err := MakeDirectory(dev, sid, "/", "name")
 	//if err != nil {
 	//	log.Panic(err)
@@ -276,6 +280,7 @@ func main() {
 	//
 	//pretty.Println(objectId)
 
+	///ListDirectory
 	//files, err := ListDirectory(dev, sid, 0, "/")
 	//if err != nil {
 	//	log.Panic(err)
@@ -283,7 +288,7 @@ func main() {
 	//
 	//pretty.Println("Listing directory test: ", files)
 
-	//
+	//GetObjectFromPath
 	//fileObj, err := GetObjectFromPath(dev, sid, "/tests/s")
 	//if err != nil {
 	//	log.Panic(err)
@@ -293,6 +298,7 @@ func main() {
 	//pretty.Println(fileObj)
 	//
 
+	// FileExists
 	//exists := FileExists(dev, sid, "/tests/test.txt")
 	//
 	//pretty.Println("======\n")
