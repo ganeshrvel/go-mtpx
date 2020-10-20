@@ -218,7 +218,7 @@ func handleMakeDirectory(dev *mtp.Device, storageId, parentId uint32, filename s
 // dont leave both [objectId] and [fullPath] empty
 // Tips: use [objectId] whenever possible to avoid traversing down the whole file tree to process and find the [objectId]
 // returns total number of objects
-func processFetchDirectoryTree(dev *mtp.Device, storageId, objectId uint32, fullPath string, recursive bool, dirTree *DirectoryTree) (rTotalFiles int, rError error) {
+func proccessWalkDirectory(dev *mtp.Device, storageId, objectId uint32, fullPath string, recursive bool, cb WalkDirectoryCb) (rTotalFiles int, rError error) {
 	_objectId, err := GetObjectFromObjectIdOrPath(dev, storageId, objectId, fullPath)
 
 	if err != nil {
@@ -232,18 +232,15 @@ func processFetchDirectoryTree(dev *mtp.Device, storageId, objectId uint32, full
 
 	totalFiles := 0
 
-	for _, objectId := range handles.Values {
-		fi, err := GetObjectFromObjectId(dev, objectId, fullPath)
+	for _, objId := range handles.Values {
+		fi, err := GetObjectFromObjectId(dev, objId, fullPath)
 		if err != nil {
 			continue
 		}
 
-		childDirTree := &DirectoryTree{
-			FileInfo: fi,
-			Children: []*DirectoryTree{},
-		}
+		totalFiles += 1
 
-		dirTree.Children = append(dirTree.Children, childDirTree)
+		cb(objId, fi)
 
 		// don't traverse down the tree if [recursive] is false
 		if !recursive {
@@ -255,8 +252,8 @@ func processFetchDirectoryTree(dev *mtp.Device, storageId, objectId uint32, full
 			continue
 		}
 
-		_totalFiles, err := processFetchDirectoryTree(
-			dev, storageId, objectId, fi.FullPath, recursive, childDirTree,
+		_totalFiles, err := proccessWalkDirectory(
+			dev, storageId, objId, fi.FullPath, recursive, cb,
 		)
 		if err != nil {
 			continue
@@ -265,5 +262,5 @@ func processFetchDirectoryTree(dev *mtp.Device, storageId, objectId uint32, full
 		totalFiles += _totalFiles
 	}
 
-	return totalFiles + len(dirTree.Children), nil
+	return totalFiles, nil
 }

@@ -28,8 +28,4 @@ type FileInfo struct {
 	Info *mtp.ObjectInfo
 }
 
-type DirectoryTree struct {
-	*FileInfo
-
-	Children []*DirectoryTree
-}
+type WalkDirectoryCb func(objectId uint32, fi *FileInfo)

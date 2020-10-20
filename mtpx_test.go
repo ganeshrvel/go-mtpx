@@ -299,10 +299,10 @@ func TestFetchDirectoryTree(t *testing.T) {
 
 	sid := storages[0].sid
 
-	Convey("Testing valid directory | with objectId | objectId should be picked up instead of fullPath | FetchDirectoryTree", t, func() {
+	Convey("Testing valid directory | with objectId | objectId should be picked up instead of fullPath | WalkDirectory", t, func() {
 		// test the root directory [ParentObjectId] | empty [fullPath]
 		dirListing := &DirectoryTree{}
-		objectId, totalFiles, err := FetchDirectoryTree(dev, sid, ParentObjectId, "", false, dirListing)
+		objectId, totalFiles, err := WalkDirectory(dev, sid, ParentObjectId, "", false, dirListing)
 
 		So(err, ShouldBeNil)
 		So(dirListing, ShouldNotBeNil)
@@ -314,7 +314,7 @@ func TestFetchDirectoryTree(t *testing.T) {
 
 		// test the root directory [ParentObjectId] | [fullPath]='/fake'
 		dirListing = &DirectoryTree{}
-		objectId, totalFiles, err = FetchDirectoryTree(dev, sid, ParentObjectId, "/fake", false, dirListing)
+		objectId, totalFiles, err = WalkDirectory(dev, sid, ParentObjectId, "/fake", false, dirListing)
 
 		So(err, ShouldBeNil)
 		So(dirListing, ShouldNotBeNil)
@@ -325,14 +325,14 @@ func TestFetchDirectoryTree(t *testing.T) {
 		So(len(pDirListing.Children), ShouldBeGreaterThan, 0)
 	})
 
-	Convey("Testing valid directory | without objectId | fullPath should be picked up instead of objectId | FetchDirectoryTree", t, func() {
+	Convey("Testing valid directory | without objectId | fullPath should be picked up instead of objectId | WalkDirectory", t, func() {
 		/////////////////
 		// test the directory '/mtp-test-files'
 		/////////////////
 		dirListing := &DirectoryTree{}
 		fullPath := "/mtp-test-files"
 
-		objectId1, totalFiles1, err := FetchDirectoryTree(dev, sid, 0, fullPath, false, dirListing)
+		objectId1, totalFiles1, err := WalkDirectory(dev, sid, 0, fullPath, false, dirListing)
 
 		So(err, ShouldBeNil)
 		So(dirListing, ShouldNotBeNil)
@@ -353,7 +353,7 @@ func TestFetchDirectoryTree(t *testing.T) {
 		dirListing = &DirectoryTree{}
 		fullPath = "/mtp-test-files/"
 
-		objectId2, totalFiles2, err := FetchDirectoryTree(dev, sid, 0, fullPath, false, dirListing)
+		objectId2, totalFiles2, err := WalkDirectory(dev, sid, 0, fullPath, false, dirListing)
 
 		So(err, ShouldBeNil)
 		So(dirListing, ShouldNotBeNil)
@@ -375,7 +375,7 @@ func TestFetchDirectoryTree(t *testing.T) {
 		dirListing = &DirectoryTree{}
 		fullPath = "mtp-test-files/"
 
-		objectId3, totalFiles3, err := FetchDirectoryTree(dev, sid, 0, fullPath, false, dirListing)
+		objectId3, totalFiles3, err := WalkDirectory(dev, sid, 0, fullPath, false, dirListing)
 
 		So(err, ShouldBeNil)
 		So(dirListing, ShouldNotBeNil)
@@ -396,7 +396,7 @@ func TestFetchDirectoryTree(t *testing.T) {
 		dirListing = &DirectoryTree{}
 		fullPath = "mtp-test-files/mock_dir3/"
 
-		objectId4, totalFiles4, err := FetchDirectoryTree(dev, sid, 0, fullPath, false, dirListing)
+		objectId4, totalFiles4, err := WalkDirectory(dev, sid, 0, fullPath, false, dirListing)
 
 		So(err, ShouldBeNil)
 		So(dirListing, ShouldNotBeNil)
@@ -412,13 +412,13 @@ func TestFetchDirectoryTree(t *testing.T) {
 		So(len(pDirListing.Children), ShouldEqual, 5)
 	})
 
-	Convey("Testing valid directory | 1 | recursive=false | FetchDirectoryTree", t, func() {
+	Convey("Testing valid directory | 1 | recursive=false | WalkDirectory", t, func() {
 		//test the directory '/mtp-test-files/mock_dir1/1'
 		fullPath := "/mtp-test-files/mock_dir1/1"
 
 		dirListing := &DirectoryTree{}
 
-		objectId, totalFiles, err := FetchDirectoryTree(dev, sid, 0, fullPath, false, dirListing)
+		objectId, totalFiles, err := WalkDirectory(dev, sid, 0, fullPath, false, dirListing)
 
 		So(err, ShouldBeNil)
 
@@ -442,13 +442,13 @@ func TestFetchDirectoryTree(t *testing.T) {
 		So(_file0.ModTime.Year(), ShouldBeGreaterThanOrEqualTo, 2020)
 	})
 
-	Convey("Testing valid directory | 2 | recursive=false | FetchDirectoryTree", t, func() {
+	Convey("Testing valid directory | 2 | recursive=false | WalkDirectory", t, func() {
 		//test the directory '/mtp-test-files/mock_dir1/'
 		fullPath := "/mtp-test-files/mock_dir1/"
 
 		dirListing := &DirectoryTree{}
 
-		objectId, totalFiles, err := FetchDirectoryTree(dev, sid, 0, fullPath, false, dirListing)
+		objectId, totalFiles, err := WalkDirectory(dev, sid, 0, fullPath, false, dirListing)
 
 		So(err, ShouldBeNil)
 
@@ -472,12 +472,12 @@ func TestFetchDirectoryTree(t *testing.T) {
 		So(_file0.ModTime.Year(), ShouldBeGreaterThanOrEqualTo, 2020)
 	})
 
-	Convey("Testing valid directory | recursive=true | FetchDirectoryTree", t, func() {
+	Convey("Testing valid directory | recursive=true | WalkDirectory", t, func() {
 		//test the directory '/mtp-test-files/mock_dir1/'
 		fullPath := "/mtp-test-files/mock_dir1/"
 
 		dirListing := &DirectoryTree{}
-		objectId, totalFiles, err := FetchDirectoryTree(dev, sid, 0, fullPath, true, dirListing)
+		objectId, totalFiles, err := WalkDirectory(dev, sid, 0, fullPath, true, dirListing)
 
 		So(err, ShouldBeNil)
 
@@ -551,10 +551,10 @@ func TestFetchDirectoryTree(t *testing.T) {
 		}
 	})
 
-	Convey("Testing non exisiting file | FetchDirectoryTree | It should throw an error", t, func() {
+	Convey("Testing non exisiting file | WalkDirectory | It should throw an error", t, func() {
 		// test the directory '/fake' | recursive=true
 		dirListing := &DirectoryTree{}
-		objectId, totalFiles, err := FetchDirectoryTree(dev, sid, 0, "/fake", true, dirListing)
+		objectId, totalFiles, err := WalkDirectory(dev, sid, 0, "/fake", true, dirListing)
 
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
@@ -563,7 +563,7 @@ func TestFetchDirectoryTree(t *testing.T) {
 
 		// test the directory '/fake' | recursive=false
 		dirListing = &DirectoryTree{}
-		objectId, totalFiles, err = FetchDirectoryTree(dev, sid, 0, "/fake", false, dirListing)
+		objectId, totalFiles, err = WalkDirectory(dev, sid, 0, "/fake", false, dirListing)
 
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
@@ -572,7 +572,7 @@ func TestFetchDirectoryTree(t *testing.T) {
 
 		// test the directory '/mtp-test-files/fake' | recursive=true
 		dirListing = &DirectoryTree{}
-		objectId, totalFiles, err = FetchDirectoryTree(dev, sid, 0, "/mtp-test-files/fake", true, dirListing)
+		objectId, totalFiles, err = WalkDirectory(dev, sid, 0, "/mtp-test-files/fake", true, dirListing)
 
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
@@ -581,7 +581,7 @@ func TestFetchDirectoryTree(t *testing.T) {
 
 		// test the directory '/mtp-test-files/fake' | recursive=false
 		dirListing = &DirectoryTree{}
-		objectId, totalFiles, err = FetchDirectoryTree(dev, sid, 0, "/mtp-test-files/fake", false, dirListing)
+		objectId, totalFiles, err = WalkDirectory(dev, sid, 0, "/mtp-test-files/fake", false, dirListing)
 
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
@@ -590,7 +590,7 @@ func TestFetchDirectoryTree(t *testing.T) {
 
 		// test the directory '/mtp-test-files/a.txt'
 		dirListing = &DirectoryTree{}
-		objectId, totalFiles, err = FetchDirectoryTree(dev, sid, 0, "/mtp-test-files/a.txt", true, dirListing)
+		objectId, totalFiles, err = WalkDirectory(dev, sid, 0, "/mtp-test-files/a.txt", true, dirListing)
 
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
@@ -599,7 +599,7 @@ func TestFetchDirectoryTree(t *testing.T) {
 
 		// test the directory=''
 		dirListing = &DirectoryTree{}
-		objectId, totalFiles, err = FetchDirectoryTree(dev, sid, 0, "", true, dirListing)
+		objectId, totalFiles, err = WalkDirectory(dev, sid, 0, "", true, dirListing)
 
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, InvalidPathError{})

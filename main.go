@@ -198,7 +198,7 @@ func ListDirectory(dev *mtp.Device, storageId, objectId uint32, fullPath string)
 // dont leave both [objectId] and [fullPath] empty
 // Tips: use [objectId] whenever possible to avoid traversing down the whole file tree to process and find the [objectId]
 // returns total number of objects
-func FetchDirectoryTree(dev *mtp.Device, storageId, objectId uint32, fullPath string, recursive bool, dirTree *DirectoryTree) (rObjectId uint32, rTotalFiles int, rError error) {
+func WalkDirectory(dev *mtp.Device, storageId, objectId uint32, fullPath string, recursive bool, cb WalkDirectoryCb) (rObjectId uint32, rTotalFiles int, rError error) {
 	// fetch the objectId from [objectId] and/or [fullPath] parameters
 	objId, err := GetObjectFromObjectIdOrPath(dev, storageId, objectId, fullPath)
 	if err != nil {
@@ -210,9 +210,9 @@ func FetchDirectoryTree(dev *mtp.Device, storageId, objectId uint32, fullPath st
 		return objId, 0, err
 	}
 
-	dirTree.FileInfo = fi
+	cb(objId, fi)
 
-	totalFiles, err := processFetchDirectoryTree(dev, storageId, objId, fullPath, recursive, dirTree)
+	totalFiles, err := proccessWalkDirectory(dev, storageId, objId, fullPath, recursive, cb)
 	if err != nil {
 		return objId, 0, err
 	}
@@ -240,43 +240,62 @@ func main() {
 	sid := storages[0].sid
 	pretty.Println("storage id: ", sid)
 
-	dirListing := &DirectoryTree{}
-	objectId, totalFiles, err := FetchDirectoryTree(dev, sid, 0, "", true, dirListing)
+	//totalFiles, err := dev.GetNumObjects(sid, mtp.GOH_ALL_ASSOCS, ParentObjectId)
+	//if err != nil {
+	//	log.Panic(err)
+	//}
+	//
+	//pretty.Println(int64(totalFiles))
+	//
+	//	totalFiles, err := WalkDirectory(dev, sid, 0, "/Android", true, func(objectId uint32, totalFiles int, fi *FileInfo) {
+	//		//pretty.Println("objectId: ", objectId)
+	//	})
+	//
+	//	if err != nil {
+	//		log.Panic(err)
+	//	}
+	//
+	//	pretty.Println("totalFiles: ", totalFiles)
+	//
+	_, totalFiles, err := WalkDirectory(dev, sid, 0, "/", true, func(objectId uint32, fi *FileInfo) {
+		//pretty.Println("objectId is: ", objectId)
+	})
+
 	if err != nil {
 		log.Panic(err)
 	}
-	pretty.Println(dirListing)
-
+	//pretty.Println(dirListing)
+	//
 	pretty.Println("totalFiles: ", totalFiles)
-	pretty.Println("objectId: ", objectId)
+	//pretty.Println("objectId: ", objectId)
 
-	/*objectId, err := MakeDirectory(dev, sid, "/", "name")
-	if err != nil {
-		log.Panic(err)
-	}
+	//objectId, err := MakeDirectory(dev, sid, "/", "name")
+	//if err != nil {
+	//	log.Panic(err)
+	//}
+	//
+	//pretty.Println(objectId)
 
-	pretty.Println(objectId)*/
+	//files, err := ListDirectory(dev, sid, 0, "/")
+	//if err != nil {
+	//	log.Panic(err)
+	//}
+	//
+	//pretty.Println("Listing directory test: ", files)
 
-	/*	files, err := ListDirectory(dev, sid, 0, "/")
-		if err != nil {
-			log.Panic(err)
-		}
+	//
+	//fileObj, err := GetObjectFromPath(dev, sid, "/tests/s")
+	//if err != nil {
+	//	log.Panic(err)
+	//}
+	//
+	//pretty.Println("======\n")
+	//pretty.Println(fileObj)
+	//
 
-		pretty.Println("Listing directory test: ", files)*/
-
-	/*
-		fileObj, err := GetObjectFromPath(dev, sid, "/tests/s")
-		if err != nil {
-			log.Panic(err)
-		}
-
-		pretty.Println("======\n")
-		pretty.Println(fileObj)
-	*/
-
-	/*exists := FileExists(dev, sid, "/tests/test.txt")
-
-	pretty.Println("======\n")
-	pretty.Println("Does File exists:", exists)*/
+	//exists := FileExists(dev, sid, "/tests/test.txt")
+	//
+	//pretty.Println("======\n")
+	//pretty.Println("Does File exists:", exists)
 	Dispose(dev)
 }
