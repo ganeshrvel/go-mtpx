@@ -27,11 +27,17 @@ brew install libusb
 
 Git clone:
 ```shell script
+cd ~/Desktop
 git clone https://github.com/ganeshrvel/go-mtpx
+
 cd go-mtpx
 git fetch
 git checkout test/samsung
+
+go get -d
 ```
+
+Connect your phone and select USB File sharing
 
 Build:
 ```shell script
@@ -43,7 +49,7 @@ DYLD_LIBRARY_PATH=./build ./build/mtpx
 ```
 
 
-If the above steps didn't work then:
+If the above build steps failed then:
 ```shell script
 # build the binary
 ./scripts/build.sh
