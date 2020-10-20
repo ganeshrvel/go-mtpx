@@ -248,19 +248,6 @@ func main() {
 	//pretty.Println(int64(totalFiles))
 	//
 
-	go func() {
-		objectId, totalFiles, err := WalkDirectory(dev, sid, 0, "/", true, func(objectId uint32, fi *FileInfo) {
-			//pretty.Println("objectId is: ", objectId)
-		})
-
-		if err != nil {
-			log.Panic(err)
-		}
-
-		pretty.Println("go routine totalFiles: ", totalFiles)
-		pretty.Println("go routine objectId: ", objectId)
-	}()
-
 	objectId, totalFiles, err := WalkDirectory(dev, sid, 0, "/", true, func(objectId uint32, fi *FileInfo) {
 		pretty.Println("objectId is: ", objectId)
 	})
