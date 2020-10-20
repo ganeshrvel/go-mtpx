@@ -60,9 +60,10 @@ func FetchStorages(dev *mtp.Device) ([]StorageData, error) {
 
 	var result []StorageData
 
-	for sid := range sids.Values {
+	for _, sid := range sids.Values {
 		var info mtp.StorageInfo
-		if err := dev.GetStorageInfo(uint32(sid), &info); err != nil {
+
+		if err := dev.GetStorageInfo(sid, &info); err != nil {
 			return nil, StorageInfoError{error: err}
 		}
 
