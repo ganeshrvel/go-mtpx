@@ -21,6 +21,9 @@ Brew setup:
 # update
 brew update
 
+# install pkg-config
+brew install pkg-config
+
 # install libusb
 brew install libusb
 ```
