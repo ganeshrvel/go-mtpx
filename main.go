@@ -241,20 +241,25 @@ func ListDirectory(dev *mtp.Device, storageId, objectId uint32, fullPath string)
 //}
 
 func main() {
-	dev, err := Initialize(Init{})
+	dev, err := Initialize(Init{debugMode: true})
 
 	if err != nil {
 		log.Panic(err)
+
+		return
 	}
 
 	_, err = FetchDeviceInfo(dev)
 	if err != nil {
 		log.Panic(err)
+		return
 	}
 
 	storages, err := FetchStorages(dev)
 	if err != nil {
 		log.Panic(err)
+
+		return
 	}
 
 	sid := storages[0].sid
@@ -275,9 +280,11 @@ func main() {
 
 	pretty.Println(objectId)*/
 
-	files, err := ListDirectory(dev, sid, 0, "/")
+	files, err := ListDirectory(dev, sid, 0, "/something-fake")
 	if err != nil {
 		log.Panic(err)
+
+		return
 	}
 
 	pretty.Println("Listing directory test: ", files)
