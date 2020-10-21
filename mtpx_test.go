@@ -22,9 +22,10 @@ func TestMakeDirectory(t *testing.T) {
 	sid := storages[0].sid
 
 	var _objectId uint32
+	var _objectId2 uint32
 	Convey("Creating a new dir | MakeDirectory", t, func() {
 		// test the directory '/mtp-test-files/temp_dir/test-MakeDirectory'
-		objectId, err := MakeDirectory(dev, sid, "/mtp-test-files/temp_dir", "test-MakeDirectory")
+		objectId, err := MakeDirectory(dev, sid, 0, "/mtp-test-files/temp_dir", "test-MakeDirectory")
 
 		_objectId = objectId
 
@@ -32,24 +33,52 @@ func TestMakeDirectory(t *testing.T) {
 		So(objectId, ShouldBeGreaterThan, 0)
 	})
 
+	Convey("Creating a new dir | using parentId | MakeDirectory", t, func() {
+		// test the directory '/mtp-test-files/temp_dir/test-MakeDirectoryUsingParentId'
+		parentId, isDir, err := GetObjectFromPath(dev, sid, "/mtp-test-files/temp_dir")
+		So(err, ShouldBeNil)
+		So(parentId, ShouldBeGreaterThan, 0)
+		So(isDir, ShouldEqual, true)
+
+		objectId, err := MakeDirectory(dev, sid, parentId, "", "test-MakeDirectoryUsingParentId")
+
+		_objectId2 = objectId
+
+		So(err, ShouldBeNil)
+		So(objectId, ShouldBeGreaterThan, 0)
+	})
+
 	Convey("Testing MakeDirectory for an existing directory | MakeDirectory", t, func() {
 		// test the directory '/mtp-test-files/temp_dir/test-MakeDirectory'
-		objectId, err := MakeDirectory(dev, sid, "/mtp-test-files/temp_dir", "test-MakeDirectory")
+		objectId, err := MakeDirectory(dev, sid, 0, "/mtp-test-files/temp_dir", "test-MakeDirectory")
 
 		So(err, ShouldBeNil)
 		So(objectId, ShouldEqual, _objectId)
 	})
 
-	Convey("Creating a new random dir | MakeDirectory", t, func() {
+	Convey("Testing MakeDirectory for an existing directory | using parentId | MakeDirectory", t, func() {
+		// test the directory '/mtp-test-files/temp_dir/test-MakeDirectoryUsingParentId'
+		parentId, isDir, err := GetObjectFromPath(dev, sid, "/mtp-test-files/temp_dir")
+		So(err, ShouldBeNil)
+		So(parentId, ShouldBeGreaterThan, 0)
+		So(isDir, ShouldEqual, true)
+
+		objectId, err := MakeDirectory(dev, sid, parentId, "", "test-MakeDirectoryUsingParentId")
+
+		So(err, ShouldBeNil)
+		So(objectId, ShouldEqual, _objectId2)
+	})
+
+	Convey("Creating a new random dir | fullpath | MakeDirectory", t, func() {
 		// test the directory '/mtp-test-files/temp_dir/test-MakeDirectory/{random}'
 		filename := fmt.Sprintf("%x", rand.Int31())
 
-		objectId, err := MakeDirectory(dev, sid, "/mtp-test-files/temp_dir/test-MakeDirectory", filename)
+		objectId, err := MakeDirectory(dev, sid, 0, "/mtp-test-files/temp_dir/test-MakeDirectory", filename)
 
 		So(err, ShouldBeNil)
 		So(objectId, ShouldBeGreaterThan, 0)
 
-		exists, isDir, _existingObjectId := FileExists(dev, sid, getFullPath("/mtp-test-files/temp_dir/test-MakeDirectory", filename))
+		exists, isDir, _existingObjectId := FileExists(dev, sid, 0, getFullPath("/mtp-test-files/temp_dir/test-MakeDirectory", filename))
 
 		So(err, ShouldBeNil)
 		So(exists, ShouldEqual, true)
@@ -57,18 +86,48 @@ func TestMakeDirectory(t *testing.T) {
 		So(isDir, ShouldEqual, true)
 	})
 
-	Convey("invalid path | MakeDirectory | It should throw an error", t, func() {
+	Convey("Creating a new random dir | parentId | MakeDirectory", t, func() {
+		// test the directory '/mtp-test-files/temp_dir/test-MakeDirectory/{random}'
+		filename := fmt.Sprintf("%x", rand.Int31())
+		parentId, isDir, err := GetObjectFromPath(dev, sid, "/mtp-test-files/temp_dir/test-MakeDirectoryUsingParentId")
+		So(err, ShouldBeNil)
+		So(parentId, ShouldBeGreaterThan, 0)
+		So(isDir, ShouldEqual, true)
+
+		objectId, err := MakeDirectory(dev, sid, parentId, "", filename)
+
+		So(err, ShouldBeNil)
+		So(objectId, ShouldBeGreaterThan, 0)
+
+		exists, isDir, _existingObjectId := FileExists(dev, sid, 0, getFullPath("/mtp-test-files/temp_dir/test-MakeDirectoryUsingParentId", filename))
+
+		So(err, ShouldBeNil)
+		So(exists, ShouldEqual, true)
+		So(_existingObjectId, ShouldEqual, objectId)
+		So(isDir, ShouldEqual, true)
+	})
+
+	Convey("invalid path | MakeDirectory | fullPath | It should throw an error", t, func() {
 		// test the directory '/fake/test'
-		objectId, err := MakeDirectory(dev, sid, "fake", "test")
+		objectId, err := MakeDirectory(dev, sid, 0, "fake", "test")
 
 		So(err, ShouldBeError)
 		So(objectId, ShouldEqual, 0)
 		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
 	})
 
+	Convey("invalid path | MakeDirectory | parentId | It should throw an error", t, func() {
+		// test the directory '/fake/test'
+		objectId, err := MakeDirectory(dev, sid, 1234561234, "/mtp-test-files", "test")
+
+		So(err, ShouldBeError)
+		So(objectId, ShouldEqual, 0)
+		So(err, ShouldHaveSameTypeAs, FileObjectError{})
+	})
+
 	Convey("empty folder name | MakeDirectory | It should throw an error", t, func() {
 		// test the directory '/'
-		objectId, err := MakeDirectory(dev, sid, "fake", "")
+		objectId, err := MakeDirectory(dev, sid, 0, "fake", "")
 
 		So(err, ShouldBeError)
 		So(objectId, ShouldEqual, 0)
@@ -77,7 +136,7 @@ func TestMakeDirectory(t *testing.T) {
 
 	Convey("filename in the path | MakeDirectory | It should throw an error", t, func() {
 		// test the directory '/mtp-test-files/a.txt'
-		objectId, err := MakeDirectory(dev, sid, "/mtp-test-files/", "a.txt")
+		objectId, err := MakeDirectory(dev, sid, 0, "/mtp-test-files/", "a.txt")
 
 		So(err, ShouldBeError)
 		So(objectId, ShouldEqual, 0)
@@ -144,7 +203,7 @@ func TestMakeDirectoryRecursive(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(objectId, ShouldBeGreaterThan, 0)
 
-		exists, isDir, _existingObjectId := FileExists(dev, sid, fullpath)
+		exists, isDir, _existingObjectId := FileExists(dev, sid, 0, fullpath)
 
 		So(err, ShouldBeNil)
 		So(exists, ShouldEqual, true)

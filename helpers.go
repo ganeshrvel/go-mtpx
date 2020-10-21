@@ -113,43 +113,31 @@ func GetObjectFromPath(dev *mtp.Device, storageId uint32, fullPath string) (rObj
 }
 
 // fetch an object using [objectId] and/or [fullPath]
-func GetObjectFromObjectIdOrPath(dev *mtp.Device, storageId, objectId uint32, fullPath string) (rObjectId uint32, rError error) {
+func GetObjectFromObjectIdOrPath(dev *mtp.Device, storageId, objectId uint32, fullPath string) (rObjectId uint32, rIsDir bool, rError error) {
 	_objectId := objectId
+	var isDir bool
 
 	if _objectId == 0 && fullPath == "" {
-		return 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. both objectId and fullPath cannot be empty", fullPath)}
+		return 0, isDir, InvalidPathError{error: fmt.Errorf("invalid path: %s. both objectId and fullPath cannot be empty", fullPath)}
 	}
 
 	// if objectId is not available then fetch the objectId from fullPath
 	if _objectId == 0 {
-		objId, isDir, err := GetObjectFromPath(dev, storageId, fullPath)
+		objId, _isDir, err := GetObjectFromPath(dev, storageId, fullPath)
 
 		if err != nil {
-			return 0, err
+			return 0, _isDir, err
 		}
 
-		// if the object is not a directory throw an error
-		if !isDir {
-			return 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The object is not a directory", fullPath)}
-		}
-
-		_objectId = objId
-	} else {
-		if _objectId != ParentObjectId {
-			f, err := GetObjectFromObjectId(dev, _objectId, fullPath)
-
-			if err != nil {
-				return 0, err
-			}
-
-			// if the object is not a directory throw an error
-			if !f.IsDir {
-				return 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The object is not a directory", fullPath)}
-			}
-		}
+		return objId, _isDir, nil
 	}
 
-	return _objectId, nil
+	f, err := GetObjectFromObjectId(dev, _objectId, fullPath)
+	if err != nil {
+		return 0, isDir, err
+	}
+
+	return _objectId, f.IsDir, nil
 }
 
 // fetch the object using [parentId] and [filename]
@@ -177,14 +165,14 @@ func GetObjectFromParentIdAndFilename(dev *mtp.Device, storageId uint32, parentI
 
 // check if a file exists
 // returns exists: bool, isDir: bool, objectId: uint32
-func FileExists(dev *mtp.Device, storageId uint32, filePath string) (rExists bool, rIsDir bool, rObjectId uint32) {
-	objectId, isDir, err := GetObjectFromPath(dev, storageId, filePath)
+func FileExists(dev *mtp.Device, storageId, objectId uint32, filePath string) (rExists bool, rIsDir bool, rObjectId uint32) {
+	_objectId, isDir, err := GetObjectFromObjectIdOrPath(dev, storageId, objectId, filePath)
 
 	if err != nil {
-		return false, isDir, objectId
+		return false, isDir, _objectId
 	}
 
-	return true, isDir, objectId
+	return true, isDir, _objectId
 }
 
 // check if the object is a directory
@@ -219,7 +207,7 @@ func handleMakeDirectory(dev *mtp.Device, storageId, parentId uint32, filename s
 // Tips: use [objectId] whenever possible to avoid traversing down the whole file tree to process and find the [objectId]
 // returns total number of objects
 func proccessWalkDirectory(dev *mtp.Device, storageId, objectId uint32, fullPath string, recursive bool, cb WalkDirectoryCb) (rTotalFiles int, rError error) {
-	_objectId, err := GetObjectFromObjectIdOrPath(dev, storageId, objectId, fullPath)
+	_objectId, _, err := GetObjectFromObjectIdOrPath(dev, storageId, objectId, fullPath)
 
 	if err != nil {
 		return 0, err

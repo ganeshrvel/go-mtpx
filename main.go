@@ -80,27 +80,15 @@ func FetchStorages(dev *mtp.Device) ([]StorageData, error) {
 // if the parentpath does not exists then an error will be thrown
 // [parentPath] -> path to the parent directory
 // [name] -> directory name
-func MakeDirectory(dev *mtp.Device, storageId uint32, parentPath, name string) (rObjectId uint32, rError error) {
+func MakeDirectory(dev *mtp.Device, storageId, parentId uint32, parentPath, name string) (rObjectId uint32, rError error) {
 	if name == "" {
 		return 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The name cannot be empty", parentPath)}
 	}
 
-	parentId, isDir, err := GetObjectFromPath(dev, storageId, parentPath)
+	// check if the path exists in the MTP device
+	_objectId, isDir, err := GetObjectFromParentIdAndFilename(dev, storageId, parentId, name)
 
-	if err != nil {
-		return 0, err
-	}
-
-	// if the object exists but if it's a file then throw an error
-	if !isDir {
-		return 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The object is not a directory", parentPath)}
-	}
-
-	fullPath := getFullPath(parentPath, name)
-
-	exist, isDir, _objectId := FileExists(dev, storageId, fullPath)
-
-	if exist {
+	if err == nil {
 		// if the object exists but if it's a file then throw an error
 		if !isDir {
 			return 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The object is not a directory", parentPath)}
@@ -109,7 +97,19 @@ func MakeDirectory(dev *mtp.Device, storageId uint32, parentPath, name string) (
 		return _objectId, nil
 	}
 
-	return handleMakeDirectory(dev, storageId, parentId, name)
+	// if an object doesn't exists in the [fullPath] then check if the parent exists
+	_parentId, isDir, err := GetObjectFromObjectIdOrPath(dev, storageId, parentId, parentPath)
+
+	if err != nil {
+		return 0, err
+	}
+
+	// if the parent object is a file then throw an error
+	if !isDir {
+		return 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The object is not a directory", parentPath)}
+	}
+
+	return handleMakeDirectory(dev, storageId, _parentId, name)
 }
 
 // create a new directory recursively using [filePath]
@@ -167,9 +167,13 @@ func MakeDirectoryRecursive(dev *mtp.Device, storageId uint32, filePath string) 
 // returns total number of objects
 func WalkDirectory(dev *mtp.Device, storageId, objectId uint32, fullPath string, recursive bool, cb WalkDirectoryCb) (rObjectId uint32, rTotalFiles int, rError error) {
 	// fetch the objectId from [objectId] and/or [fullPath] parameters
-	objId, err := GetObjectFromObjectIdOrPath(dev, storageId, objectId, fullPath)
+	objId, isDir, err := GetObjectFromObjectIdOrPath(dev, storageId, objectId, fullPath)
 	if err != nil {
 		return objId, 0, err
+	}
+
+	if !isDir {
+		return 0, 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The object is not a directory", fullPath)}
 	}
 
 	totalFiles, err := proccessWalkDirectory(dev, storageId, objId, fullPath, recursive, cb)
@@ -179,6 +183,27 @@ func WalkDirectory(dev *mtp.Device, storageId, objectId uint32, fullPath string,
 
 	return objId, totalFiles, nil
 }
+
+/*func DeleteFile(dev *mtp.Device, storageId, objectId uint32, fullPath string) error {
+	parentId, isDir, err := GetObjectFromPath(dev, storageId, fullPath)
+
+	if err != nil {
+		return err
+	}
+
+	exist, isDir, _objectId := FileExists(dev, storageId, fullPath)
+
+	if exist {
+		// if the object exists but if it's a file then throw an error
+		if !isDir {
+			return 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The object is not a directory", parentPath)}
+		}
+
+		return _objectId, nil
+	}
+
+	return handleMakeDirectory(dev, storageId, parentId, name)
+}*/
 
 func main() {
 	dev, err := Initialize(Init{})
@@ -208,7 +233,7 @@ func main() {
 	//pretty.Println(int64(totalFiles))
 	//
 
-	objectId, totalFiles, err := WalkDirectory(dev, sid, 0, "/mtp-test-files/mock_dir1", true, func(objectId uint32, fi *FileInfo) {
+	/*objectId, totalFiles, err := WalkDirectory(dev, sid, 0, "/mtp-test-files/mock_dir1", true, func(objectId uint32, fi *FileInfo) {
 		pretty.Println("objectId is: ", objectId)
 	})
 
@@ -217,7 +242,7 @@ func main() {
 	}
 
 	pretty.Println("totalFiles: ", totalFiles)
-	pretty.Println("objectId: ", objectId)
+	pretty.Println("objectId: ", objectId)*/
 
 	///MakeDirectory
 	//objectId, err := MakeDirectory(dev, sid, "/", "name")
@@ -250,5 +275,6 @@ func main() {
 	//
 	//pretty.Println("======\n")
 	//pretty.Println("Does File exists:", exists)
+
 	Dispose(dev)
 }
