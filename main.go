@@ -97,7 +97,7 @@ func MakeDirectory(dev *mtp.Device, storageId, parentId uint32, parentPath, name
 		return _objectId, nil
 	}
 
-	// if an object doesn't exists in the [fullPath] then check if the parent exists
+	// check if the parent exists
 	_parentId, isDir, err := GetObjectFromObjectIdOrPath(dev, storageId, parentId, parentPath)
 
 	if err != nil {
@@ -109,24 +109,25 @@ func MakeDirectory(dev *mtp.Device, storageId, parentId uint32, parentPath, name
 		return 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The object is not a directory", parentPath)}
 	}
 
+	// create the directory
 	return handleMakeDirectory(dev, storageId, _parentId, name)
 }
 
-// create a new directory recursively using [filePath]
+// create a new directory recursively using [fullPath]
 // The path will be created if it does not exists
-func MakeDirectoryRecursive(dev *mtp.Device, storageId uint32, filePath string) (rObjectId uint32, rError error) {
-	_filePath := fixSlash(filePath)
+func MakeDirectoryRecursive(dev *mtp.Device, storageId uint32, fullPath string) (rObjectId uint32, rError error) {
+	_fullPath := fixSlash(fullPath)
 
-	if _filePath == PathSep {
+	if _fullPath == PathSep {
 		return ParentObjectId, nil
 	}
 
-	splittedFilePath := strings.Split(_filePath, PathSep)
+	splittedFullPath := strings.Split(_fullPath, PathSep)
 
 	var parentId = uint32(ParentObjectId)
 	const skipIndex = 1
 
-	for _, fName := range splittedFilePath[skipIndex:] {
+	for _, fName := range splittedFullPath[skipIndex:] {
 		// fetch the parent object and
 		_parentId, isDir, err := GetObjectFromParentIdAndFilename(dev, storageId, parentId, fName)
 
@@ -184,26 +185,19 @@ func WalkDirectory(dev *mtp.Device, storageId, objectId uint32, fullPath string,
 	return objId, totalFiles, nil
 }
 
-/*func DeleteFile(dev *mtp.Device, storageId, objectId uint32, fullPath string) error {
-	parentId, isDir, err := GetObjectFromPath(dev, storageId, fullPath)
+func DeleteFile(dev *mtp.Device, storageId, objectId uint32, fullPath string) error {
+	exist, _, objId := FileExists(dev, storageId, objectId, fullPath)
 
-	if err != nil {
-		return err
+	if !exist {
+		return nil
 	}
 
-	exist, isDir, _objectId := FileExists(dev, storageId, fullPath)
-
-	if exist {
-		// if the object exists but if it's a file then throw an error
-		if !isDir {
-			return 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The object is not a directory", parentPath)}
-		}
-
-		return _objectId, nil
+	if err := dev.DeleteObject(objId); err != nil {
+		return FileObjectError{error: err}
 	}
 
-	return handleMakeDirectory(dev, storageId, parentId, name)
-}*/
+	return nil
+}
 
 func main() {
 	dev, err := Initialize(Init{})
