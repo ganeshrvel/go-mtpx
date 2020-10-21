@@ -89,7 +89,7 @@ func MakeDirectory(dev *mtp.Device, storageId, parentId uint32, parentPath, name
 	_objectId, isDir, err := GetObjectFromParentIdAndFilename(dev, storageId, parentId, name)
 
 	if err == nil {
-		// if the object exists but if it's a file then throw an error
+		// the object exists and if it's a file then throw an error
 		if !isDir {
 			return 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The object is not a directory", parentPath)}
 		}
@@ -124,23 +124,23 @@ func MakeDirectoryRecursive(dev *mtp.Device, storageId uint32, fullPath string) 
 
 	splittedFullPath := strings.Split(_fullPath, PathSep)
 
-	var parentId = uint32(ParentObjectId)
+	var objectId = uint32(ParentObjectId)
 	const skipIndex = 1
 
 	for _, fName := range splittedFullPath[skipIndex:] {
 		// fetch the parent object and
-		_parentId, isDir, err := GetObjectFromParentIdAndFilename(dev, storageId, parentId, fName)
+		_objectId, isDir, err := GetObjectFromParentIdAndFilename(dev, storageId, objectId, fName)
 
 		if err != nil {
 			switch err.(type) {
 			case FileNotFoundError:
 				// if object does not exists then create a new directory
-				_newObjectId, err := handleMakeDirectory(dev, storageId, parentId, fName)
+				_newObjectId, err := handleMakeDirectory(dev, storageId, objectId, fName)
 				if err != nil {
 					return 0, err
 				}
 
-				parentId = _newObjectId
+				objectId = _newObjectId
 
 				continue
 			default:
@@ -153,10 +153,10 @@ func MakeDirectoryRecursive(dev *mtp.Device, storageId uint32, fullPath string) 
 			return 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The object is not a directory", fName)}
 		}
 
-		parentId = _parentId
+		objectId = _objectId
 	}
 
-	return parentId, nil
+	return objectId, nil
 }
 
 // List the contents in a directory

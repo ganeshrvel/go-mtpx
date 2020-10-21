@@ -66,6 +66,29 @@ func GetObjectFromObjectId(dev *mtp.Device, objectId uint32, parentPath string) 
 	}, nil
 }
 
+// fetch the object using [parentId] and [filename]
+// it matches the [filename] to the list of files in the directory
+func GetObjectFromParentIdAndFilename(dev *mtp.Device, storageId uint32, parentId uint32, filename string) (rObjectId uint32, rIsDir bool, rError error) {
+	handles := mtp.Uint32Array{}
+	if err := dev.GetObjectHandles(storageId, mtp.GOH_ALL_ASSOCS, parentId, &handles); err != nil {
+		return 0, false, FileObjectError{error: err}
+	}
+
+	for _, objectId := range handles.Values {
+		obj := mtp.ObjectInfo{}
+		if err := dev.GetObjectInfo(objectId, &obj); err != nil {
+			return 0, false, FileObjectError{error: err}
+		}
+
+		// return the current objectId if the filename == obj.Filename
+		if obj.Filename == filename {
+			return objectId, isObjectADir(&obj), nil
+		}
+	}
+
+	return 0, false, FileNotFoundError{error: fmt.Errorf("file not found: %s", filename)}
+}
+
 // fetch the object information using [fullPath]
 func GetObjectFromPath(dev *mtp.Device, storageId uint32, fullPath string) (rObjectId uint32, rIsDir bool, rError error) {
 	_filePath := fixSlash(fullPath)
@@ -140,29 +163,6 @@ func GetObjectFromObjectIdOrPath(dev *mtp.Device, storageId, objectId uint32, fu
 	return _objectId, f.IsDir, nil
 }
 
-// fetch the object using [parentId] and [filename]
-// it matches the [filename] to the list of files in the directory
-func GetObjectFromParentIdAndFilename(dev *mtp.Device, storageId uint32, parentId uint32, filename string) (rObjectId uint32, rIsDir bool, rError error) {
-	handles := mtp.Uint32Array{}
-	if err := dev.GetObjectHandles(storageId, mtp.GOH_ALL_ASSOCS, parentId, &handles); err != nil {
-		return 0, false, FileObjectError{error: err}
-	}
-
-	for _, objectId := range handles.Values {
-		obj := mtp.ObjectInfo{}
-		if err := dev.GetObjectInfo(objectId, &obj); err != nil {
-			return 0, false, FileObjectError{error: err}
-		}
-
-		// return the current objectId if the filename == obj.Filename
-		if obj.Filename == filename {
-			return objectId, isObjectADir(&obj), nil
-		}
-	}
-
-	return 0, false, FileNotFoundError{error: fmt.Errorf("file not found: %s", filename)}
-}
-
 // check if a file exists
 // returns exists: bool, isDir: bool, objectId: uint32
 func FileExists(dev *mtp.Device, storageId, objectId uint32, filePath string) (rExists bool, rIsDir bool, rObjectId uint32) {
@@ -191,12 +191,12 @@ func handleMakeDirectory(dev *mtp.Device, storageId, parentId uint32, filename s
 		ModificationDate: time.Now(),
 	}
 
-	_, _, handle, err := dev.SendObjectInfo(storageId, parentId, &send)
+	_, _, objId, err := dev.SendObjectInfo(storageId, parentId, &send)
 	if err != nil {
 		return 0, SendObjectError{error: err}
 	}
 
-	return handle, nil
+	return objId, nil
 }
 
 // helper function to fetch the contents inside a directory
