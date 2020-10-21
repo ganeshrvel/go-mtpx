@@ -199,6 +199,20 @@ func DeleteFile(dev *mtp.Device, storageId, objectId uint32, fullPath string) er
 	return nil
 }
 
+func RenameFile(dev *mtp.Device, storageId, objectId uint32, fullPath, newFileName string) (rObjectId uint32, error error) {
+	exist, _, objId := FileExists(dev, storageId, objectId, fullPath)
+
+	if !exist {
+		return objId, InvalidPathError{error: fmt.Errorf("file not found: %s", fullPath)}
+	}
+
+	if err := dev.SetObjectPropValue(objId, mtp.OPC_ObjectFileName, &mtp.StringValue{Value: newFileName}); err != nil {
+		return objId, FileObjectError{error: err}
+	}
+
+	return objId, nil
+}
+
 func main() {
 	dev, err := Initialize(Init{})
 
@@ -270,11 +284,18 @@ func main() {
 	//pretty.Println("======\n")
 	//pretty.Println("Does File exists:", exists)
 
-	//DeleteFile
-	//err = DeleteFile(dev, sid, 0, "/tests/test.txt")
+	///DeleteFile
+	//err = DeleteFile(dev, sid, 0, "/mtp-test-files/temp_dir/this is a test")
 	//if err != nil {
 	//	log.Panic(err)
 	//}
+
+	////RenameFile
+	objId, err := RenameFile(dev, sid, 0, "/mtp-test-files/temp_dir/b.txt", "b.txt")
+	if err != nil {
+		log.Panic(err)
+	}
+	pretty.Println(objId)
 
 	Dispose(dev)
 }
