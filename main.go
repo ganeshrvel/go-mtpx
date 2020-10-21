@@ -265,10 +265,16 @@ func main() {
 	//
 
 	// FileExists
-	//exists := FileExists(dev, sid, "/tests/test.txt")
+	//exists := FileExists(dev, sid, 0, "/tests/test.txt")
 	//
 	//pretty.Println("======\n")
 	//pretty.Println("Does File exists:", exists)
+
+	//DeleteFile
+	//err = DeleteFile(dev, sid, 0, "/tests/test.txt")
+	//if err != nil {
+	//	log.Panic(err)
+	//}
 
 	Dispose(dev)
 }
