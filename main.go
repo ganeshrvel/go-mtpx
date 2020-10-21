@@ -172,13 +172,6 @@ func WalkDirectory(dev *mtp.Device, storageId, objectId uint32, fullPath string,
 		return objId, 0, err
 	}
 
-	fi, err := GetObjectFromObjectId(dev, objId, fullPath)
-	if err != nil {
-		return objId, 0, err
-	}
-
-	cb(objId, fi)
-
 	totalFiles, err := proccessWalkDirectory(dev, storageId, objId, fullPath, recursive, cb)
 	if err != nil {
 		return objId, 0, err

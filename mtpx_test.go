@@ -173,7 +173,7 @@ func TestMakeDirectoryRecursive(t *testing.T) {
 	Dispose(dev)
 }
 
-func TestFetchDirectoryTree(t *testing.T) {
+func TestWalkDirectory(t *testing.T) {
 	dev, err := Initialize(Init{})
 	if err != nil {
 		log.Panic(err)
@@ -188,43 +188,48 @@ func TestFetchDirectoryTree(t *testing.T) {
 
 	Convey("Testing valid directory | with objectId | objectId should be picked up instead of fullPath | WalkDirectory", t, func() {
 		// test the root directory [ParentObjectId] | empty [fullPath]
-		dirListing := &DirectoryTree{}
-		objectId, totalFiles, err := WalkDirectory(dev, sid, ParentObjectId, "", false, dirListing)
+		objectId, totalFiles, err := WalkDirectory(dev, sid, ParentObjectId, "", false, func(objectId uint32, fi *FileInfo) {
+			So(objectId, ShouldBeGreaterThan, 0)
+			So(fi, ShouldNotBeNil)
+			So(fi.ParentId, ShouldEqual, 0)
+		})
 
 		So(err, ShouldBeNil)
-		So(dirListing, ShouldNotBeNil)
+
 		So(totalFiles, ShouldBeGreaterThan, 0)
 		So(objectId, ShouldEqual, ParentObjectId)
-		pDirListing := *dirListing
-
-		So(len(pDirListing.Children), ShouldBeGreaterThan, 0)
 
 		// test the root directory [ParentObjectId] | [fullPath]='/fake'
-		dirListing = &DirectoryTree{}
-		objectId, totalFiles, err = WalkDirectory(dev, sid, ParentObjectId, "/fake", false, dirListing)
+		objectId, totalFiles, err = WalkDirectory(dev, sid, ParentObjectId, "/fake", false, func(objectId uint32, fi *FileInfo) {
+			So(objectId, ShouldBeGreaterThan, 0)
+			So(fi, ShouldNotBeNil)
+			So(fi.ParentId, ShouldEqual, 0)
+		})
 
 		So(err, ShouldBeNil)
-		So(dirListing, ShouldNotBeNil)
 		So(totalFiles, ShouldBeGreaterThan, 0)
 		So(objectId, ShouldEqual, ParentObjectId)
-		pDirListing = *dirListing
-
-		So(len(pDirListing.Children), ShouldBeGreaterThan, 0)
 	})
 
 	Convey("Testing valid directory | without objectId | fullPath should be picked up instead of objectId | WalkDirectory", t, func() {
 		/////////////////
 		// test the directory '/mtp-test-files'
 		/////////////////
-		dirListing := &DirectoryTree{}
 		fullPath := "/mtp-test-files"
 
-		objectId1, totalFiles1, err := WalkDirectory(dev, sid, 0, fullPath, false, dirListing)
+		var children []*FileInfo
+		objectId1, totalFiles1, err := WalkDirectory(dev, sid, 0, fullPath, false, func(objectId uint32, fi *FileInfo) {
+			So(fi.FullPath, ShouldNotEqual, "/mtp-test-files")
+			So(objectId, ShouldBeGreaterThan, 0)
+			So(fi, ShouldNotBeNil)
+			So(fi.ParentId, ShouldBeGreaterThan, 0)
+			So(objectId, ShouldEqual, fi.ObjectId)
+
+			children = append(children, fi)
+		})
 
 		So(err, ShouldBeNil)
-		So(dirListing, ShouldNotBeNil)
 		So(totalFiles1, ShouldBeGreaterThanOrEqualTo, 4)
-		pDirListing := *dirListing
 
 		// test if [objectId] == [objectId1] of '/mtp-test-files'
 		objIdFromPath, _, err := GetObjectFromPath(dev, sid, fullPath)
@@ -232,20 +237,25 @@ func TestFetchDirectoryTree(t *testing.T) {
 
 		So(objectId1, ShouldEqual, objIdFromPath)
 
-		So(len(pDirListing.Children), ShouldEqual, totalFiles1)
+		So(len(children), ShouldEqual, totalFiles1)
 
 		/////////////////
 		// test the directory '/mtp-test-files/'
 		/////////////////
-		dirListing = &DirectoryTree{}
 		fullPath = "/mtp-test-files/"
+		children = []*FileInfo{}
+		objectId2, totalFiles2, err := WalkDirectory(dev, sid, 0, fullPath, false, func(objectId uint32, fi *FileInfo) {
+			So(fi.FullPath, ShouldNotEqual, "/mtp-test-files")
+			So(objectId, ShouldBeGreaterThan, 0)
+			So(fi, ShouldNotBeNil)
+			So(fi.ParentId, ShouldBeGreaterThan, 0)
+			So(objectId, ShouldEqual, fi.ObjectId)
 
-		objectId2, totalFiles2, err := WalkDirectory(dev, sid, 0, fullPath, false, dirListing)
+			children = append(children, fi)
+		})
 
 		So(err, ShouldBeNil)
-		So(dirListing, ShouldNotBeNil)
 		So(totalFiles2, ShouldBeGreaterThanOrEqualTo, totalFiles1)
-		pDirListing = *dirListing
 
 		// test if [objectId2] == [objectId1] of [fullPath]
 		objIdFromPath, _, err = GetObjectFromPath(dev, sid, fullPath)
@@ -254,20 +264,25 @@ func TestFetchDirectoryTree(t *testing.T) {
 		So(objectId1, ShouldEqual, objIdFromPath)
 		So(objectId1, ShouldEqual, objectId2)
 
-		So(len(pDirListing.Children), ShouldEqual, totalFiles2)
+		So(len(children), ShouldEqual, totalFiles2)
 
 		/////////////////
 		// test the directory 'mtp-test-files/'
 		/////////////////
-		dirListing = &DirectoryTree{}
 		fullPath = "mtp-test-files/"
+		children = []*FileInfo{}
+		objectId3, totalFiles3, err := WalkDirectory(dev, sid, 0, fullPath, false, func(objectId uint32, fi *FileInfo) {
+			So(fi.FullPath, ShouldNotEqual, "/mtp-test-files")
+			So(objectId, ShouldBeGreaterThan, 0)
+			So(fi, ShouldNotBeNil)
+			So(fi.ParentId, ShouldBeGreaterThan, 0)
+			So(objectId, ShouldEqual, fi.ObjectId)
 
-		objectId3, totalFiles3, err := WalkDirectory(dev, sid, 0, fullPath, false, dirListing)
+			children = append(children, fi)
+		})
 
 		So(err, ShouldBeNil)
-		So(dirListing, ShouldNotBeNil)
 		So(totalFiles3, ShouldBeGreaterThanOrEqualTo, totalFiles1)
-		pDirListing = *dirListing
 
 		// test if [objectId3] == [objectId] of [fullPath]
 		objIdFromPath, _, err = GetObjectFromPath(dev, sid, fullPath)
@@ -275,20 +290,26 @@ func TestFetchDirectoryTree(t *testing.T) {
 
 		So(objectId3, ShouldEqual, objIdFromPath)
 
-		So(len(pDirListing.Children), ShouldEqual, totalFiles3)
+		So(len(children), ShouldEqual, totalFiles3)
 
 		/////////////////
 		// test the directory 'mtp-test-files/mock_dir3/'
 		/////////////////
-		dirListing = &DirectoryTree{}
 		fullPath = "mtp-test-files/mock_dir3/"
+		children = []*FileInfo{}
 
-		objectId4, totalFiles4, err := WalkDirectory(dev, sid, 0, fullPath, false, dirListing)
+		objectId4, totalFiles4, err := WalkDirectory(dev, sid, 0, fullPath, false, func(objectId uint32, fi *FileInfo) {
+			So(fi.FullPath, ShouldNotEqual, "/mtp-test-files/mock_dir3")
+			So(objectId, ShouldBeGreaterThan, 0)
+			So(fi, ShouldNotBeNil)
+			So(fi.ParentId, ShouldBeGreaterThan, 0)
+			So(objectId, ShouldEqual, fi.ObjectId)
+
+			children = append(children, fi)
+		})
 
 		So(err, ShouldBeNil)
-		So(dirListing, ShouldNotBeNil)
 		So(totalFiles4, ShouldBeGreaterThanOrEqualTo, totalFiles1)
-		pDirListing = *dirListing
 
 		// test if [objectId4] == [objectId] of [fullPath]
 		objIdFromPath, _, err = GetObjectFromPath(dev, sid, fullPath)
@@ -296,27 +317,31 @@ func TestFetchDirectoryTree(t *testing.T) {
 
 		So(objectId4, ShouldEqual, objIdFromPath)
 
-		So(len(pDirListing.Children), ShouldEqual, 5)
+		So(len(children), ShouldEqual, 5)
 	})
 
 	Convey("Testing valid directory | 1 | recursive=false | WalkDirectory", t, func() {
 		//test the directory '/mtp-test-files/mock_dir1/1'
 		fullPath := "/mtp-test-files/mock_dir1/1"
 
-		dirListing := &DirectoryTree{}
+		var children []*FileInfo
+		objectId, totalFiles, err := WalkDirectory(dev, sid, 0, fullPath, false, func(objectId uint32, fi *FileInfo) {
+			So(fi.FullPath, ShouldNotEqual, "/mtp-test-files/mock_dir1/1")
+			So(objectId, ShouldBeGreaterThan, 0)
+			So(fi, ShouldNotBeNil)
+			So(fi.ParentId, ShouldBeGreaterThan, 0)
+			So(objectId, ShouldEqual, fi.ObjectId)
 
-		objectId, totalFiles, err := WalkDirectory(dev, sid, 0, fullPath, false, dirListing)
+			children = append(children, fi)
+		})
 
 		So(err, ShouldBeNil)
 
-		pDirListing := *dirListing
+		So(children, ShouldNotBeNil)
+		So(len(children), ShouldEqual, totalFiles)
+		So(len(children), ShouldEqual, 1)
 
-		So(pDirListing.Children, ShouldNotBeNil)
-		So(len(pDirListing.Children), ShouldEqual, totalFiles)
-		So(len(pDirListing.Children), ShouldEqual, 1)
-		So(pDirListing.ObjectId, ShouldEqual, objectId)
-
-		_file0 := pDirListing.Children[0]
+		_file0 := children[0]
 
 		So(_file0.ObjectId, ShouldBeGreaterThan, 0)
 		So(_file0.Name, ShouldEqual, "a.txt")
@@ -333,20 +358,24 @@ func TestFetchDirectoryTree(t *testing.T) {
 		//test the directory '/mtp-test-files/mock_dir1/'
 		fullPath := "/mtp-test-files/mock_dir1/"
 
-		dirListing := &DirectoryTree{}
+		var children []*FileInfo
+		objectId, totalFiles, err := WalkDirectory(dev, sid, 0, fullPath, false, func(objectId uint32, fi *FileInfo) {
+			So(fi.FullPath, ShouldNotEqual, "/mtp-test-files/mock_dir1")
+			So(objectId, ShouldBeGreaterThan, 0)
+			So(fi, ShouldNotBeNil)
+			So(fi.ParentId, ShouldBeGreaterThan, 0)
+			So(objectId, ShouldEqual, fi.ObjectId)
 
-		objectId, totalFiles, err := WalkDirectory(dev, sid, 0, fullPath, false, dirListing)
+			children = append(children, fi)
+		})
 
 		So(err, ShouldBeNil)
 
-		pDirListing := *dirListing
+		So(children, ShouldNotBeNil)
+		So(len(children), ShouldEqual, totalFiles)
+		So(len(children), ShouldEqual, 4)
 
-		So(pDirListing.Children, ShouldNotBeNil)
-		So(len(pDirListing.Children), ShouldEqual, totalFiles)
-		So(len(pDirListing.Children), ShouldEqual, 4)
-		So(pDirListing.ObjectId, ShouldEqual, objectId)
-
-		_file0 := pDirListing.Children[0]
+		_file0 := children[0]
 
 		So(_file0.ObjectId, ShouldBeGreaterThan, 0)
 		So(_file0.Name, ShouldEqual, "1")
@@ -359,24 +388,30 @@ func TestFetchDirectoryTree(t *testing.T) {
 		So(_file0.ModTime.Year(), ShouldBeGreaterThanOrEqualTo, 2020)
 	})
 
-	Convey("Testing valid directory | recursive=true | WalkDirectory", t, func() {
+	Convey("Testing valid directory | 1 | recursive=true | WalkDirectory", t, func() {
 		//test the directory '/mtp-test-files/mock_dir1/'
 		fullPath := "/mtp-test-files/mock_dir1/"
 
-		dirListing := &DirectoryTree{}
-		objectId, totalFiles, err := WalkDirectory(dev, sid, 0, fullPath, true, dirListing)
+		var children []*FileInfo
+		objectId, totalFiles, err := WalkDirectory(dev, sid, 0, fullPath, true, func(objectId uint32, fi *FileInfo) {
+			So(fi.FullPath, ShouldNotEqual, "/mtp-test-files/mock_dir1")
+			So(objectId, ShouldBeGreaterThan, 0)
+			So(fi, ShouldNotBeNil)
+			So(fi.ParentId, ShouldBeGreaterThan, 0)
+			So(objectId, ShouldEqual, fi.ObjectId)
+
+			children = append(children, fi)
+		})
 
 		So(err, ShouldBeNil)
 
-		pDirListing := *dirListing
-		const l1ChildrenLength = 4
+		const childrenLength = 9
 
-		So(pDirListing.Children, ShouldNotBeNil)
-		So(len(pDirListing.Children), ShouldEqual, l1ChildrenLength)
+		So(children, ShouldNotBeNil)
+		So(len(children), ShouldEqual, childrenLength)
 		So(totalFiles, ShouldEqual, 9)
-		So(pDirListing.ObjectId, ShouldEqual, objectId)
 
-		_file0 := pDirListing.Children[0]
+		_file0 := children[0]
 
 		So(_file0.ObjectId, ShouldBeGreaterThan, 0)
 		So(_file0.Name, ShouldEqual, "1")
@@ -389,109 +424,86 @@ func TestFetchDirectoryTree(t *testing.T) {
 		So(_file0.ModTime.Year(), ShouldBeGreaterThanOrEqualTo, 2020)
 
 		// test level 1 objects
-		dirList1 := [l1ChildrenLength]string{"/mtp-test-files/mock_dir1/1", "/mtp-test-files/mock_dir1/a.txt", "/mtp-test-files/mock_dir1/3", "/mtp-test-files/mock_dir1/2"}
+		dirList1 := [childrenLength]string{"/mtp-test-files/mock_dir1/1", "/mtp-test-files/mock_dir1/1/a.txt", "/mtp-test-files/mock_dir1/a.txt", "/mtp-test-files/mock_dir1/3", "/mtp-test-files/mock_dir1/3/b.txt", "/mtp-test-files/mock_dir1/3/2", "/mtp-test-files/mock_dir1/3/2/b.txt", "/mtp-test-files/mock_dir1/2", "/mtp-test-files/mock_dir1/2/b.txt"}
 
 		for i, _dir := range dirList1 {
 			So(
-				pDirListing.Children[i].FullPath, ShouldEqual, _dir,
-			)
-		}
-
-		// test level 2 objects dir='1'
-		const childrenLengthDir1 = 1
-		dirList2 := [childrenLengthDir1]string{"/mtp-test-files/mock_dir1/1/a.txt"}
-
-		for i, _dir := range dirList2 {
-			So(
-				pDirListing.Children[0].Children[i].FullPath, ShouldEqual, _dir,
-			)
-		}
-
-		// test level 2 objects dir='2'
-		const childrenLengthDir2 = 1
-		dirList3 := [childrenLengthDir2]string{"/mtp-test-files/mock_dir1/2/b.txt"}
-
-		for i, _dir := range dirList3 {
-			So(
-				pDirListing.Children[3].Children[i].FullPath, ShouldEqual, _dir,
-			)
-		}
-
-		// test level 2 objects dir='3'
-		const childrenLengthDir3 = 2
-		dirList4 := [childrenLengthDir3]string{"/mtp-test-files/mock_dir1/3/b.txt", "/mtp-test-files/mock_dir1/3/2"}
-
-		for i, _dir := range dirList4 {
-			So(
-				pDirListing.Children[2].Children[i].FullPath, ShouldEqual, _dir,
-			)
-		}
-
-		// test level 3 objects dir='3/2'
-		const childrenLengthDir4 = 1
-		dirList5 := [childrenLengthDir4]string{"/mtp-test-files/mock_dir1/3/2/b.txt"}
-
-		for i, _dir := range dirList5 {
-			So(
-				pDirListing.Children[2].Children[1].Children[i].FullPath, ShouldEqual, _dir,
+				children[i].FullPath, ShouldEqual, _dir,
 			)
 		}
 	})
 
 	Convey("Testing non exisiting file | WalkDirectory | It should throw an error", t, func() {
 		// test the directory '/fake' | recursive=true
-		dirListing := &DirectoryTree{}
-		objectId, totalFiles, err := WalkDirectory(dev, sid, 0, "/fake", true, dirListing)
+		var children []*FileInfo
+		objectId, totalFiles, err := WalkDirectory(dev, sid, 0, "/fake", true, func(objectId uint32, fi *FileInfo) {
+			children = append(children, fi)
+		})
 
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
 		So(objectId, ShouldEqual, 0)
 		So(totalFiles, ShouldEqual, 0)
+		So(len(children), ShouldEqual, 0)
 
 		// test the directory '/fake' | recursive=false
-		dirListing = &DirectoryTree{}
-		objectId, totalFiles, err = WalkDirectory(dev, sid, 0, "/fake", false, dirListing)
+		children = []*FileInfo{}
+		objectId, totalFiles, err = WalkDirectory(dev, sid, 0, "/fake", false, func(objectId uint32, fi *FileInfo) {
+			children = append(children, fi)
+		})
 
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
 		So(objectId, ShouldEqual, 0)
 		So(totalFiles, ShouldEqual, 0)
+		So(len(children), ShouldEqual, 0)
 
 		// test the directory '/mtp-test-files/fake' | recursive=true
-		dirListing = &DirectoryTree{}
-		objectId, totalFiles, err = WalkDirectory(dev, sid, 0, "/mtp-test-files/fake", true, dirListing)
+		children = []*FileInfo{}
+		objectId, totalFiles, err = WalkDirectory(dev, sid, 0, "/mtp-test-files/fake", true, func(objectId uint32, fi *FileInfo) {
+			children = append(children, fi)
+		})
 
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
 		So(objectId, ShouldEqual, 0)
 		So(totalFiles, ShouldEqual, 0)
+		So(len(children), ShouldEqual, 0)
 
 		// test the directory '/mtp-test-files/fake' | recursive=false
-		dirListing = &DirectoryTree{}
-		objectId, totalFiles, err = WalkDirectory(dev, sid, 0, "/mtp-test-files/fake", false, dirListing)
+		children = []*FileInfo{}
+		objectId, totalFiles, err = WalkDirectory(dev, sid, 0, "/mtp-test-files/fake", false, func(objectId uint32, fi *FileInfo) {
+			children = append(children, fi)
+		})
 
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
 		So(objectId, ShouldEqual, 0)
 		So(totalFiles, ShouldEqual, 0)
+		So(len(children), ShouldEqual, 0)
 
 		// test the directory '/mtp-test-files/a.txt'
-		dirListing = &DirectoryTree{}
-		objectId, totalFiles, err = WalkDirectory(dev, sid, 0, "/mtp-test-files/a.txt", true, dirListing)
+		children = []*FileInfo{}
+		objectId, totalFiles, err = WalkDirectory(dev, sid, 0, "/mtp-test-files/a.txt", true, func(objectId uint32, fi *FileInfo) {
+			children = append(children, fi)
+		})
 
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
 		So(objectId, ShouldEqual, 0)
 		So(totalFiles, ShouldEqual, 0)
+		So(len(children), ShouldEqual, 0)
 
 		// test the directory=''
-		dirListing = &DirectoryTree{}
-		objectId, totalFiles, err = WalkDirectory(dev, sid, 0, "", true, dirListing)
+		objectId, totalFiles, err = WalkDirectory(dev, sid, 0, "", true, func(objectId uint32, fi *FileInfo) {
+			children = append(children, fi)
+		})
 
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
 		So(objectId, ShouldEqual, 0)
 		So(totalFiles, ShouldEqual, 0)
+		So(len(children), ShouldEqual, 0)
 	})
 
 	Dispose(dev)
