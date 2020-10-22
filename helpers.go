@@ -68,7 +68,7 @@ func GetObjectFromObjectId(dev *mtp.Device, objectId uint32, parentPath string) 
 
 // fetch the object using [parentId] and [filename]
 // it matches the [filename] to the list of files in the directory
-// Since the parent path is unavailable the [FullPath] property of the object [FileInfo] will not be valid.
+// Since the [parentPath] is unavailable here the [fullPath] property of the resulting object [FileInfo] may not be valid.
 func GetObjectFromParentIdAndFilename(dev *mtp.Device, storageId uint32, parentId uint32, filename string) (*FileInfo, error) {
 	handles := mtp.Uint32Array{}
 	if err := dev.GetObjectHandles(storageId, mtp.GOH_ALL_ASSOCS, parentId, &handles); err != nil {
@@ -92,7 +92,7 @@ func GetObjectFromParentIdAndFilename(dev *mtp.Device, storageId uint32, parentI
 }
 
 // fetch the object information using [fullPath]
-// Since the parent path is unavailable the [FullPath] property of the object [FileInfo] will not be valid.
+// Since the [parentPath] is unavailable here the [fullPath] property of the resulting object [FileInfo] may not be valid.
 func GetObjectFromPath(dev *mtp.Device, storageId uint32, fullPath string) (*FileInfo, error) {
 	_filePath := fixSlash(fullPath)
 
@@ -144,6 +144,7 @@ func GetObjectFromPath(dev *mtp.Device, storageId uint32, fullPath string) (*Fil
 }
 
 // fetch an object using [objectId] and/or [fullPath]
+// Since the [parentPath] is unavailable here the [fullPath] property of the resulting object [FileInfo] may not be valid.
 func GetObjectFromObjectIdOrPath(dev *mtp.Device, storageId, objectId uint32, fullPath string) (*FileInfo, error) {
 	_objectId := objectId
 
@@ -172,6 +173,7 @@ func GetObjectFromObjectIdOrPath(dev *mtp.Device, storageId, objectId uint32, fu
 
 // check if a file exists
 // returns exists: bool, isDir: bool, objectId: uint32
+// Since the [parentPath] is unavailable here the [fullPath] property of the resulting object [FileInfo] may not be valid.
 func FileExists(dev *mtp.Device, storageId, objectId uint32, filePath string) (exists bool, fileInfo *FileInfo) {
 	fi, err := GetObjectFromObjectIdOrPath(dev, storageId, objectId, filePath)
 
