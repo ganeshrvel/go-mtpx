@@ -86,31 +86,31 @@ func MakeDirectory(dev *mtp.Device, storageId, parentId uint32, parentPath, name
 	}
 
 	// check if the path exists in the MTP device
-	_objectId, isDir, err := GetObjectFromParentIdAndFilename(dev, storageId, parentId, name)
+	fi, err := GetObjectFromParentIdAndFilename(dev, storageId, parentId, name)
 
 	if err == nil {
 		// the object exists and if it's a file then throw an error
-		if !isDir {
+		if !fi.IsDir {
 			return 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The object is not a directory", parentPath)}
 		}
 
-		return _objectId, nil
+		return fi.ObjectId, nil
 	}
 
 	// check if the parent exists
-	_parentId, isDir, err := GetObjectFromObjectIdOrPath(dev, storageId, parentId, parentPath)
+	parentFi, err := GetObjectFromObjectIdOrPath(dev, storageId, parentId, parentPath)
 
 	if err != nil {
 		return 0, err
 	}
 
 	// if the parent object is a file then throw an error
-	if !isDir {
+	if !parentFi.IsDir {
 		return 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The object is not a directory", parentPath)}
 	}
 
 	// create the directory
-	return handleMakeDirectory(dev, storageId, _parentId, name)
+	return handleMakeDirectory(dev, storageId, parentFi.ObjectId, name)
 }
 
 // create a new directory recursively using [fullPath]
@@ -129,7 +129,7 @@ func MakeDirectoryRecursive(dev *mtp.Device, storageId uint32, fullPath string) 
 
 	for _, fName := range splittedFullPath[skipIndex:] {
 		// fetch the parent object and
-		_objectId, isDir, err := GetObjectFromParentIdAndFilename(dev, storageId, objectId, fName)
+		fi, err := GetObjectFromParentIdAndFilename(dev, storageId, objectId, fName)
 
 		if err != nil {
 			switch err.(type) {
@@ -149,11 +149,11 @@ func MakeDirectoryRecursive(dev *mtp.Device, storageId uint32, fullPath string) 
 		}
 
 		// if the object exists but if it's a file then throw an error
-		if !isDir {
+		if !fi.IsDir {
 			return 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The object is not a directory", fName)}
 		}
 
-		objectId = _objectId
+		objectId = fi.ObjectId
 	}
 
 	return objectId, nil
@@ -168,31 +168,31 @@ func MakeDirectoryRecursive(dev *mtp.Device, storageId uint32, fullPath string) 
 // returns total number of objects
 func WalkDirectory(dev *mtp.Device, storageId, objectId uint32, fullPath string, recursive bool, cb WalkDirectoryCb) (rObjectId uint32, rTotalFiles int, rError error) {
 	// fetch the objectId from [objectId] and/or [fullPath] parameters
-	objId, isDir, err := GetObjectFromObjectIdOrPath(dev, storageId, objectId, fullPath)
+	fi, err := GetObjectFromObjectIdOrPath(dev, storageId, objectId, fullPath)
 	if err != nil {
-		return objId, 0, err
+		return 0, 0, err
 	}
 
-	if !isDir {
+	if !fi.IsDir {
 		return 0, 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The object is not a directory", fullPath)}
 	}
 
-	totalFiles, err := proccessWalkDirectory(dev, storageId, objId, fullPath, recursive, cb)
+	totalFiles, err := proccessWalkDirectory(dev, storageId, fi.ObjectId, fullPath, recursive, cb)
 	if err != nil {
-		return objId, 0, err
+		return 0, 0, err
 	}
 
-	return objId, totalFiles, nil
+	return fi.ObjectId, totalFiles, nil
 }
 
 func DeleteFile(dev *mtp.Device, storageId, objectId uint32, fullPath string) error {
-	exist, _, objId := FileExists(dev, storageId, objectId, fullPath)
+	exist, fi := FileExists(dev, storageId, objectId, fullPath)
 
 	if !exist {
 		return nil
 	}
 
-	if err := dev.DeleteObject(objId); err != nil {
+	if err := dev.DeleteObject(fi.ObjectId); err != nil {
 		return FileObjectError{error: err}
 	}
 
@@ -200,17 +200,17 @@ func DeleteFile(dev *mtp.Device, storageId, objectId uint32, fullPath string) er
 }
 
 func RenameFile(dev *mtp.Device, storageId, objectId uint32, fullPath, newFileName string) (rObjectId uint32, error error) {
-	exist, _, objId := FileExists(dev, storageId, objectId, fullPath)
+	exist, fi := FileExists(dev, storageId, objectId, fullPath)
 
 	if !exist {
-		return objId, InvalidPathError{error: fmt.Errorf("file not found: %s", fullPath)}
+		return 0, InvalidPathError{error: fmt.Errorf("file not found: %s", fullPath)}
 	}
 
-	if err := dev.SetObjectPropValue(objId, mtp.OPC_ObjectFileName, &mtp.StringValue{Value: newFileName}); err != nil {
-		return objId, FileObjectError{error: err}
+	if err := dev.SetObjectPropValue(fi.ObjectId, mtp.OPC_ObjectFileName, &mtp.StringValue{Value: newFileName}); err != nil {
+		return 0, FileObjectError{error: err}
 	}
 
-	return objId, nil
+	return fi.ObjectId, nil
 }
 
 func main() {

@@ -68,111 +68,118 @@ func GetObjectFromObjectId(dev *mtp.Device, objectId uint32, parentPath string) 
 
 // fetch the object using [parentId] and [filename]
 // it matches the [filename] to the list of files in the directory
-func GetObjectFromParentIdAndFilename(dev *mtp.Device, storageId uint32, parentId uint32, filename string) (rObjectId uint32, rIsDir bool, rError error) {
+// Since the parent path is unavailable the [FullPath] property of the object [FileInfo] will not be valid.
+func GetObjectFromParentIdAndFilename(dev *mtp.Device, storageId uint32, parentId uint32, filename string) (*FileInfo, error) {
 	handles := mtp.Uint32Array{}
 	if err := dev.GetObjectHandles(storageId, mtp.GOH_ALL_ASSOCS, parentId, &handles); err != nil {
-		return 0, false, FileObjectError{error: err}
+		return nil, FileObjectError{error: err}
 	}
 
 	for _, objectId := range handles.Values {
-		obj := mtp.ObjectInfo{}
-		if err := dev.GetObjectInfo(objectId, &obj); err != nil {
-			return 0, false, FileObjectError{error: err}
+		fi, err := GetObjectFromObjectId(dev, objectId, "")
+
+		if err != nil {
+			return nil, FileObjectError{error: err}
 		}
 
-		// return the current objectId if the filename == obj.Filename
-		if obj.Filename == filename {
-			return objectId, isObjectADir(&obj), nil
+		// return the current objectId if the filename == fi.Name
+		if fi.Name == filename {
+			return fi, nil
 		}
 	}
 
-	return 0, false, FileNotFoundError{error: fmt.Errorf("file not found: %s", filename)}
+	return nil, FileNotFoundError{error: fmt.Errorf("file not found: %s", filename)}
 }
 
 // fetch the object information using [fullPath]
-func GetObjectFromPath(dev *mtp.Device, storageId uint32, fullPath string) (rObjectId uint32, rIsDir bool, rError error) {
+// Since the parent path is unavailable the [FullPath] property of the object [FileInfo] will not be valid.
+func GetObjectFromPath(dev *mtp.Device, storageId uint32, fullPath string) (*FileInfo, error) {
 	_filePath := fixSlash(fullPath)
 
 	if _filePath == PathSep {
-		return ParentObjectId, true, nil
+		return GetObjectFromObjectId(dev, ParentObjectId, "")
 	}
 
 	splittedFilePath := strings.Split(_filePath, PathSep)
 
-	var parentId = uint32(ParentObjectId)
-	isDir := true
+	var objectId = uint32(ParentObjectId)
 	var resultCount = 0
+	var fi *FileInfo
 	const skipIndex = 1
 
 	for i, fName := range splittedFilePath[skipIndex:] {
-		objectId, _isDir, err := GetObjectFromParentIdAndFilename(dev, storageId, parentId, fName)
+		_fi, err := GetObjectFromParentIdAndFilename(dev, storageId, objectId, fName)
 
 		if err != nil {
 			switch err.(type) {
 			case FileNotFoundError:
-				return 0, false, InvalidPathError{
+				return nil, InvalidPathError{
 					error: fmt.Errorf("path not found: %s\nreason: %v", fullPath, err),
 				}
 
 			default:
-				return 0, false, err
+				return nil, err
 			}
 		}
 
-		if !_isDir && indexExists(splittedFilePath, i+1+skipIndex) {
-			return 0, false, InvalidPathError{error: fmt.Errorf("path not found: %s", fullPath)}
+		if !_fi.IsDir && indexExists(splittedFilePath, i+1+skipIndex) {
+			return nil, InvalidPathError{error: fmt.Errorf("path not found: %s", fullPath)}
 		}
 
-		parentId = objectId
-		isDir = _isDir
+		// updating [fi] to current [_fi]
+		fi = _fi
+
+		// updating the [objectId] to follow the nested directory
+		objectId = _fi.ObjectId
+
+		// keeping a tab on total results
 		resultCount += 1
 	}
 
 	if resultCount < 1 {
-		return 0, false, InvalidPathError{error: fmt.Errorf("file not found: %s", fullPath)}
+		return nil, InvalidPathError{error: fmt.Errorf("file not found: %s", fullPath)}
 	}
 
-	return parentId, isDir, nil
+	return fi, nil
 }
 
 // fetch an object using [objectId] and/or [fullPath]
-func GetObjectFromObjectIdOrPath(dev *mtp.Device, storageId, objectId uint32, fullPath string) (rObjectId uint32, rIsDir bool, rError error) {
+func GetObjectFromObjectIdOrPath(dev *mtp.Device, storageId, objectId uint32, fullPath string) (*FileInfo, error) {
 	_objectId := objectId
-	var isDir bool
 
 	if _objectId == 0 && fullPath == "" {
-		return 0, isDir, InvalidPathError{error: fmt.Errorf("invalid path: %s. both objectId and fullPath cannot be empty", fullPath)}
+		return nil, InvalidPathError{error: fmt.Errorf("invalid path: %s. both objectId and fullPath cannot be empty", fullPath)}
 	}
 
 	// if objectId is not available then fetch the objectId from fullPath
 	if _objectId == 0 {
-		objId, _isDir, err := GetObjectFromPath(dev, storageId, fullPath)
+		fp, err := GetObjectFromPath(dev, storageId, fullPath)
 
 		if err != nil {
-			return 0, _isDir, err
+			return nil, err
 		}
 
-		return objId, _isDir, nil
+		return fp, nil
 	}
 
-	f, err := GetObjectFromObjectId(dev, _objectId, fullPath)
+	fo, err := GetObjectFromObjectId(dev, _objectId, fullPath)
 	if err != nil {
-		return 0, isDir, err
+		return nil, err
 	}
 
-	return _objectId, f.IsDir, nil
+	return fo, nil
 }
 
 // check if a file exists
 // returns exists: bool, isDir: bool, objectId: uint32
-func FileExists(dev *mtp.Device, storageId, objectId uint32, filePath string) (rExists bool, rIsDir bool, rObjectId uint32) {
-	_objectId, isDir, err := GetObjectFromObjectIdOrPath(dev, storageId, objectId, filePath)
+func FileExists(dev *mtp.Device, storageId, objectId uint32, filePath string) (exists bool, fileInfo *FileInfo) {
+	fi, err := GetObjectFromObjectIdOrPath(dev, storageId, objectId, filePath)
 
 	if err != nil {
-		return false, isDir, _objectId
+		return false, nil
 	}
 
-	return true, isDir, _objectId
+	return true, fi
 }
 
 // check if the object is a directory
@@ -207,14 +214,14 @@ func handleMakeDirectory(dev *mtp.Device, storageId, parentId uint32, filename s
 // Tips: use [objectId] whenever possible to avoid traversing down the whole file tree to process and find the [objectId]
 // returns total number of objects
 func proccessWalkDirectory(dev *mtp.Device, storageId, objectId uint32, fullPath string, recursive bool, cb WalkDirectoryCb) (rTotalFiles int, rError error) {
-	_objectId, _, err := GetObjectFromObjectIdOrPath(dev, storageId, objectId, fullPath)
+	fi, err := GetObjectFromObjectIdOrPath(dev, storageId, objectId, fullPath)
 
 	if err != nil {
 		return 0, err
 	}
 
 	handles := mtp.Uint32Array{}
-	if err := dev.GetObjectHandles(storageId, mtp.GOH_ALL_ASSOCS, _objectId, &handles); err != nil {
+	if err := dev.GetObjectHandles(storageId, mtp.GOH_ALL_ASSOCS, fi.ObjectId, &handles); err != nil {
 		return 0, ListDirectoryError{error: err}
 	}
 
