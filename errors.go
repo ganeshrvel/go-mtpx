@@ -32,6 +32,10 @@ type InvalidPathError struct {
 	error
 }
 
+type LocalFileError struct {
+	error
+}
+
 type FileObjectError struct {
 	error
 }

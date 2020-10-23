@@ -5,6 +5,8 @@ import (
 	mtp "github.com/ganeshrvel/go-mtpfs/mtp"
 	"github.com/kr/pretty"
 	"log"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -185,6 +187,89 @@ func WalkDirectory(dev *mtp.Device, storageId, objectId uint32, fullPath string,
 	return fi.ObjectId, totalFiles, nil
 }
 
+func UploadFiles(dev *mtp.Device, storageId uint32, source, destination string) (rObjectId uint32, rTotalFiles int, rError error) {
+	_destination := fixSlash(destination)
+	_source := fixSlash(source)
+	sourceParentPath := filepath.Dir(_source)
+
+	destParentId, err := MakeDirectoryRecursive(dev, storageId, _destination)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	destinationFilesDict := map[string]uint32{
+		_destination: destParentId,
+	}
+
+	err = filepath.Walk(_source,
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+
+			_path := fixSlash(path)
+
+			destinationParentPath, destinationFilePath := mapLocalPathToMtpPath(
+				_path, sourceParentPath, destination,
+			)
+
+			isDir := info.IsDir()
+			name := info.Name()
+			if isDir {
+				// if the parent path exists within the [destinationFilesDict] then fetch the [parentId] (value) and make the destination directory
+				if parentId, ok := destinationFilesDict[destinationParentPath]; ok {
+					objId, err := MakeDirectory(
+						dev, storageId, parentId, destinationParentPath, name,
+					)
+					if err != nil {
+						//todo
+						return err
+					}
+
+					// append the current objectId to [destinationFilesDict]
+					destinationFilesDict[destinationFilePath] = objId
+
+					// if the parent path DOES NOT exists within the [destinationFilesDict] create a new directory using costlier [MakeDirectoryRecursive] method
+					// this is a fallback situation
+				} else {
+					objId, err := MakeDirectoryRecursive(dev, storageId, _destination)
+					if err != nil {
+						//todo
+						return err
+					}
+
+					// append the current objectId to [destinationFilesDict]
+					destinationFilesDict[destinationFilePath] = objId
+				}
+
+				return nil
+			}
+
+			/*size := info.Size()
+			var objectFormat uint16 = mtp.OFC_Association
+
+			objInfo := mtp.ObjectInfo{
+				StorageID:        storageId,
+				ObjectFormat:     objectFormat,
+				ParentObject:     destParentId,
+				Filename:         name,
+				CompressedSize:   uint32(size),
+				ModificationDate: time.Now(),
+			}*/
+
+			return nil
+		},
+	)
+
+	if err != nil {
+		return 0, 0,
+			LocalFileError{error: fmt.Errorf("an error occured while uploading files. %v", err)}
+	}
+
+	//todo
+	return 0, 0, nil
+}
+
 func DeleteFile(dev *mtp.Device, storageId, objectId uint32, fullPath string) error {
 	exist, fi := FileExists(dev, storageId, objectId, fullPath)
 
@@ -290,12 +375,22 @@ func main() {
 	//	log.Panic(err)
 	//}
 
-	////RenameFile
-	objId, err := RenameFile(dev, sid, 0, "/mtp-test-files/temp_dir/b.txt", "b.txt")
+	//////RenameFile
+	//objId, err := RenameFile(dev, sid, 0, "/mtp-test-files/temp_dir/b.txt", "b.txt")
+	//if err != nil {
+	//	log.Panic(err)
+	//}
+	//pretty.Println(objId)
+
+	//UploadFiles
+	uploadFile := getTestMocksAsset("mock_dir1")
+	objId, totalFiles, err := UploadFiles(dev, sid, uploadFile, "/mtp-test-files/temp_dir/test-UploadFiles")
 	if err != nil {
 		log.Panic(err)
 	}
+
 	pretty.Println(objId)
+	pretty.Println(totalFiles)
 
 	Dispose(dev)
 }

@@ -3,3 +3,4 @@ tests/mtp-test-files-build/*
 /.idea/
 resources
 build
+mocks-build

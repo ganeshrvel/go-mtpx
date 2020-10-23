@@ -702,7 +702,7 @@ func TestRenameFile(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(objId, ShouldEqual, objectId)
 
-		time.Sleep(50000)
+		time.Sleep(5000)
 
 		//try renaming the object using using the same [newFileName]
 		objId, err = RenameFile(dev, sid, 0, getFullPath("/mtp-test-files/temp_dir/test-RenameFile/", renameRandFileName), renameRandFileName)

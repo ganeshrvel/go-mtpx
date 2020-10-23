@@ -208,6 +208,16 @@ func handleMakeDirectory(dev *mtp.Device, storageId, parentId uint32, filename s
 	return objId, nil
 }
 
+// helper function to create a file
+func handleMakeFile(dev *mtp.Device, storageId uint32, obj *mtp.ObjectInfo) (rObjectId uint32, rError error) {
+	_, _, objId, err := dev.SendObjectInfo(storageId, obj.ParentObject, obj)
+	if err != nil {
+		return 0, SendObjectError{error: err}
+	}
+
+	return objId, nil
+}
+
 // helper function to fetch the contents inside a directory
 // use [recursive] to fetch the whole nested tree
 // [objectId] and [fullPath] are optional parameters
