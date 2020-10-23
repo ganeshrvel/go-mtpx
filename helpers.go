@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/ganeshrvel/go-mtpfs/mtp"
 	"strings"
@@ -209,7 +210,7 @@ func handleMakeDirectory(dev *mtp.Device, storageId, parentId uint32, filename s
 }
 
 // helper function to create a file
-func handleMakeFile(dev *mtp.Device, storageId uint32, obj *mtp.ObjectInfo, overwriteExisting bool) (rObjectId uint32, rError error) {
+func handleMakeFile(dev *mtp.Device, storageId uint32, obj *mtp.ObjectInfo, data []byte, overwriteExisting bool) (rObjectId uint32, rError error) {
 
 	fi, err := GetObjectFromParentIdAndFilename(dev, storageId, obj.ParentObject, obj.Filename)
 
@@ -234,8 +235,15 @@ func handleMakeFile(dev *mtp.Device, storageId uint32, obj *mtp.ObjectInfo, over
 		}
 	}
 
-	// create a new file object
+	// create a new object handle
 	_, _, objId, err := dev.SendObjectInfo(storageId, obj.ParentObject, obj)
+	if err != nil {
+		return 0, SendObjectError{error: err}
+	}
+
+	// send the bytes data to the newly create object handle
+	buf := bytes.NewBuffer(data)
+	err = dev.SendObject(buf, int64(len(data)))
 	if err != nil {
 		return 0, SendObjectError{error: err}
 	}

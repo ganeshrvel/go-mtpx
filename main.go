@@ -208,10 +208,10 @@ func UploadFiles(dev *mtp.Device, storageId uint32, source, destination string) 
 				return err
 			}
 
-			_path := fixSlash(path)
+			sourceFilePath := fixSlash(path)
 
 			destinationParentPath, destinationFilePath := mapLocalPathToMtpPath(
-				_path, sourceParentPath, destination,
+				sourceFilePath, sourceParentPath, destination,
 			)
 
 			isDir := info.IsDir()
@@ -249,7 +249,6 @@ func UploadFiles(dev *mtp.Device, storageId uint32, source, destination string) 
 			}
 
 			size := info.Size()
-			var objectFormat uint16 = mtp.OFC_Association
 			var fileParentId uint32
 
 			_parentId, ok := destinationFilesDict[destinationParentPath]
@@ -258,9 +257,9 @@ func UploadFiles(dev *mtp.Device, storageId uint32, source, destination string) 
 
 				fileParentId = _parentId
 			} else {
-				// if [destinationParentPath] DOES NOT exists within [destinationFilesDict] then create a directory using [MakeDirectoryRecursive] and use the resulting objId as [parentId]
+				// if [destinationParentPath] DOES NOT exists within [destinationFilesDict] then create the parent directory using [MakeDirectoryRecursive] and use the resulting objId as [parentId]
 
-				objId, err := MakeDirectoryRecursive(dev, storageId, _destination)
+				objId, err := MakeDirectoryRecursive(dev, storageId, destinationParentPath)
 				if err != nil {
 					//todo
 					return err
@@ -272,16 +271,32 @@ func UploadFiles(dev *mtp.Device, storageId uint32, source, destination string) 
 				fileParentId = objId
 			}
 
+			// read the local file
+			file, err := os.Open(sourceFilePath)
+			if err != nil {
+				return LocalFileError{error: err}
+			}
+			defer file.Close()
+
+			// convert the local file into a byte stream
+			data := make([]byte, size)
+			_, err = file.Read(data)
+			if err != nil {
+				return LocalFileError{error: err}
+			}
+
 			fObj := mtp.ObjectInfo{
 				StorageID:        storageId,
-				ObjectFormat:     objectFormat,
+				ObjectFormat:     mtp.OFC_Undefined,
 				ParentObject:     fileParentId,
 				Filename:         name,
-				CompressedSize:   uint32(size),
+				CompressedSize:   uint32(len(data)),
 				ModificationDate: time.Now(),
 			}
 
-			objId, err := handleMakeFile(dev, storageId, &fObj, true)
+			objId, err := handleMakeFile(
+				dev, storageId, &fObj, data, true,
+			)
 			if err != nil {
 				//todo
 				return err
@@ -417,7 +432,7 @@ func main() {
 
 	//UploadFiles
 	uploadFile := getTestMocksAsset("mock_dir1")
-	objId, totalFiles, err := UploadFiles(dev, sid, uploadFile, "/mtp-test-files/temp_dir/test-UploadFiles")
+	objId, totalFiles, err := UploadFiles(dev, sid, uploadFile, "/mtp-test-files/temp_dir/test-UploadFiles34")
 	if err != nil {
 		log.Panic(err)
 	}
