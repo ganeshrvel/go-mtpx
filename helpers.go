@@ -209,7 +209,32 @@ func handleMakeDirectory(dev *mtp.Device, storageId, parentId uint32, filename s
 }
 
 // helper function to create a file
-func handleMakeFile(dev *mtp.Device, storageId uint32, obj *mtp.ObjectInfo) (rObjectId uint32, rError error) {
+func handleMakeFile(dev *mtp.Device, storageId uint32, obj *mtp.ObjectInfo, overwriteExisting bool) (rObjectId uint32, rError error) {
+
+	fi, err := GetObjectFromParentIdAndFilename(dev, storageId, obj.ParentObject, obj.Filename)
+
+	// file exists
+	if err == nil {
+		// if [overwriteExisting] is false then just return existing [objectId] of the exisiting file
+		if !overwriteExisting {
+			return fi.ObjectId, nil
+		}
+
+		// if [overwriteExisting] is true then delete the existing file
+		if err := DeleteFile(dev, storageId, fi.ObjectId, ""); err != nil {
+			return 0, err
+		}
+	} else {
+		switch err.(type) {
+		// if the file does not exists then do nothing
+		case FileNotFoundError:
+
+		default:
+			return 0, err
+		}
+	}
+
+	// create a new file object
 	_, _, objId, err := dev.SendObjectInfo(storageId, obj.ParentObject, obj)
 	if err != nil {
 		return 0, SendObjectError{error: err}

@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 // initialize the mtp device
@@ -215,6 +216,8 @@ func UploadFiles(dev *mtp.Device, storageId uint32, source, destination string) 
 
 			isDir := info.IsDir()
 			name := info.Name()
+
+			// if the object is a directory then create a directory using [MakeDirectory] or [MakeDirectoryRecursive]
 			if isDir {
 				// if the parent path exists within the [destinationFilesDict] then fetch the [parentId] (value) and make the destination directory
 				if parentId, ok := destinationFilesDict[destinationParentPath]; ok {
@@ -245,17 +248,47 @@ func UploadFiles(dev *mtp.Device, storageId uint32, source, destination string) 
 				return nil
 			}
 
-			/*size := info.Size()
+			size := info.Size()
 			var objectFormat uint16 = mtp.OFC_Association
+			var fileParentId uint32
 
-			objInfo := mtp.ObjectInfo{
+			_parentId, ok := destinationFilesDict[destinationParentPath]
+			if ok {
+				// if [destinationParentPath] exists within [destinationFilesDict] then use the value of the [destinationFilesDict] item as [parentId]
+
+				fileParentId = _parentId
+			} else {
+				// if [destinationParentPath] DOES NOT exists within [destinationFilesDict] then create a directory using [MakeDirectoryRecursive] and use the resulting objId as [parentId]
+
+				objId, err := MakeDirectoryRecursive(dev, storageId, _destination)
+				if err != nil {
+					//todo
+					return err
+				}
+
+				// append the current objectId to [destinationFilesDict]
+				destinationFilesDict[destinationFilePath] = objId
+
+				fileParentId = objId
+			}
+
+			fObj := mtp.ObjectInfo{
 				StorageID:        storageId,
 				ObjectFormat:     objectFormat,
-				ParentObject:     destParentId,
+				ParentObject:     fileParentId,
 				Filename:         name,
 				CompressedSize:   uint32(size),
 				ModificationDate: time.Now(),
-			}*/
+			}
+
+			objId, err := handleMakeFile(dev, storageId, &fObj, true)
+			if err != nil {
+				//todo
+				return err
+			}
+
+			// append the current objectId to [destinationFilesDict]
+			destinationFilesDict[destinationFilePath] = objId
 
 			return nil
 		},
