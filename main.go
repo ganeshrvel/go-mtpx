@@ -208,6 +208,11 @@ func UploadFiles(dev *mtp.Device, storageId uint32, source, destination string) 
 				return err
 			}
 
+			// dont follow symlinks
+			if isSymlinkLocal(info) {
+				return nil
+			}
+
 			sourceFilePath := fixSlash(path)
 
 			destinationParentPath, destinationFilePath := mapLocalPathToMtpPath(
