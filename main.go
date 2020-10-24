@@ -209,6 +209,7 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 			_destination: destParentId,
 		}
 
+		// walk through the source
 		err = filepath.Walk(_source,
 			func(path string, fInfo os.FileInfo, err error) error {
 				if err != nil {
@@ -222,6 +223,7 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 
 				sourceFilePath := fixSlash(path)
 
+				// map the local files path to the mtp files path
 				destinationParentPath, destinationFilePath := mapLocalPathToMtpPath(
 					sourceFilePath, sourceParentPath, _destination,
 				)
@@ -295,6 +297,7 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 
 				var compressedSize uint32
 
+				// assign compressedSize of the file
 				if size > 0xFFFFFFFF {
 					compressedSize = 0xFFFFFFFF
 				} else {
