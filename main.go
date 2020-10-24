@@ -187,139 +187,150 @@ func WalkDirectory(dev *mtp.Device, storageId, objectId uint32, fullPath string,
 	return fi.ObjectId, totalFiles, nil
 }
 
-func UploadFiles(dev *mtp.Device, storageId uint32, source, destination string) (rObjectId uint32, rTotalFiles int, rError error) {
+// Send local files to the device
+// sources: can be the list of files/directories that are to be sent to the device
+// destination: fullPath to the destination directory
+func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destination string) (rObjectId uint32, rTotalFiles int, rTotalSize int64, rError error) {
 	_destination := fixSlash(destination)
-	_source := fixSlash(source)
-	sourceParentPath := filepath.Dir(_source)
+
+	totalFiles := 0
+	var totalSize int64 = 0
 
 	destParentId, err := MakeDirectoryRecursive(dev, storageId, _destination)
 	if err != nil {
-		return 0, 0, err
+		return 0, totalFiles, totalSize, err
 	}
 
-	destinationFilesDict := map[string]uint32{
-		_destination: destParentId,
-	}
+	for _, source := range sources {
+		_source := fixSlash(source)
+		sourceParentPath := filepath.Dir(_source)
 
-	err = filepath.Walk(_source,
-		func(path string, fInfo os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
+		destinationFilesDict := map[string]uint32{
+			_destination: destParentId,
+		}
 
-			// dont follow symlinks
-			if isSymlinkLocal(fInfo) {
-				return nil
-			}
-
-			sourceFilePath := fixSlash(path)
-
-			destinationParentPath, destinationFilePath := mapLocalPathToMtpPath(
-				sourceFilePath, sourceParentPath, _destination,
-			)
-
-			isDir := fInfo.IsDir()
-			name := fInfo.Name()
-
-			// if the object is a directory then create a directory using [MakeDirectory] or [MakeDirectoryRecursive]
-			if isDir {
-				// if the parent path exists within the [destinationFilesDict] then fetch the [parentId] (value) and make the destination directory
-				if parentId, ok := destinationFilesDict[destinationParentPath]; ok {
-					objId, err := MakeDirectory(
-						dev, storageId, parentId, destinationParentPath, name,
-					)
-					if err != nil {
-						//todo
-						return err
-					}
-
-					// append the current objectId to [destinationFilesDict]
-					destinationFilesDict[destinationFilePath] = objId
-
-					// if the parent path DOES NOT exists within the [destinationFilesDict] create a new directory using costlier [MakeDirectoryRecursive] method
-					// this is a fallback situation
-				} else {
-					objId, err := MakeDirectoryRecursive(dev, storageId, _destination)
-					if err != nil {
-						//todo
-						return err
-					}
-
-					// append the current objectId to [destinationFilesDict]
-					destinationFilesDict[destinationFilePath] = objId
+		err = filepath.Walk(_source,
+			func(path string, fInfo os.FileInfo, err error) error {
+				if err != nil {
+					return err
 				}
 
-				return nil
-			}
+				// don't follow symlinks
+				if isSymlinkLocal(fInfo) {
+					return nil
+				}
 
-			var fileParentId uint32
+				sourceFilePath := fixSlash(path)
 
-			_parentId, ok := destinationFilesDict[destinationParentPath]
-			if ok {
-				// if [destinationParentPath] exists within [destinationFilesDict] then use the value of the [destinationFilesDict] item as [parentId]
+				destinationParentPath, destinationFilePath := mapLocalPathToMtpPath(
+					sourceFilePath, sourceParentPath, _destination,
+				)
 
-				fileParentId = _parentId
-			} else {
-				// if [destinationParentPath] DOES NOT exists within [destinationFilesDict] then create the parent directory using [MakeDirectoryRecursive] and use the resulting objId as [parentId]
+				size := fInfo.Size()
+				// keep track of [totalFiles]
+				totalFiles += 1
 
-				objId, err := MakeDirectoryRecursive(dev, storageId, destinationParentPath)
+				// keep track of [totalSize]
+				totalSize += size
+
+				isDir := fInfo.IsDir()
+				name := fInfo.Name()
+
+				// if the object is a directory then create a directory using [MakeDirectory] or [MakeDirectoryRecursive]
+				if isDir {
+					// if the parent path exists within the [destinationFilesDict] then fetch the [parentId] (value) and make the destination directory
+					if parentId, ok := destinationFilesDict[destinationParentPath]; ok {
+						objId, err := MakeDirectory(
+							dev, storageId, parentId, destinationParentPath, name,
+						)
+						if err != nil {
+							return err
+						}
+
+						// append the current objectId to [destinationFilesDict]
+						destinationFilesDict[destinationFilePath] = objId
+
+						// if the parent path DOES NOT exists within the [destinationFilesDict] create a new directory using costlier [MakeDirectoryRecursive] method
+						// this is a fallback situation
+					} else {
+						objId, err := MakeDirectoryRecursive(dev, storageId, _destination)
+						if err != nil {
+							return err
+						}
+
+						// append the current objectId to [destinationFilesDict]
+						destinationFilesDict[destinationFilePath] = objId
+					}
+
+					return nil
+				}
+
+				var fileParentId uint32
+
+				_parentId, ok := destinationFilesDict[destinationParentPath]
+				if ok {
+					// if [destinationParentPath] exists within [destinationFilesDict] then use the value of the [destinationFilesDict] item as [parentId]
+					fileParentId = _parentId
+
+				} else {
+					// if [destinationParentPath] DOES NOT exists within [destinationFilesDict] then create the parent directory using [MakeDirectoryRecursive] and use the resulting objId as [parentId]
+					objId, err := MakeDirectoryRecursive(dev, storageId, destinationParentPath)
+
+					if err != nil {
+						return err
+					}
+
+					// append the current objectId to [destinationFilesDict]
+					destinationFilesDict[destinationFilePath] = objId
+
+					fileParentId = objId
+				}
+
+				// read the local file
+				fileBuf, err := os.Open(sourceFilePath)
 				if err != nil {
-					//todo
+					return LocalFileError{error: err}
+				}
+				defer fileBuf.Close()
+
+				var compressedSize uint32
+
+				if size > 0xFFFFFFFF {
+					compressedSize = 0xFFFFFFFF
+				} else {
+					compressedSize = uint32(size)
+				}
+
+				fObj := mtp.ObjectInfo{
+					StorageID:        storageId,
+					ObjectFormat:     mtp.OFC_Undefined,
+					ParentObject:     fileParentId,
+					Filename:         name,
+					CompressedSize:   compressedSize,
+					ModificationDate: time.Now(),
+				}
+
+				objId, err := handleMakeFile(
+					dev, storageId, &fObj, &fInfo, fileBuf, true,
+				)
+				if err != nil {
 					return err
 				}
 
 				// append the current objectId to [destinationFilesDict]
 				destinationFilesDict[destinationFilePath] = objId
 
-				fileParentId = objId
-			}
+				return nil
+			},
+		)
 
-			// read the local file
-			fileBuf, err := os.Open(sourceFilePath)
-			if err != nil {
-				return LocalFileError{error: err}
-			}
-			defer fileBuf.Close()
-
-			var compressedSize uint32
-			size := fInfo.Size()
-			if size > 0xFFFFFFFF {
-				compressedSize = 0xFFFFFFFF
-			} else {
-				compressedSize = uint32(size)
-			}
-
-			fObj := mtp.ObjectInfo{
-				StorageID:        storageId,
-				ObjectFormat:     mtp.OFC_Undefined,
-				ParentObject:     fileParentId,
-				Filename:         name,
-				CompressedSize:   compressedSize,
-				ModificationDate: time.Now(),
-			}
-
-			objId, err := handleMakeFile(
-				dev, storageId, &fObj, &fInfo, fileBuf, true,
-			)
-			if err != nil {
-				//todo
-				return err
-			}
-
-			// append the current objectId to [destinationFilesDict]
-			destinationFilesDict[destinationFilePath] = objId
-
-			return nil
-		},
-	)
-
-	if err != nil {
-		return 0, 0,
-			LocalFileError{error: fmt.Errorf("an error occured while uploading files. %+v", err)}
+		if err != nil {
+			return destParentId, totalFiles, totalSize,
+				LocalFileError{error: fmt.Errorf("an error occured while uploading files. %+v", err)}
+		}
 	}
 
-	//todo
-	return 0, 0, nil
+	return destParentId, totalFiles, totalSize, nil
 }
 
 func DeleteFile(dev *mtp.Device, storageId, objectId uint32, fullPath string) error {
@@ -351,7 +362,7 @@ func RenameFile(dev *mtp.Device, storageId, objectId uint32, fullPath, newFileNa
 }
 
 func main() {
-	dev, err := Initialize(Init{})
+	dev, err := Initialize(Init{debugMode: false})
 
 	if err != nil {
 		log.Panic(err)
@@ -436,7 +447,13 @@ func main() {
 
 	//UploadFiles
 	uploadFile := getTestMocksAsset("mock_dir1")
-	objId, totalFiles, err := UploadFiles(dev, sid, uploadFile, "/mtp-test-files/temp_dir/test-UploadFile")
+	uploadFile2 := getTestMocksAsset("mock_dir2")
+	start := time.Now()
+
+	// uploadFile := "/Users/ganeshr/Desktop/squash-test-assets/huge_file.zip"
+	objId, totalFiles, totalSize, err := UploadFiles(dev, sid,
+		[]string{uploadFile, uploadFile2}, "/mtp-test-files/temp_dir/test-UploadFile-o",
+	)
 	if err != nil {
 
 		log.Panic(err)
@@ -444,6 +461,8 @@ func main() {
 
 	pretty.Println(objId)
 	pretty.Println(totalFiles)
+	pretty.Println(totalSize)
+	pretty.Println("time elapsed: ", time.Since(start).Seconds())
 
 	Dispose(dev)
 }

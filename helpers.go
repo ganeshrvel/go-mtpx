@@ -201,6 +201,7 @@ func handleMakeDirectory(dev *mtp.Device, storageId, parentId uint32, filename s
 		ModificationDate: time.Now(),
 	}
 
+	// create a new object handle
 	_, _, objId, err := dev.SendObjectInfo(storageId, parentId, &send)
 	if err != nil {
 		return 0, SendObjectError{error: err}
@@ -240,8 +241,8 @@ func handleMakeFile(dev *mtp.Device, storageId uint32, obj *mtp.ObjectInfo, fInf
 		return objId, SendObjectError{error: err}
 	}
 
-	_fileInfo := *fInfo
 	// send the bytes data to the newly create object handle
+	_fileInfo := *fInfo
 	err = dev.SendObject(fileBuf, _fileInfo.Size())
 	if err != nil {
 		return objId, SendObjectError{error: err}
@@ -302,19 +303,4 @@ func proccessWalkDirectory(dev *mtp.Device, storageId, objectId uint32, fullPath
 	}
 
 	return totalFiles, nil
-}
-
-func SanitizeDosName(name string) string {
-	if !strings.ContainsAny(name, forbiddenFileName) {
-		return name
-	}
-	dest := make([]byte, len(name))
-	for i := 0; i < len(name); i++ {
-		if strings.Contains(forbiddenFileName, string(name[i])) {
-			dest[i] = '_'
-		} else {
-			dest[i] = name[i]
-		}
-	}
-	return string(dest)
 }

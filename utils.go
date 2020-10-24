@@ -191,3 +191,18 @@ func mapLocalPathToMtpPath(
 
 	return filepath.Dir(fullPath), fullPath
 }
+
+func SanitizeDosName(name string) string {
+	if !strings.ContainsAny(name, forbiddenFileName) {
+		return name
+	}
+	dest := make([]byte, len(name))
+	for i := 0; i < len(name); i++ {
+		if strings.Contains(forbiddenFileName, string(name[i])) {
+			dest[i] = '_'
+		} else {
+			dest[i] = name[i]
+		}
+	}
+	return string(dest)
+}
