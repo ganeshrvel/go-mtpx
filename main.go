@@ -190,8 +190,13 @@ func WalkDirectory(dev *mtp.Device, storageId, objectId uint32, fullPath string,
 // Send local files to the device
 // sources: can be the list of files/directories that are to be sent to the device
 // destination: fullPath to the destination directory
-func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destination string) (rObjectId uint32, rTotalFiles int, rTotalSize int64, rError error) {
+func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destination string, cb UploadFilesCb) (rObjectId uint32, rTotalFiles int, rTotalSize int64, rError error) {
 	_destination := fixSlash(destination)
+
+	uploadFi := UploadFileInfo{
+		startTime:      time.Now(),
+		latestSentTime: time.Now(),
+	}
 
 	totalFiles := 0
 	var totalSize int64 = 0
@@ -319,6 +324,24 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 				if err != nil {
 					return err
 				}
+
+				uploadFi.FileInfo = &FileInfo{
+					Info:       &fObj,
+					Size:       size,
+					IsDir:      isDir,
+					ModTime:    fObj.ModificationDate,
+					Name:       fObj.Filename,
+					FullPath:   destinationFilePath,
+					ParentPath: destinationParentPath,
+					Extension:  extension(fObj.Filename, isDir),
+					ParentId:   fObj.ParentObject,
+					ObjectId:   objId,
+				}
+				uploadFi.sentFiles = totalFiles
+				uploadFi.speed = transferRateInMBs(size, uploadFi.latestSentTime, uploadFi.speed)
+				uploadFi.latestSentTime = time.Now()
+
+				cb(&uploadFi)
 
 				// append the current objectId to [destinationFilesDict]
 				destinationFilesDict[destinationFilePath] = objId
@@ -453,9 +476,12 @@ func main() {
 	uploadFile2 := getTestMocksAsset("mock_dir2")
 	start := time.Now()
 
-	// uploadFile := "/Users/ganeshr/Desktop/squash-test-assets/huge_file.zip"
 	objId, totalFiles, totalSize, err := UploadFiles(dev, sid,
-		[]string{uploadFile, uploadFile2}, "/mtp-test-files/temp_dir/test-UploadFile-o",
+		[]string{uploadFile, uploadFile2, uploadFile}, "/mtp-test-files/temp_dir/test-UploadFile-o",
+		func(uploadFi *UploadFileInfo) {
+			fmt.Printf("Current filepath: %s\n", uploadFi.FileInfo.FullPath)
+			fmt.Printf("%s MB/s\n", uploadFi.speed)
+		},
 	)
 	if err != nil {
 

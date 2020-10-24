@@ -3,10 +3,12 @@ package main
 import (
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 func extension(filename string, isDir bool) string {
@@ -205,4 +207,18 @@ func SanitizeDosName(name string) string {
 		}
 	}
 	return string(dest)
+}
+
+func transferRateInMBs(size int64, lastSentTime time.Time, speed float64) float64 {
+	var _size = float64(size)
+	var elapsedTime = time.Since(lastSentTime).Seconds()
+
+	rate := _size / elapsedTime / 1000 / 1000
+
+	// prevent polluted values
+	if elapsedTime <= 1 {
+		return speed
+	}
+
+	return math.Round(rate*100) / 100
 }

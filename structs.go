@@ -29,3 +29,14 @@ type FileInfo struct {
 }
 
 type WalkDirectoryCb func(objectId uint32, fi *FileInfo)
+
+type UploadFileInfo struct {
+	FileInfo *FileInfo
+
+	startTime      time.Time
+	latestSentTime time.Time
+	sentFiles      int
+	speed          float64
+}
+
+type UploadFilesCb func(uploadFi *UploadFileInfo)
