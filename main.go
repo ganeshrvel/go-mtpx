@@ -124,7 +124,6 @@ func MakeDirectoryRecursive(dev *mtp.Device, storageId uint32, fullPath string) 
 	if _fullPath == PathSep {
 		return ParentObjectId, nil
 	}
-
 	splittedFullPath := strings.Split(_fullPath, PathSep)
 
 	var objectId = uint32(ParentObjectId)
@@ -203,24 +202,24 @@ func UploadFiles(dev *mtp.Device, storageId uint32, source, destination string) 
 	}
 
 	err = filepath.Walk(_source,
-		func(path string, info os.FileInfo, err error) error {
+		func(path string, fInfo os.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}
 
 			// dont follow symlinks
-			if isSymlinkLocal(info) {
+			if isSymlinkLocal(fInfo) {
 				return nil
 			}
 
 			sourceFilePath := fixSlash(path)
 
 			destinationParentPath, destinationFilePath := mapLocalPathToMtpPath(
-				sourceFilePath, sourceParentPath, destination,
+				sourceFilePath, sourceParentPath, _destination,
 			)
 
-			isDir := info.IsDir()
-			name := info.Name()
+			isDir := fInfo.IsDir()
+			name := fInfo.Name()
 
 			// if the object is a directory then create a directory using [MakeDirectory] or [MakeDirectoryRecursive]
 			if isDir {
@@ -253,7 +252,6 @@ func UploadFiles(dev *mtp.Device, storageId uint32, source, destination string) 
 				return nil
 			}
 
-			size := info.Size()
 			var fileParentId uint32
 
 			_parentId, ok := destinationFilesDict[destinationParentPath]
@@ -277,17 +275,18 @@ func UploadFiles(dev *mtp.Device, storageId uint32, source, destination string) 
 			}
 
 			// read the local file
-			file, err := os.Open(sourceFilePath)
+			fileBuf, err := os.Open(sourceFilePath)
 			if err != nil {
 				return LocalFileError{error: err}
 			}
-			defer file.Close()
+			defer fileBuf.Close()
 
-			// convert the local file into a byte stream
-			data := make([]byte, size)
-			_, err = file.Read(data)
-			if err != nil {
-				return LocalFileError{error: err}
+			var compressedSize uint32
+			size := fInfo.Size()
+			if size > 0xFFFFFFFF {
+				compressedSize = 0xFFFFFFFF
+			} else {
+				compressedSize = uint32(size)
 			}
 
 			fObj := mtp.ObjectInfo{
@@ -295,12 +294,12 @@ func UploadFiles(dev *mtp.Device, storageId uint32, source, destination string) 
 				ObjectFormat:     mtp.OFC_Undefined,
 				ParentObject:     fileParentId,
 				Filename:         name,
-				CompressedSize:   uint32(len(data)),
+				CompressedSize:   compressedSize,
 				ModificationDate: time.Now(),
 			}
 
 			objId, err := handleMakeFile(
-				dev, storageId, &fObj, data, true,
+				dev, storageId, &fObj, &fInfo, fileBuf, true,
 			)
 			if err != nil {
 				//todo
@@ -316,7 +315,7 @@ func UploadFiles(dev *mtp.Device, storageId uint32, source, destination string) 
 
 	if err != nil {
 		return 0, 0,
-			LocalFileError{error: fmt.Errorf("an error occured while uploading files. %v", err)}
+			LocalFileError{error: fmt.Errorf("an error occured while uploading files. %+v", err)}
 	}
 
 	//todo
@@ -437,8 +436,9 @@ func main() {
 
 	//UploadFiles
 	uploadFile := getTestMocksAsset("mock_dir1")
-	objId, totalFiles, err := UploadFiles(dev, sid, uploadFile, "/mtp-test-files/temp_dir/test-UploadFiles34")
+	objId, totalFiles, err := UploadFiles(dev, sid, uploadFile, "/mtp-test-files/temp_dir/test-UploadFile")
 	if err != nil {
+
 		log.Panic(err)
 	}
 

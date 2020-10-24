@@ -10,3 +10,5 @@ const PathSep = string(os.PathSeparator)
 const ParentObjectId = mtp.GOH_ROOT_PARENT
 
 const devTimeout = 15000
+
+const forbiddenFileName = ":*?\"<>|"

@@ -1,9 +1,9 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/ganeshrvel/go-mtpfs/mtp"
+	"os"
 	"strings"
 	"time"
 )
@@ -35,7 +35,7 @@ func GetObjectFromObjectId(dev *mtp.Device, objectId uint32, parentPath string) 
 	// if the [objectId] is root then return the basic root directory information
 	if objectId == ParentObjectId {
 		return &FileInfo{
-			Size:     0,
+			Size:     0xFFFFFFFF,
 			IsDir:    true,
 			FullPath: "/",
 			ObjectId: ParentObjectId,
@@ -197,7 +197,7 @@ func handleMakeDirectory(dev *mtp.Device, storageId, parentId uint32, filename s
 		ObjectFormat:     mtp.OFC_Association,
 		ParentObject:     parentId,
 		Filename:         filename,
-		CompressedSize:   uint32(0),
+		CompressedSize:   0xFFFFFFFF,
 		ModificationDate: time.Now(),
 	}
 
@@ -210,8 +210,7 @@ func handleMakeDirectory(dev *mtp.Device, storageId, parentId uint32, filename s
 }
 
 // helper function to create a file
-func handleMakeFile(dev *mtp.Device, storageId uint32, obj *mtp.ObjectInfo, data []byte, overwriteExisting bool) (rObjectId uint32, rError error) {
-
+func handleMakeFile(dev *mtp.Device, storageId uint32, obj *mtp.ObjectInfo, fInfo *os.FileInfo, fileBuf *os.File, overwriteExisting bool) (rObjectId uint32, rError error) {
 	fi, err := GetObjectFromParentIdAndFilename(dev, storageId, obj.ParentObject, obj.Filename)
 
 	// file exists
@@ -238,14 +237,14 @@ func handleMakeFile(dev *mtp.Device, storageId uint32, obj *mtp.ObjectInfo, data
 	// create a new object handle
 	_, _, objId, err := dev.SendObjectInfo(storageId, obj.ParentObject, obj)
 	if err != nil {
-		return 0, SendObjectError{error: err}
+		return objId, SendObjectError{error: err}
 	}
 
+	_fileInfo := *fInfo
 	// send the bytes data to the newly create object handle
-	buf := bytes.NewBuffer(data)
-	err = dev.SendObject(buf, int64(len(data)))
+	err = dev.SendObject(fileBuf, _fileInfo.Size())
 	if err != nil {
-		return 0, SendObjectError{error: err}
+		return objId, SendObjectError{error: err}
 	}
 
 	return objId, nil
@@ -303,4 +302,19 @@ func proccessWalkDirectory(dev *mtp.Device, storageId, objectId uint32, fullPath
 	}
 
 	return totalFiles, nil
+}
+
+func SanitizeDosName(name string) string {
+	if !strings.ContainsAny(name, forbiddenFileName) {
+		return name
+	}
+	dest := make([]byte, len(name))
+	for i := 0; i < len(name); i++ {
+		if strings.Contains(forbiddenFileName, string(name[i])) {
+			dest[i] = '_'
+		} else {
+			dest[i] = name[i]
+		}
+	}
+	return string(dest)
 }
