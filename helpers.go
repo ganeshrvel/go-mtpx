@@ -96,6 +96,10 @@ func GetObjectFromParentIdAndFilename(dev *mtp.Device, storageId uint32, parentI
 // fetch the object information using [fullPath]
 // Since the [parentPath] is unavailable here the [fullPath] property of the resulting object [FileInfo] may not be valid.
 func GetObjectFromPath(dev *mtp.Device, storageId uint32, fullPath string) (*FileInfo, error) {
+	if fullPath == "" {
+		return nil, InvalidPathError{error: fmt.Errorf("path does not exists. path: %s", fullPath)}
+	}
+
 	_filePath := fixSlash(fullPath)
 
 	if _filePath == PathSep {
@@ -138,9 +142,11 @@ func GetObjectFromPath(dev *mtp.Device, storageId uint32, fullPath string) (*Fil
 		resultCount += 1
 	}
 
-	if resultCount < 1 {
+	if resultCount < 1 || fi == nil {
 		return nil, InvalidPathError{error: fmt.Errorf("file not found: %s", fullPath)}
 	}
+
+	fi.FullPath = _filePath
 
 	return fi, nil
 }

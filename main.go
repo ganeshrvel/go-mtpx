@@ -166,15 +166,12 @@ func MakeDirectoryRecursive(dev *mtp.Device, storageId uint32, fullPath string) 
 
 // List the contents in a directory
 // use [recursive] to fetch the whole nested tree
-// [objectId] and [fullPath] are optional parameters
-// if [objectId] is not available then [fullPath] will be used to fetch the [objectId]
-// dont leave both [objectId] and [fullPath] empty
 // Tip: use [objectId] whenever possible to avoid traversing down the whole file tree to process and find the [objectId]
 // rObjectId: objectId of the file/diectory
 // rTotalFiles: total number of files and directories
-func Walk(dev *mtp.Device, storageId, objectId uint32, fullPath string, recursive bool, cb WalkCb) (rObjectId uint32, rTotalFiles int, rError error) {
+func Walk(dev *mtp.Device, storageId uint32, fullPath string, recursive bool, cb WalkCb) (rObjectId uint32, rTotalFiles int, rError error) {
 	// fetch the objectId from [objectId] and/or [fullPath] parameters
-	fi, err := GetObjectFromObjectIdOrPath(dev, storageId, objectId, fullPath)
+	fi, err := GetObjectFromPath(dev, storageId, fullPath)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -456,13 +453,12 @@ func DownloadFiles(dev *mtp.Device, storageId uint32, sources []string, destinat
 		_source := fixSlash(source)
 		sourceParentPath := filepath.Dir(_source)
 
-		fi, err := GetObjectFromPath(dev, storageId, _source)
+		_, err := GetObjectFromPath(dev, storageId, _source)
 		if err != nil {
 			return totalFiles, totalSize, err
 		}
 
-		sourceObjectId := fi.ObjectId
-		_, _, err = Walk(dev, storageId, sourceObjectId, _source, true, func(objectId uint32, fi *FileInfo) error {
+		_, _, err = Walk(dev, storageId, _source, true, func(objectId uint32, fi *FileInfo) error {
 			destinationFileParentPath, destinationFilePath := mapSourcePathToDestinationPath(fi.FullPath, sourceParentPath, _destination)
 			// filter out disallowed files
 			if isDisallowedFiles(fi.Name) {
@@ -618,25 +614,25 @@ func main() {
 	//pretty.Println(totalSize)
 	//pretty.Println("time elapsed: ", time.Since(start).Seconds())
 
-	//UploadFiles
-	downloadFile := newTempMocksDir("test_DownloadTest", true)
-	sourceFile1 := "/mtp-test-files/temp_dir"
-	start := time.Now()
-
-	totalFiles, totalSize, err := DownloadFiles(dev, sid,
-		[]string{sourceFile1}, downloadFile,
-		func(downloadFi *TransferredFileInfo) {
-			fmt.Printf("Current filepath: %s\n", downloadFi.FileInfo.FullPath)
-			fmt.Printf("%d MB/s\n", downloadFi.Speed)
-		},
-	)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	pretty.Println(totalFiles)
-	pretty.Println(totalSize)
-	pretty.Println("time elapsed: ", time.Since(start).Seconds())
+	////DownloadFiles
+	//downloadFile := newTempMocksDir("test_DownloadTest", true)
+	//sourceFile1 := "/mtp-test-files/temp_dir/openmtp.dmg"
+	//start := time.Now()
+	//
+	//totalFiles, totalSize, err := DownloadFiles(dev, sid,
+	//	[]string{sourceFile1}, downloadFile,
+	//	func(downloadFi *TransferredFileInfo) {
+	//		fmt.Printf("Current filepath: %s\n", downloadFi.FileInfo.FullPath)
+	//		fmt.Printf("%d MB/s\n", downloadFi.Speed)
+	//	},
+	//)
+	//if err != nil {
+	//	log.Panic(err)
+	//}
+	//
+	//pretty.Println(totalFiles)
+	//pretty.Println(totalSize)
+	//pretty.Println("time elapsed: ", time.Since(start).Seconds())
 
 	Dispose(dev)
 }

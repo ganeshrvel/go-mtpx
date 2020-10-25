@@ -26,6 +26,7 @@ func TestGetObjectFromPath(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(fi.ObjectId, ShouldBeGreaterThan, 0)
 		So(fi.IsDir, ShouldEqual, true)
+		So(fi.FullPath, ShouldEqual, "/mtp-test-files")
 
 		// test the directory '/mtp-test-files/'
 		fi, err = GetObjectFromPath(dev, sid, "/mtp-test-files/")
@@ -33,6 +34,7 @@ func TestGetObjectFromPath(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(fi.ObjectId, ShouldBeGreaterThan, 0)
 		So(fi.IsDir, ShouldEqual, true)
+		So(fi.FullPath, ShouldEqual, "/mtp-test-files")
 
 		// test the directory 'mtp-test-files/'
 		fi, err = GetObjectFromPath(dev, sid, "mtp-test-files/")
@@ -40,6 +42,7 @@ func TestGetObjectFromPath(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(fi.ObjectId, ShouldBeGreaterThan, 0)
 		So(fi.IsDir, ShouldEqual, true)
+		So(fi.FullPath, ShouldEqual, "/mtp-test-files")
 
 		// test the directory 'mtp-test-files'
 		fi, err = GetObjectFromPath(dev, sid, "mtp-test-files")
@@ -47,6 +50,7 @@ func TestGetObjectFromPath(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(fi.ObjectId, ShouldBeGreaterThan, 0)
 		So(fi.IsDir, ShouldEqual, true)
+		So(fi.FullPath, ShouldEqual, "/mtp-test-files")
 
 		// test the file '/mtp-test-files/a.txt'
 		fi, err = GetObjectFromPath(dev, sid, "/mtp-test-files/a.txt")
@@ -54,6 +58,7 @@ func TestGetObjectFromPath(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(fi.ObjectId, ShouldBeGreaterThan, 0)
 		So(fi.IsDir, ShouldEqual, false)
+		So(fi.FullPath, ShouldEqual, "/mtp-test-files/a.txt")
 
 		// test the file '/mtp-test-files/mock_dir1/a.txt'
 		fi, err = GetObjectFromPath(dev, sid, "/mtp-test-files/mock_dir1/a.txt")
@@ -61,6 +66,7 @@ func TestGetObjectFromPath(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(fi.ObjectId, ShouldBeGreaterThan, 0)
 		So(fi.IsDir, ShouldEqual, false)
+		So(fi.FullPath, ShouldEqual, "/mtp-test-files/mock_dir1/a.txt")
 
 		// test the file 'mtp-test-files/a.txt'
 		fi, err = GetObjectFromPath(dev, sid, "mtp-test-files/a.txt")
@@ -68,6 +74,7 @@ func TestGetObjectFromPath(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(fi.ObjectId, ShouldBeGreaterThan, 0)
 		So(fi.IsDir, ShouldEqual, false)
+		So(fi.FullPath, ShouldEqual, "/mtp-test-files/a.txt")
 
 		// test the file 'mtp-test-files/a.txt/'
 		fi, err = GetObjectFromPath(dev, sid, "mtp-test-files/a.txt/")
@@ -75,6 +82,14 @@ func TestGetObjectFromPath(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(fi.ObjectId, ShouldBeGreaterThan, 0)
 		So(fi.IsDir, ShouldEqual, false)
+		So(fi.FullPath, ShouldEqual, "/mtp-test-files/a.txt")
+
+		// test the file ''
+		fi, err = GetObjectFromPath(dev, sid, "")
+
+		So(err, ShouldBeError)
+		So(fi, ShouldBeNil)
+		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
 	})
 
 	Convey("Testing non exisiting file | GetObjectFromPath | It should throw an error", t, func() {

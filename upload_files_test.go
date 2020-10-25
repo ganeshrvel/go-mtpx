@@ -118,7 +118,7 @@ func TestUploadFiles(t *testing.T) {
 			"/mock_dir1/a.txt"}
 
 		index := 0
-		objectId, totalListFiles, err := Walk(dev, sid, objectIdDest, destination, true, func(objectId uint32, fi *FileInfo) error {
+		objectId, totalListFiles, err := Walk(dev, sid, destination, true, func(objectId uint32, fi *FileInfo) error {
 			So(fi.FullPath, ShouldEqual, getFullPath(destination, dirList1[index]))
 
 			index += 1
