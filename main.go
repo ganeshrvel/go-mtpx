@@ -321,13 +321,6 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 				}
 
 				/// if the object is a file then create a file
-
-				// keep track of [totalFiles]
-				totalFiles += 1
-
-				// keep track of [totalSize]
-				totalSize += size
-
 				var fileParentId uint32
 
 				_parentId, ok := destinationFilesDict[destinationParentPath]
@@ -380,6 +373,12 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 				if err != nil {
 					return err
 				}
+
+				// keep track of [totalFiles]
+				totalFiles += 1
+
+				// keep track of [totalSize]
+				totalSize += size
 
 				uploadFi.FileInfo = &FileInfo{
 					Info:       &fObj,
@@ -490,6 +489,12 @@ func DownloadFiles(dev *mtp.Device, storageId uint32, sources []string, destinat
 			if err != nil {
 				return err
 			}
+
+			// keep track of [totalFiles]
+			totalFiles += 1
+
+			// keep track of [totalSize]
+			totalSize += fi.Size
 
 			downloadFi.FileInfo = fi
 			downloadFi.FilesSent = totalFiles
