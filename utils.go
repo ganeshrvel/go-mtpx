@@ -159,6 +159,10 @@ func isSymlinkLocal(fi os.FileInfo) bool {
 	return fi.Mode()&os.ModeSymlink != 0
 }
 
+func isDisallowedFiles(filename string) bool {
+	return StringContains(disallowedFiles, filename)
+}
+
 func existsLocal(filename string) bool {
 	_, err := os.Stat(filename)
 
@@ -181,6 +185,16 @@ func StringFilter(x []string, f func(string) bool) []string {
 	return a
 }
 
+func StringContains(list []string, search string) bool {
+	for _, a := range list {
+		if a == search {
+			return true
+		}
+	}
+
+	return false
+}
+
 func subpathExists(path, searchPath string) bool {
 	return path != "" && strings.HasPrefix(searchPath, path)
 }
@@ -195,12 +209,12 @@ func mapLocalPathToMtpPath(
 }
 
 func SanitizeDosName(name string) string {
-	if !strings.ContainsAny(name, forbiddenFileName) {
+	if !strings.ContainsAny(name, disallowedFileName) {
 		return name
 	}
 	dest := make([]byte, len(name))
 	for i := 0; i < len(name); i++ {
-		if strings.Contains(forbiddenFileName, string(name[i])) {
+		if strings.Contains(disallowedFileName, string(name[i])) {
 			dest[i] = '_'
 		} else {
 			dest[i] = name[i]

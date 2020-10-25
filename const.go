@@ -11,4 +11,6 @@ const ParentObjectId = mtp.GOH_ROOT_PARENT
 
 const devTimeout = 15000
 
-const forbiddenFileName = ":*?\"<>|"
+const disallowedFileName = ":*?\"<>|"
+
+var disallowedFiles = []string{".DS_Store"}

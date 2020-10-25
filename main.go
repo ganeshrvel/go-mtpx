@@ -190,12 +190,12 @@ func WalkDirectory(dev *mtp.Device, storageId, objectId uint32, fullPath string,
 // Send local files to the device
 // sources: can be the list of files/directories that are to be sent to the device
 // destination: fullPath to the destination directory
-func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destination string, cb UploadFilesCb) (rObjectId uint32, rTotalFiles int, rTotalSize int64, rError error) {
+func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destination string, cb UploadFilesCb) (rDestinationObjectId uint32, rTotalFiles int, rTotalSize int64, rError error) {
 	_destination := fixSlash(destination)
 
 	uploadFi := UploadFileInfo{
-		startTime:      time.Now(),
-		latestSentTime: time.Now(),
+		StartTime:      time.Now(),
+		LatestSentTime: time.Now(),
 	}
 
 	totalFiles := 0
@@ -221,8 +221,14 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 					return err
 				}
 
+				name := fInfo.Name()
 				// don't follow symlinks
 				if isSymlinkLocal(fInfo) {
+					return nil
+				}
+
+				// filter out disallowed files
+				if isDisallowedFiles(name) {
 					return nil
 				}
 
@@ -234,14 +240,7 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 				)
 
 				size := fInfo.Size()
-				// keep track of [totalFiles]
-				totalFiles += 1
-
-				// keep track of [totalSize]
-				totalSize += size
-
 				isDir := fInfo.IsDir()
-				name := fInfo.Name()
 
 				// if the object is a directory then create a directory using [MakeDirectory] or [MakeDirectoryRecursive]
 				if isDir {
@@ -271,6 +270,14 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 
 					return nil
 				}
+
+				// if the object is a file then create a file
+
+				// keep track of [totalFiles]
+				totalFiles += 1
+
+				// keep track of [totalSize]
+				totalSize += size
 
 				var fileParentId uint32
 
@@ -337,9 +344,10 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 					ParentId:   fObj.ParentObject,
 					ObjectId:   objId,
 				}
-				uploadFi.sentFiles = totalFiles
-				uploadFi.speed = transferRateInMBs(size, uploadFi.latestSentTime, uploadFi.speed)
-				uploadFi.latestSentTime = time.Now()
+
+				uploadFi.FilesSent = totalFiles
+				uploadFi.Speed = transferRateInMBs(size, uploadFi.LatestSentTime, uploadFi.Speed)
+				uploadFi.LatestSentTime = time.Now()
 
 				cb(&uploadFi)
 
@@ -477,10 +485,10 @@ func main() {
 	start := time.Now()
 
 	objId, totalFiles, totalSize, err := UploadFiles(dev, sid,
-		[]string{uploadFile, uploadFile2, uploadFile}, "/mtp-test-files/temp_dir/test-UploadFile-o",
+		[]string{uploadFile, uploadFile2, uploadFile}, "/mtp-test-files/temp_dir/test_UploadFiles",
 		func(uploadFi *UploadFileInfo) {
 			fmt.Printf("Current filepath: %s\n", uploadFi.FileInfo.FullPath)
-			fmt.Printf("%x MB/s\n", uploadFi.speed)
+			fmt.Printf("%x MB/s\n", uploadFi.Speed)
 		},
 	)
 	if err != nil {

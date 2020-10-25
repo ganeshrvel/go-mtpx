@@ -33,10 +33,10 @@ type WalkDirectoryCb func(objectId uint32, fi *FileInfo)
 type UploadFileInfo struct {
 	FileInfo *FileInfo
 
-	startTime      time.Time
-	latestSentTime time.Time
-	sentFiles      int
-	speed          float64
+	StartTime      time.Time
+	LatestSentTime time.Time
+	FilesSent      int
+	Speed          float64
 }
 
-type UploadFilesCb func(uploadFi *UploadFileInfo)
+type UploadFilesCb func(fi *UploadFileInfo)
