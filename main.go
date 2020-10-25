@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+// todo work on documentations
+
 // initialize the mtp device
 // returns mtp device
 func Initialize(init Init) (*mtp.Device, error) {
@@ -166,8 +168,9 @@ func MakeDirectoryRecursive(dev *mtp.Device, storageId uint32, fullPath string) 
 // [objectId] and [fullPath] are optional parameters
 // if [objectId] is not available then [fullPath] will be used to fetch the [objectId]
 // dont leave both [objectId] and [fullPath] empty
-// Tips: use [objectId] whenever possible to avoid traversing down the whole file tree to process and find the [objectId]
-// returns total number of objects
+// Tip: use [objectId] whenever possible to avoid traversing down the whole file tree to process and find the [objectId]
+// rObjectId: objectId of the file/diectory
+// rTotalFiles: total number of files and directories
 func WalkDirectory(dev *mtp.Device, storageId, objectId uint32, fullPath string, recursive bool, cb WalkDirectoryCb) (rObjectId uint32, rTotalFiles int, rError error) {
 	// fetch the objectId from [objectId] and/or [fullPath] parameters
 	fi, err := GetObjectFromObjectIdOrPath(dev, storageId, objectId, fullPath)
@@ -187,9 +190,51 @@ func WalkDirectory(dev *mtp.Device, storageId, objectId uint32, fullPath string,
 	return fi.ObjectId, totalFiles, nil
 }
 
+// Delete an file/directory
+// [objectId] and [fullPath] are optional parameters
+// if [objectId] is not available then [fullPath] will be used to fetch the [objectId]
+// dont leave both [objectId] and [fullPath] empty
+// Tip: use [objectId] whenever possible to avoid traversing down the whole file tree to process and find the [objectId]
+func DeleteFile(dev *mtp.Device, storageId, objectId uint32, fullPath string) error {
+	exist, fi := FileExists(dev, storageId, objectId, fullPath)
+
+	if !exist {
+		return nil
+	}
+
+	if err := dev.DeleteObject(fi.ObjectId); err != nil {
+		return FileObjectError{error: err}
+	}
+
+	return nil
+}
+
+// Rename a file/directory
+// [objectId] and [fullPath] are optional parameters
+// if [objectId] is not available then [fullPath] will be used to fetch the [objectId]
+// dont leave both [objectId] and [fullPath] empty
+// Tip: use [objectId] whenever possible to avoid traversing down the whole file tree to process and find the [objectId]
+// rObjectId: objectId of the file/diectory
+func RenameFile(dev *mtp.Device, storageId, objectId uint32, fullPath, newFileName string) (rObjectId uint32, error error) {
+	exist, fi := FileExists(dev, storageId, objectId, fullPath)
+
+	if !exist {
+		return 0, InvalidPathError{error: fmt.Errorf("file not found: %s", fullPath)}
+	}
+
+	if err := dev.SetObjectPropValue(fi.ObjectId, mtp.OPC_ObjectFileName, &mtp.StringValue{Value: newFileName}); err != nil {
+		return 0, FileObjectError{error: err}
+	}
+
+	return fi.ObjectId, nil
+}
+
 // Send local files to the device
 // sources: can be the list of files/directories that are to be sent to the device
 // destination: fullPath to the destination directory
+// rDestinationObjectId: objectId of [destination] directory
+// rTotalFiles: total number of uploaded files (directory count not included)
+// rTotalSize: total size uploaded file
 func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destination string, cb UploadFilesCb) (rDestinationObjectId uint32, rTotalFiles int, rTotalSize int64, rError error) {
 	_destination := fixSlash(destination)
 
@@ -377,34 +422,6 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 	return destParentId, totalFiles, totalSize, nil
 }
 
-func DeleteFile(dev *mtp.Device, storageId, objectId uint32, fullPath string) error {
-	exist, fi := FileExists(dev, storageId, objectId, fullPath)
-
-	if !exist {
-		return nil
-	}
-
-	if err := dev.DeleteObject(fi.ObjectId); err != nil {
-		return FileObjectError{error: err}
-	}
-
-	return nil
-}
-
-func RenameFile(dev *mtp.Device, storageId, objectId uint32, fullPath, newFileName string) (rObjectId uint32, error error) {
-	exist, fi := FileExists(dev, storageId, objectId, fullPath)
-
-	if !exist {
-		return 0, InvalidPathError{error: fmt.Errorf("file not found: %s", fullPath)}
-	}
-
-	if err := dev.SetObjectPropValue(fi.ObjectId, mtp.OPC_ObjectFileName, &mtp.StringValue{Value: newFileName}); err != nil {
-		return 0, FileObjectError{error: err}
-	}
-
-	return fi.ObjectId, nil
-}
-
 func main() {
 	dev, err := Initialize(Init{debugMode: false})
 
@@ -489,27 +506,27 @@ func main() {
 	//}
 	//pretty.Println(objId)
 
-	//UploadFiles
-	uploadFile := getTestMocksAsset("mock_dir1")
-	uploadFile2 := getTestMocksAsset("mock_dir2")
-	start := time.Now()
-
-	objId, totalFiles, totalSize, err := UploadFiles(dev, sid,
-		[]string{uploadFile, uploadFile2, uploadFile}, "/mtp-test-files/temp_dir/test_UploadFiles",
-		func(uploadFi *UploadFileInfo) {
-			fmt.Printf("Current filepath: %s\n", uploadFi.FileInfo.FullPath)
-			fmt.Printf("%x MB/s\n", uploadFi.Speed)
-		},
-	)
-	if err != nil {
-
-		log.Panic(err)
-	}
-
-	pretty.Println(objId)
-	pretty.Println(totalFiles)
-	pretty.Println(totalSize)
-	pretty.Println("time elapsed: ", time.Since(start).Seconds())
+	////UploadFiles
+	//uploadFile := getTestMocksAsset("mock_dir1")
+	//uploadFile2 := getTestMocksAsset("mock_dir2")
+	//start := time.Now()
+	//
+	//objId, totalFiles, totalSize, err := UploadFiles(dev, sid,
+	//	[]string{uploadFile, uploadFile2, uploadFile}, "/mtp-test-files/temp_dir/test_UploadFiles",
+	//	func(uploadFi *UploadFileInfo) {
+	//		fmt.Printf("Current filepath: %s\n", uploadFi.FileInfo.FullPath)
+	//		fmt.Printf("%x MB/s\n", uploadFi.Speed)
+	//	},
+	//)
+	//if err != nil {
+	//
+	//	log.Panic(err)
+	//}
+	//
+	//pretty.Println(objId)
+	//pretty.Println(totalFiles)
+	//pretty.Println(totalSize)
+	//pretty.Println("time elapsed: ", time.Since(start).Seconds())
 
 	Dispose(dev)
 }
