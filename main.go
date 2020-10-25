@@ -303,7 +303,7 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 				// read the local file
 				fileBuf, err := os.Open(sourceFilePath)
 				if err != nil {
-					return LocalFileError{error: err}
+					return InvalidPathError{error: err}
 				}
 				defer fileBuf.Close()
 
@@ -359,8 +359,18 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 		)
 
 		if err != nil {
-			return destParentId, totalFiles, totalSize,
-				LocalFileError{error: fmt.Errorf("an error occured while uploading files. %+v", err)}
+
+			switch err.(type) {
+			case InvalidPathError:
+				return destParentId, totalFiles, totalSize, err
+
+			case *os.PathError:
+				return destParentId, totalFiles, totalSize, InvalidPathError{error: err}
+
+			default:
+				return destParentId, totalFiles, totalSize,
+					UploadFileError{error: fmt.Errorf("an error occured while uploading files. %+v", err)}
+			}
 		}
 	}
 

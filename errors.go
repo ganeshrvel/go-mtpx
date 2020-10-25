@@ -32,7 +32,7 @@ type InvalidPathError struct {
 	error
 }
 
-type LocalFileError struct {
+type UploadFileError struct {
 	error
 }
 
