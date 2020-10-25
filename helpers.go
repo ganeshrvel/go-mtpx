@@ -275,7 +275,7 @@ func handleMakeLocalFile(dev *mtp.Device, fi *FileInfo, destination string) erro
 // dont leave both [objectId] and [fullPath] empty
 // Tips: use [objectId] whenever possible to avoid traversing down the whole file tree to process and find the [objectId]
 // returns total number of objects
-func proccessWalkDirectory(dev *mtp.Device, storageId, objectId uint32, fullPath string, recursive bool, cb WalkDirectoryCb) (rTotalFiles int, rError error) {
+func proccessWalk(dev *mtp.Device, storageId, objectId uint32, fullPath string, recursive bool, cb WalkCb) (rTotalFiles int, rError error) {
 	fi, err := GetObjectFromObjectIdOrPath(dev, storageId, objectId, fullPath)
 
 	if err != nil {
@@ -312,7 +312,7 @@ func proccessWalkDirectory(dev *mtp.Device, storageId, objectId uint32, fullPath
 			continue
 		}
 
-		_totalFiles, err := proccessWalkDirectory(
+		_totalFiles, err := proccessWalk(
 			dev, storageId, objId, fi.FullPath, recursive, cb,
 		)
 		if err != nil {

@@ -172,18 +172,24 @@ func MakeDirectoryRecursive(dev *mtp.Device, storageId uint32, fullPath string) 
 // Tip: use [objectId] whenever possible to avoid traversing down the whole file tree to process and find the [objectId]
 // rObjectId: objectId of the file/diectory
 // rTotalFiles: total number of files and directories
-func WalkDirectory(dev *mtp.Device, storageId, objectId uint32, fullPath string, recursive bool, cb WalkDirectoryCb) (rObjectId uint32, rTotalFiles int, rError error) {
+func Walk(dev *mtp.Device, storageId, objectId uint32, fullPath string, recursive bool, cb WalkCb) (rObjectId uint32, rTotalFiles int, rError error) {
 	// fetch the objectId from [objectId] and/or [fullPath] parameters
 	fi, err := GetObjectFromObjectIdOrPath(dev, storageId, objectId, fullPath)
 	if err != nil {
 		return 0, 0, err
 	}
 
+	// if the object is a file then return objectId
 	if !fi.IsDir {
-		return 0, 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The object is not a directory", fullPath)}
+		err := cb(fi.ObjectId, fi)
+		if err != nil {
+			return 0, 0, err
+		}
+
+		return fi.ObjectId, 1, nil
 	}
 
-	totalFiles, err := proccessWalkDirectory(dev, storageId, fi.ObjectId, fullPath, recursive, cb)
+	totalFiles, err := proccessWalk(dev, storageId, fi.ObjectId, fullPath, recursive, cb)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -456,7 +462,7 @@ func DownloadFiles(dev *mtp.Device, storageId uint32, sources []string, destinat
 		}
 
 		sourceObjectId := fi.ObjectId
-		_, _, err = WalkDirectory(dev, storageId, sourceObjectId, _source, true, func(objectId uint32, fi *FileInfo) error {
+		_, _, err = Walk(dev, storageId, sourceObjectId, _source, true, func(objectId uint32, fi *FileInfo) error {
 			destinationFileParentPath, destinationFilePath := mapSourcePathToDestinationPath(fi.FullPath, sourceParentPath, _destination)
 			// filter out disallowed files
 			if isDisallowedFiles(fi.Name) {
@@ -477,7 +483,7 @@ func DownloadFiles(dev *mtp.Device, storageId uint32, sources []string, destinat
 
 			// if the local parent directory does not exists then create one
 			if !fileExistsLocal(destinationFileParentPath) {
-				err := makeLocalDirectory(destinationFilePath)
+				err := makeLocalDirectory(destinationFileParentPath)
 				if err != nil {
 					return err
 				}
@@ -534,7 +540,7 @@ func main() {
 	//pretty.Println(int64(totalFiles))
 	//
 
-	/*objectId, totalFiles, err := WalkDirectory(dev, sid, 0, "/mtp-test-files/mock_dir1", true, func(objectId uint32, fi *FileInfo) {
+	/*objectId, totalFiles, err := Walk(dev, sid, 0, "/mtp-test-files/mock_dir1", true, func(objectId uint32, fi *FileInfo) {
 		pretty.Println("objectId is: ", objectId)
 	})
 
@@ -614,14 +620,14 @@ func main() {
 
 	//UploadFiles
 	downloadFile := newTempMocksDir("test_DownloadTest", true)
-	sourceFile1 := "/mtp-test-files/mock_dir1"
+	sourceFile1 := "/mtp-test-files/temp_dir"
 	start := time.Now()
 
 	totalFiles, totalSize, err := DownloadFiles(dev, sid,
 		[]string{sourceFile1}, downloadFile,
 		func(downloadFi *TransferredFileInfo) {
 			fmt.Printf("Current filepath: %s\n", downloadFi.FileInfo.FullPath)
-			fmt.Printf("%x MB/s\n", downloadFi.Speed)
+			fmt.Printf("%d MB/s\n", downloadFi.Speed)
 		},
 	)
 	if err != nil {

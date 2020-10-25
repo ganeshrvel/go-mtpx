@@ -28,7 +28,7 @@ type FileInfo struct {
 	Info *mtp.ObjectInfo
 }
 
-type WalkDirectoryCb func(objectId uint32, fi *FileInfo) error
+type WalkCb func(objectId uint32, fi *FileInfo) error
 
 type TransferredFileInfo struct {
 	FileInfo *FileInfo
