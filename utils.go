@@ -199,7 +199,7 @@ func subpathExists(path, searchPath string) bool {
 	return path != "" && strings.HasPrefix(searchPath, path)
 }
 
-func mapLocalPathToMtpPath(
+func mapSourcePathToDestinationPath(
 	sourcePath, sourceParentPath, destinationPath string,
 ) (destinationParentPath, destinationFilePath string) {
 	trimmedSourcePath := strings.TrimPrefix(sourcePath, sourceParentPath)

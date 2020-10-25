@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"github.com/ganeshrvel/go-mtpfs/mtp"
 	"os"
@@ -15,7 +16,7 @@ func GetFileSize(dev *mtp.Device, obj *mtp.ObjectInfo, objectId uint32) (int64, 
 		var val mtp.Uint64Value
 		if err := dev.GetObjectPropValue(objectId, mtp.OPC_ObjectSize, &val); err != nil {
 			return 0, FileObjectError{
-				fmt.Errorf("GetObjectPropValue handle %d failed: %v", objectId, err),
+				fmt.Errorf("GetObjectPropValue handle %d failed: %v", objectId, err.Error()),
 			}
 		}
 
@@ -115,7 +116,7 @@ func GetObjectFromPath(dev *mtp.Device, storageId uint32, fullPath string) (*Fil
 			switch err.(type) {
 			case FileNotFoundError:
 				return nil, InvalidPathError{
-					error: fmt.Errorf("path not found: %s\nreason: %v", fullPath, err),
+					error: fmt.Errorf("path not found: %s\nreason: %v", fullPath, err.Error()),
 				}
 
 			default:
@@ -210,7 +211,7 @@ func handleMakeDirectory(dev *mtp.Device, storageId, parentId uint32, filename s
 	return objId, nil
 }
 
-// helper function to create a file
+// helper function to create a device file
 func handleMakeFile(dev *mtp.Device, storageId uint32, obj *mtp.ObjectInfo, fInfo *os.FileInfo, fileBuf *os.File, overwriteExisting bool) (rObjectId uint32, rError error) {
 	fi, err := GetObjectFromParentIdAndFilename(dev, storageId, obj.ParentObject, obj.Filename)
 
@@ -251,6 +252,22 @@ func handleMakeFile(dev *mtp.Device, storageId uint32, obj *mtp.ObjectInfo, fInf
 	return objId, nil
 }
 
+// helper function to create a local file
+func handleMakeLocalFile(dev *mtp.Device, fi *FileInfo, destination string) error {
+	f, err := os.Create(destination)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	err = dev.GetObject(fi.ObjectId, f)
+	if err != nil {
+		return err
+	}
+
+	return err
+}
+
 // helper function to fetch the contents inside a directory
 // use [recursive] to fetch the whole nested tree
 // [objectId] and [fullPath] are optional parameters
@@ -280,7 +297,10 @@ func proccessWalkDirectory(dev *mtp.Device, storageId, objectId uint32, fullPath
 
 		totalFiles += 1
 
-		cb(objId, fi)
+		err = cb(objId, fi)
+		if err != nil {
+			return totalFiles, err
+		}
 
 		// don't traverse down the tree if [recursive] is false
 		if !recursive {
@@ -303,4 +323,23 @@ func proccessWalkDirectory(dev *mtp.Device, storageId, objectId uint32, fullPath
 	}
 
 	return totalFiles, nil
+}
+
+func makeLocalDirectory(filename string) error {
+	err := os.MkdirAll(filename, os.FileMode(newLocalDirectoryMode))
+	if err != nil {
+		switch err.(type) {
+		case *os.PathError:
+			if errors.Is(err, os.ErrPermission) {
+				return FilePermissionError{error: err}
+			}
+
+			return LocalFileError{error: err}
+
+		default:
+			return err
+		}
+	}
+
+	return nil
 }

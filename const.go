@@ -11,6 +11,8 @@ const ParentObjectId = mtp.GOH_ROOT_PARENT
 
 const devTimeout = 15000
 
+const newLocalDirectoryMode = 0755
+
 const disallowedFileName = ":*?\"<>|"
 
 var disallowedFiles = []string{".DS_Store"}

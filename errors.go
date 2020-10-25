@@ -28,6 +28,14 @@ type FileNotFoundError struct {
 	error
 }
 
+type FilePermissionError struct {
+	error
+}
+
+type LocalFileError struct {
+	error
+}
+
 type InvalidPathError struct {
 	error
 }

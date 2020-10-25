@@ -28,9 +28,9 @@ type FileInfo struct {
 	Info *mtp.ObjectInfo
 }
 
-type WalkDirectoryCb func(objectId uint32, fi *FileInfo)
+type WalkDirectoryCb func(objectId uint32, fi *FileInfo) error
 
-type UploadFileInfo struct {
+type TransferredFileInfo struct {
 	FileInfo *FileInfo
 
 	StartTime      time.Time
@@ -39,4 +39,4 @@ type UploadFileInfo struct {
 	Speed          float64
 }
 
-type UploadFilesCb func(fi *UploadFileInfo)
+type TransferFilesCb func(fi *TransferredFileInfo)

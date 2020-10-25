@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	. "github.com/smartystreets/goconvey/convey"
 	"log"
 	"testing"
@@ -21,10 +22,12 @@ func TestWalkDirectory(t *testing.T) {
 
 	Convey("Testing valid directory | with objectId | objectId should be picked up instead of fullPath | WalkDirectory", t, func() {
 		// test the root directory [ParentObjectId] | empty [fullPath]
-		objectId, totalFiles, err := WalkDirectory(dev, sid, ParentObjectId, "", false, func(objectId uint32, fi *FileInfo) {
+		objectId, totalFiles, err := WalkDirectory(dev, sid, ParentObjectId, "", false, func(objectId uint32, fi *FileInfo) error {
 			So(objectId, ShouldBeGreaterThan, 0)
 			So(fi, ShouldNotBeNil)
 			So(fi.ParentId, ShouldEqual, 0)
+
+			return nil
 		})
 
 		So(err, ShouldBeNil)
@@ -33,10 +36,12 @@ func TestWalkDirectory(t *testing.T) {
 		So(objectId, ShouldEqual, ParentObjectId)
 
 		// test the root directory [ParentObjectId] | [fullPath]='/fake'
-		objectId, totalFiles, err = WalkDirectory(dev, sid, ParentObjectId, "/fake", false, func(objectId uint32, fi *FileInfo) {
+		objectId, totalFiles, err = WalkDirectory(dev, sid, ParentObjectId, "/fake", false, func(objectId uint32, fi *FileInfo) error {
 			So(objectId, ShouldBeGreaterThan, 0)
 			So(fi, ShouldNotBeNil)
 			So(fi.ParentId, ShouldEqual, 0)
+
+			return nil
 		})
 
 		So(err, ShouldBeNil)
@@ -51,7 +56,7 @@ func TestWalkDirectory(t *testing.T) {
 		fullPath := "/mtp-test-files"
 
 		var children []*FileInfo
-		objectId1, totalFiles1, err := WalkDirectory(dev, sid, 0, fullPath, false, func(objectId uint32, fi *FileInfo) {
+		objectId1, totalFiles1, err := WalkDirectory(dev, sid, 0, fullPath, false, func(objectId uint32, fi *FileInfo) error {
 			So(fi.FullPath, ShouldNotEqual, "/mtp-test-files")
 			So(fi.FullPath, ShouldContainSubstring, "/mtp-test-files/")
 			So(objectId, ShouldBeGreaterThan, 0)
@@ -60,6 +65,8 @@ func TestWalkDirectory(t *testing.T) {
 			So(objectId, ShouldEqual, fi.ObjectId)
 
 			children = append(children, fi)
+
+			return nil
 		})
 
 		So(err, ShouldBeNil)
@@ -78,7 +85,7 @@ func TestWalkDirectory(t *testing.T) {
 		/////////////////
 		fullPath = "/mtp-test-files/"
 		children = []*FileInfo{}
-		objectId2, totalFiles2, err := WalkDirectory(dev, sid, 0, fullPath, false, func(objectId uint32, fi *FileInfo) {
+		objectId2, totalFiles2, err := WalkDirectory(dev, sid, 0, fullPath, false, func(objectId uint32, fi *FileInfo) error {
 			// make sure that the first item is not the parent path itself
 			So(fi.FullPath, ShouldNotEqual, "/mtp-test-files")
 			So(fi.FullPath, ShouldContainSubstring, "/mtp-test-files/")
@@ -88,6 +95,8 @@ func TestWalkDirectory(t *testing.T) {
 			So(objectId, ShouldEqual, fi.ObjectId)
 
 			children = append(children, fi)
+
+			return nil
 		})
 
 		So(err, ShouldBeNil)
@@ -107,7 +116,7 @@ func TestWalkDirectory(t *testing.T) {
 		/////////////////
 		fullPath = "mtp-test-files/"
 		children = []*FileInfo{}
-		objectId3, totalFiles3, err := WalkDirectory(dev, sid, 0, fullPath, false, func(objectId uint32, fi *FileInfo) {
+		objectId3, totalFiles3, err := WalkDirectory(dev, sid, 0, fullPath, false, func(objectId uint32, fi *FileInfo) error {
 			// make sure that the first item is not the parent path itself
 			So(fi.FullPath, ShouldNotEqual, "/mtp-test-files")
 			So(fi.FullPath, ShouldContainSubstring, "/mtp-test-files/")
@@ -117,6 +126,8 @@ func TestWalkDirectory(t *testing.T) {
 			So(objectId, ShouldEqual, fi.ObjectId)
 
 			children = append(children, fi)
+
+			return nil
 		})
 
 		So(err, ShouldBeNil)
@@ -136,7 +147,7 @@ func TestWalkDirectory(t *testing.T) {
 		fullPath = "mtp-test-files/mock_dir3/"
 		children = []*FileInfo{}
 
-		objectId4, totalFiles4, err := WalkDirectory(dev, sid, 0, fullPath, false, func(objectId uint32, fi *FileInfo) {
+		objectId4, totalFiles4, err := WalkDirectory(dev, sid, 0, fullPath, false, func(objectId uint32, fi *FileInfo) error {
 			// make sure that the first item is not the parent path itself
 			So(fi.FullPath, ShouldNotEqual, "/mtp-test-files/mock_dir3")
 			So(fi.FullPath, ShouldContainSubstring, "/mtp-test-files/mock_dir3/")
@@ -146,6 +157,8 @@ func TestWalkDirectory(t *testing.T) {
 			So(objectId, ShouldEqual, fi.ObjectId)
 
 			children = append(children, fi)
+
+			return nil
 		})
 
 		So(err, ShouldBeNil)
@@ -165,7 +178,7 @@ func TestWalkDirectory(t *testing.T) {
 		fullPath := "/mtp-test-files/mock_dir1/1"
 
 		var children []*FileInfo
-		objectId, totalFiles, err := WalkDirectory(dev, sid, 0, fullPath, false, func(objectId uint32, fi *FileInfo) {
+		objectId, totalFiles, err := WalkDirectory(dev, sid, 0, fullPath, false, func(objectId uint32, fi *FileInfo) error {
 			// make sure that the first item is not the parent path itself
 			So(fi.FullPath, ShouldNotEqual, "/mtp-test-files/mock_dir1/1")
 			So(fi.FullPath, ShouldContainSubstring, "/mtp-test-files/mock_dir1/1/")
@@ -175,6 +188,8 @@ func TestWalkDirectory(t *testing.T) {
 			So(objectId, ShouldEqual, fi.ObjectId)
 
 			children = append(children, fi)
+
+			return nil
 		})
 
 		So(err, ShouldBeNil)
@@ -201,7 +216,7 @@ func TestWalkDirectory(t *testing.T) {
 		fullPath := "/mtp-test-files/mock_dir1/"
 
 		var children []*FileInfo
-		objectId, totalFiles, err := WalkDirectory(dev, sid, 0, fullPath, false, func(objectId uint32, fi *FileInfo) {
+		objectId, totalFiles, err := WalkDirectory(dev, sid, 0, fullPath, false, func(objectId uint32, fi *FileInfo) error {
 			// make sure that the first item is not the parent path itself
 			So(fi.FullPath, ShouldNotEqual, "/mtp-test-files/mock_dir1")
 			So(fi.FullPath, ShouldContainSubstring, "/mtp-test-files/mock_dir1/")
@@ -211,6 +226,8 @@ func TestWalkDirectory(t *testing.T) {
 			So(objectId, ShouldEqual, fi.ObjectId)
 
 			children = append(children, fi)
+
+			return nil
 		})
 
 		So(err, ShouldBeNil)
@@ -237,7 +254,7 @@ func TestWalkDirectory(t *testing.T) {
 		fullPath := "/mtp-test-files/mock_dir1/"
 
 		var children []*FileInfo
-		objectId, totalFiles, err := WalkDirectory(dev, sid, 0, fullPath, true, func(objectId uint32, fi *FileInfo) {
+		objectId, totalFiles, err := WalkDirectory(dev, sid, 0, fullPath, true, func(objectId uint32, fi *FileInfo) error {
 			// make sure that the first item is not the parent path itself
 			So(fi.FullPath, ShouldNotEqual, "/mtp-test-files/mock_dir1")
 			So(fi.FullPath, ShouldContainSubstring, "/mtp-test-files/mock_dir1/")
@@ -248,6 +265,8 @@ func TestWalkDirectory(t *testing.T) {
 			So(objectId, ShouldEqual, fi.ObjectId)
 
 			children = append(children, fi)
+
+			return nil
 		})
 
 		So(err, ShouldBeNil)
@@ -283,8 +302,10 @@ func TestWalkDirectory(t *testing.T) {
 	Convey("Testing non exisiting file | WalkDirectory | It should throw an error", t, func() {
 		// test the directory '/fake' | recursive=true
 		var children []*FileInfo
-		objectId, totalFiles, err := WalkDirectory(dev, sid, 0, "/fake", true, func(objectId uint32, fi *FileInfo) {
+		objectId, totalFiles, err := WalkDirectory(dev, sid, 0, "/fake", true, func(objectId uint32, fi *FileInfo) error {
 			children = append(children, fi)
+
+			return nil
 		})
 
 		So(err, ShouldBeError)
@@ -295,8 +316,10 @@ func TestWalkDirectory(t *testing.T) {
 
 		// test the directory '/fake' | recursive=false
 		children = []*FileInfo{}
-		objectId, totalFiles, err = WalkDirectory(dev, sid, 0, "/fake", false, func(objectId uint32, fi *FileInfo) {
+		objectId, totalFiles, err = WalkDirectory(dev, sid, 0, "/fake", false, func(objectId uint32, fi *FileInfo) error {
 			children = append(children, fi)
+
+			return nil
 		})
 
 		So(err, ShouldBeError)
@@ -307,8 +330,10 @@ func TestWalkDirectory(t *testing.T) {
 
 		// test the directory '/mtp-test-files/fake' | recursive=true
 		children = []*FileInfo{}
-		objectId, totalFiles, err = WalkDirectory(dev, sid, 0, "/mtp-test-files/fake", true, func(objectId uint32, fi *FileInfo) {
+		objectId, totalFiles, err = WalkDirectory(dev, sid, 0, "/mtp-test-files/fake", true, func(objectId uint32, fi *FileInfo) error {
 			children = append(children, fi)
+
+			return nil
 		})
 
 		So(err, ShouldBeError)
@@ -319,8 +344,10 @@ func TestWalkDirectory(t *testing.T) {
 
 		// test the directory '/mtp-test-files/fake' | recursive=false
 		children = []*FileInfo{}
-		objectId, totalFiles, err = WalkDirectory(dev, sid, 0, "/mtp-test-files/fake", false, func(objectId uint32, fi *FileInfo) {
+		objectId, totalFiles, err = WalkDirectory(dev, sid, 0, "/mtp-test-files/fake", false, func(objectId uint32, fi *FileInfo) error {
 			children = append(children, fi)
+
+			return nil
 		})
 
 		So(err, ShouldBeError)
@@ -331,8 +358,10 @@ func TestWalkDirectory(t *testing.T) {
 
 		// test the directory '/mtp-test-files/a.txt'
 		children = []*FileInfo{}
-		objectId, totalFiles, err = WalkDirectory(dev, sid, 0, "/mtp-test-files/a.txt", true, func(objectId uint32, fi *FileInfo) {
+		objectId, totalFiles, err = WalkDirectory(dev, sid, 0, "/mtp-test-files/a.txt", true, func(objectId uint32, fi *FileInfo) error {
 			children = append(children, fi)
+
+			return nil
 		})
 
 		So(err, ShouldBeError)
@@ -342,8 +371,10 @@ func TestWalkDirectory(t *testing.T) {
 		So(len(children), ShouldEqual, 0)
 
 		// test the directory=''
-		objectId, totalFiles, err = WalkDirectory(dev, sid, 0, "", true, func(objectId uint32, fi *FileInfo) {
+		objectId, totalFiles, err = WalkDirectory(dev, sid, 0, "", true, func(objectId uint32, fi *FileInfo) error {
 			children = append(children, fi)
+
+			return nil
 		})
 
 		So(err, ShouldBeError)
@@ -351,6 +382,17 @@ func TestWalkDirectory(t *testing.T) {
 		So(objectId, ShouldEqual, 0)
 		So(totalFiles, ShouldEqual, 0)
 		So(len(children), ShouldEqual, 0)
+	})
+
+	Convey("Testing callback error | WalkDirectory | It should throw an error", t, func() {
+		// test the directory '/mtp-test-files' | recursive=true
+		_, _, err := WalkDirectory(dev, sid, 0, "/mtp-test-files", true, func(objectId uint32, fi *FileInfo) error {
+
+			return InvalidPathError{error: fmt.Errorf("some error occured")}
+		})
+
+		So(err, ShouldBeError)
+		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
 	})
 
 	Dispose(dev)

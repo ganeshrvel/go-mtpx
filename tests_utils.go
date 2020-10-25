@@ -43,7 +43,7 @@ func newTempMocksAsset(_filePath string) string {
 	currentDir, err := os.Getwd()
 
 	if err != nil {
-		log.Panicf("\nunable to fetch the current directory: %s\nerror: %+v\n", currentDir, err)
+		log.Panicf("\nunable to fetch the current directory: %s\nerror: %+v\n", currentDir, err.Error())
 	}
 
 	resultPath := fmt.Sprintf("%s/tests/mocks-build/", currentDir)
@@ -52,7 +52,7 @@ func newTempMocksAsset(_filePath string) string {
 		_, err := os.Create(resultPath)
 
 		if err != nil {
-			log.Panicf("\n'mocks-build' directory not found: %s\nerror: %+v\n", resultPath, err)
+			log.Panicf("\n'mocks-build' directory not found: %s\nerror: %+v\n", resultPath, err.Error())
 		}
 	}
 
@@ -65,7 +65,7 @@ func newTempMocksDir(_dirPath string, resetDir bool) string {
 	currentDir, err := os.Getwd()
 
 	if err != nil {
-		log.Panicf("\nunable to fetch the current directory: %s\nerror: %+v\n", currentDir, err)
+		log.Panicf("\nunable to fetch the current directory: %s\nerror: %+v\n", currentDir, err.Error())
 	}
 
 	resultPath := filepath.Join(currentDir, "tests/mocks-build", _dirPath)
@@ -81,7 +81,7 @@ func newTempMocksDir(_dirPath string, resetDir bool) string {
 			err = os.MkdirAll(resultPath, os.ModePerm)
 
 			if err != nil {
-				log.Panicf("\ntemp mocks directory not found: %s\nerror: %+v\n", resultPath, err)
+				log.Panicf("\ntemp mocks directory not found: %s\nerror: %+v\n", resultPath, err.Error())
 			}
 		}
 	}
@@ -90,7 +90,7 @@ func newTempMocksDir(_dirPath string, resetDir bool) string {
 		err := os.MkdirAll(resultPath, os.ModePerm)
 
 		if err != nil {
-			log.Panicf("\ntemp mocks directory not found: %s\nerror: %+v\n", resultPath, err)
+			log.Panicf("\ntemp mocks directory not found: %s\nerror: %+v\n", resultPath, err.Error())
 		}
 	}
 
