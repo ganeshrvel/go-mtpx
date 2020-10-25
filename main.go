@@ -480,7 +480,7 @@ func main() {
 		[]string{uploadFile, uploadFile2, uploadFile}, "/mtp-test-files/temp_dir/test-UploadFile-o",
 		func(uploadFi *UploadFileInfo) {
 			fmt.Printf("Current filepath: %s\n", uploadFi.FileInfo.FullPath)
-			fmt.Printf("%s MB/s\n", uploadFi.speed)
+			fmt.Printf("%x MB/s\n", uploadFi.speed)
 		},
 	)
 	if err != nil {
