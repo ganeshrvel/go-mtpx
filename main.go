@@ -178,7 +178,7 @@ func Walk(dev *mtp.Device, storageId uint32, fullPath string, recursive bool, cb
 
 	// if the object is a file then return objectId
 	if !fi.IsDir {
-		err := cb(fi.ObjectId, fi)
+		err := cb(fi.ObjectId, fi, nil)
 		if err != nil {
 			return 0, 0, err
 		}
@@ -397,7 +397,9 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 				uploadFi.Speed = transferRateInMBs(size, uploadFi.LatestSentTime, uploadFi.Speed)
 				uploadFi.LatestSentTime = time.Now()
 
-				cb(&uploadFi)
+				if err := cb(&uploadFi, nil); err != nil {
+					return err
+				}
 
 				// append the current objectId to [destinationFilesDict]
 				destinationFilesDict[destinationFilePath] = objId
@@ -423,7 +425,7 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 				return destParentId, totalFiles, totalSize, LocalFileError{error: err}
 			default:
 				return destParentId, totalFiles, totalSize,
-					UploadFileError{error: fmt.Errorf("an error occured while uploading files. %+v", err.Error())}
+					FileTransferError{error: fmt.Errorf("an error occured while uploading files. %+v", err.Error())}
 			}
 		}
 	}
@@ -434,7 +436,6 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 // Transfer files from the device to the local disk
 // sources: can be the list of files/directories that are to be sent to the local disk
 // destination: fullPath to the destination directory
-// rSourceObjectId: objectId of [destination] directory
 // rTotalFiles: total transferred files (directory count not included)
 // rTotalSize: total size of the uploaded files
 func DownloadFiles(dev *mtp.Device, storageId uint32, sources []string, destination string, cb TransferFilesCb) (rTotalFiles int, rTotalSize int64, rError error) {
@@ -457,56 +458,84 @@ func DownloadFiles(dev *mtp.Device, storageId uint32, sources []string, destinat
 			return totalFiles, totalSize, err
 		}
 
-		_, _, err = Walk(dev, storageId, _source, true, func(objectId uint32, fi *FileInfo) error {
-			destinationFileParentPath, destinationFilePath := mapSourcePathToDestinationPath(fi.FullPath, sourceParentPath, _destination)
-			// filter out disallowed files
-			if isDisallowedFiles(fi.Name) {
-				return nil
-			}
+		_, _, err = Walk(dev, storageId, _source, true,
+			func(objectId uint32, fi *FileInfo, err error) error {
+				destinationFileParentPath, destinationFilePath := mapSourcePathToDestinationPath(
+					fi.FullPath, sourceParentPath, _destination,
+				)
 
-			// if the object is a directory then create a local directory
-			if fi.IsDir {
-				err := makeLocalDirectory(destinationFilePath)
 				if err != nil {
 					return err
 				}
 
-				return nil
-			}
+				// filter out disallowed files
+				if isDisallowedFiles(fi.Name) {
+					return nil
+				}
 
-			/// if the object is a file then create one
+				// if the object is a directory then create a local directory
+				if fi.IsDir {
+					err := makeLocalDirectory(destinationFilePath)
+					if err != nil {
+						return err
+					}
 
-			// if the local parent directory does not exists then create one
-			if !fileExistsLocal(destinationFileParentPath) {
-				err := makeLocalDirectory(destinationFileParentPath)
+					return nil
+				}
+
+				/// if the object is a file then create one
+
+				// if the local parent directory does not exists then create one
+				if !fileExistsLocal(destinationFileParentPath) {
+					err := makeLocalDirectory(destinationFileParentPath)
+					if err != nil {
+						return err
+					}
+				}
+
+				// create the local file
+				err = handleMakeLocalFile(dev, fi, destinationFilePath)
 				if err != nil {
 					return err
 				}
-			}
 
-			// create the local file
-			err := handleMakeLocalFile(dev, fi, destinationFilePath)
-			if err != nil {
-				return err
-			}
+				// keep track of [totalFiles]
+				totalFiles += 1
 
-			// keep track of [totalFiles]
-			totalFiles += 1
+				// keep track of [totalSize]
+				totalSize += fi.Size
 
-			// keep track of [totalSize]
-			totalSize += fi.Size
+				downloadFi.FileInfo = fi
+				downloadFi.FilesSent = totalFiles
+				downloadFi.Speed = transferRateInMBs(fi.Size, downloadFi.LatestSentTime, downloadFi.Speed)
+				downloadFi.LatestSentTime = time.Now()
 
-			downloadFi.FileInfo = fi
-			downloadFi.FilesSent = totalFiles
-			downloadFi.Speed = transferRateInMBs(fi.Size, downloadFi.LatestSentTime, downloadFi.Speed)
-			downloadFi.LatestSentTime = time.Now()
+				if err := cb(&downloadFi, nil); err != nil {
+					return err
+				}
 
-			cb(&downloadFi)
+				return nil
+			})
 
-			return nil
-		})
 		if err != nil {
-			return totalFiles, totalSize, err
+			switch err.(type) {
+			case InvalidPathError:
+				return totalFiles, totalSize, err
+
+			case *os.PathError:
+				if errors.Is(err, os.ErrPermission) {
+					return totalFiles, totalSize, FilePermissionError{error: err}
+				}
+
+				if errors.Is(err, os.ErrNotExist) {
+					return totalFiles, totalSize, InvalidPathError{error: err}
+				}
+
+				return totalFiles, totalSize, LocalFileError{error: err}
+			default:
+				return totalFiles, totalSize,
+					FileTransferError{error: fmt.Errorf("an error occured while downloading the files. %+v", err.Error())}
+			}
 		}
 	}
 

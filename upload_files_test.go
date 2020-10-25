@@ -33,7 +33,8 @@ func TestUploadFiles(t *testing.T) {
 		objectIdDest, totalFiles, totalSize, err := UploadFiles(dev, sid,
 			sources,
 			destination,
-			func(fi *TransferredFileInfo) {
+			func(fi *TransferredFileInfo, err error) error {
+				So(err, ShouldBeNil)
 				So(fi, ShouldNotBeNil)
 				So(fi.StartTime.Year(), ShouldBeGreaterThanOrEqualTo, 2020)
 				So(fi.LatestSentTime.UnixNano(), ShouldBeGreaterThan, currentSentTime)
@@ -45,6 +46,8 @@ func TestUploadFiles(t *testing.T) {
 
 				currentSentTime = fi.LatestSentTime.UnixNano()
 				currentSentFiles = fi.FilesSent
+
+				return nil
 			},
 		)
 
@@ -76,7 +79,8 @@ func TestUploadFiles(t *testing.T) {
 		objectIdDest, totalFiles, totalSize, err := UploadFiles(dev, sid,
 			sources,
 			destination,
-			func(fi *TransferredFileInfo) {
+			func(fi *TransferredFileInfo, err error) error {
+				So(err, ShouldBeNil)
 				So(fi, ShouldNotBeNil)
 				So(fi.StartTime.Year(), ShouldBeGreaterThanOrEqualTo, 2020)
 				So(fi.LatestSentTime.UnixNano(), ShouldBeGreaterThan, currentSentTime)
@@ -90,6 +94,8 @@ func TestUploadFiles(t *testing.T) {
 
 				currentSentTime = fi.LatestSentTime.UnixNano()
 				currentSentFiles = fi.FilesSent
+
+				return nil
 			},
 		)
 
@@ -118,7 +124,8 @@ func TestUploadFiles(t *testing.T) {
 			"/mock_dir1/a.txt"}
 
 		index := 0
-		objectId, totalListFiles, err := Walk(dev, sid, destination, true, func(objectId uint32, fi *FileInfo) error {
+		objectId, totalListFiles, err := Walk(dev, sid, destination, true, func(objectId uint32, fi *FileInfo, err error) error {
+			So(err, ShouldBeNil)
 			So(fi.FullPath, ShouldEqual, getFullPath(destination, dirList1[index]))
 
 			index += 1
@@ -151,7 +158,8 @@ func TestUploadFiles(t *testing.T) {
 		objectIdDest, totalFiles, totalSize, err := UploadFiles(dev, sid,
 			sources,
 			destination,
-			func(fi *TransferredFileInfo) {
+			func(fi *TransferredFileInfo, err error) error {
+				So(err, ShouldBeNil)
 				So(fi, ShouldNotBeNil)
 				So(fi.StartTime.Year(), ShouldBeGreaterThanOrEqualTo, 2020)
 				So(fi.LatestSentTime.UnixNano(), ShouldBeGreaterThan, currentSentTime)
@@ -165,6 +173,8 @@ func TestUploadFiles(t *testing.T) {
 
 				currentSentTime = fi.LatestSentTime.UnixNano()
 				currentSentFiles = fi.FilesSent
+
+				return nil
 			},
 		)
 
@@ -200,7 +210,8 @@ func TestUploadFiles(t *testing.T) {
 		objectIdDest, totalFiles, totalSize, err := UploadFiles(dev, sid,
 			sources,
 			destination,
-			func(fi *TransferredFileInfo) {
+			func(fi *TransferredFileInfo, err error) error {
+				So(err, ShouldBeNil)
 				So(fi, ShouldNotBeNil)
 				So(fi.StartTime.Year(), ShouldBeGreaterThanOrEqualTo, 2020)
 				So(fi.LatestSentTime.UnixNano(), ShouldBeGreaterThan, currentSentTime)
@@ -214,6 +225,8 @@ func TestUploadFiles(t *testing.T) {
 
 				currentSentTime = fi.LatestSentTime.UnixNano()
 				currentSentFiles = fi.FilesSent
+
+				return nil
 			},
 		)
 
@@ -245,7 +258,8 @@ func TestUploadFiles(t *testing.T) {
 		objectIdDest, totalFiles, totalSize, err := UploadFiles(dev, sid,
 			sources,
 			destination,
-			func(fi *TransferredFileInfo) {
+			func(fi *TransferredFileInfo, err error) error {
+				So(err, ShouldBeNil)
 				So(fi, ShouldNotBeNil)
 				So(fi.StartTime.Year(), ShouldBeGreaterThanOrEqualTo, 2020)
 				So(fi.LatestSentTime.UnixNano(), ShouldBeGreaterThan, currentSentTime)
@@ -259,6 +273,8 @@ func TestUploadFiles(t *testing.T) {
 
 				currentSentTime = fi.LatestSentTime.UnixNano()
 				currentSentFiles = fi.FilesSent
+
+				return nil
 			},
 		)
 
@@ -291,7 +307,8 @@ func TestUploadFiles(t *testing.T) {
 		objectIdDest, totalFiles, totalSize, err := UploadFiles(dev, sid,
 			sources,
 			destination,
-			func(fi *TransferredFileInfo) {
+			func(fi *TransferredFileInfo, err error) error {
+				So(err, ShouldBeNil)
 				So(fi, ShouldNotBeNil)
 				So(fi.StartTime.Year(), ShouldBeGreaterThanOrEqualTo, 2020)
 				So(fi.LatestSentTime.UnixNano(), ShouldBeGreaterThan, currentSentTime)
@@ -305,6 +322,8 @@ func TestUploadFiles(t *testing.T) {
 
 				currentSentTime = fi.LatestSentTime.UnixNano()
 				currentSentFiles = fi.FilesSent
+
+				return nil
 			},
 		)
 
@@ -337,7 +356,8 @@ func TestUploadFiles(t *testing.T) {
 		objectIdDest, totalFiles, totalSize, err := UploadFiles(dev, sid,
 			sources,
 			destination,
-			func(fi *TransferredFileInfo) {
+			func(fi *TransferredFileInfo, err error) error {
+				So(err, ShouldBeNil)
 				So(fi, ShouldNotBeNil)
 				So(fi.StartTime.Year(), ShouldBeGreaterThanOrEqualTo, 2020)
 				So(fi.LatestSentTime.UnixNano(), ShouldBeGreaterThan, currentSentTime)
@@ -351,6 +371,8 @@ func TestUploadFiles(t *testing.T) {
 
 				currentSentTime = fi.LatestSentTime.UnixNano()
 				currentSentFiles = fi.FilesSent
+
+				return nil
 			},
 		)
 
@@ -386,7 +408,8 @@ func TestUploadFiles(t *testing.T) {
 		objectIdDest, totalFiles, totalSize, err := UploadFiles(dev, sid,
 			sources,
 			_destination,
-			func(fi *TransferredFileInfo) {
+			func(fi *TransferredFileInfo, err error) error {
+				So(err, ShouldBeNil)
 				So(fi, ShouldNotBeNil)
 				So(fi.StartTime.Year(), ShouldBeGreaterThanOrEqualTo, 2020)
 				So(fi.LatestSentTime.UnixNano(), ShouldBeGreaterThan, currentSentTime)
@@ -400,6 +423,8 @@ func TestUploadFiles(t *testing.T) {
 
 				currentSentTime = fi.LatestSentTime.UnixNano()
 				currentSentFiles = fi.FilesSent
+
+				return nil
 			},
 		)
 
@@ -429,7 +454,8 @@ func TestUploadFiles(t *testing.T) {
 		objectIdDest, totalFiles, totalSize, err := UploadFiles(dev, sid,
 			sources,
 			_destination,
-			func(fi *TransferredFileInfo) {
+			func(fi *TransferredFileInfo, err error) error {
+				So(err, ShouldBeNil)
 				So(fi, ShouldNotBeNil)
 				So(fi.StartTime.Year(), ShouldBeGreaterThanOrEqualTo, 2020)
 				So(fi.LatestSentTime.UnixNano(), ShouldBeGreaterThan, currentSentTime)
@@ -443,6 +469,8 @@ func TestUploadFiles(t *testing.T) {
 
 				currentSentTime = fi.LatestSentTime.UnixNano()
 				currentSentFiles = fi.FilesSent
+
+				return nil
 			},
 		)
 
@@ -477,7 +505,8 @@ func TestUploadFiles(t *testing.T) {
 		objectIdDest, totalFiles, totalSize, err := UploadFiles(dev, sid,
 			sources,
 			_destination,
-			func(fi *TransferredFileInfo) {
+			func(fi *TransferredFileInfo, err error) error {
+				So(err, ShouldBeNil)
 				So(fi, ShouldNotBeNil)
 				So(fi.StartTime.Year(), ShouldBeGreaterThanOrEqualTo, 2020)
 				So(fi.LatestSentTime.UnixNano(), ShouldBeGreaterThan, currentSentTime)
@@ -491,6 +520,8 @@ func TestUploadFiles(t *testing.T) {
 
 				currentSentTime = fi.LatestSentTime.UnixNano()
 				currentSentFiles = fi.FilesSent
+
+				return nil
 			},
 		)
 
@@ -499,6 +530,55 @@ func TestUploadFiles(t *testing.T) {
 		So(totalFiles, ShouldEqual, 5)
 		So(totalFiles, ShouldEqual, currentSentFiles)
 		So(totalSize, ShouldEqual, 35)
+
+		fi, err := GetObjectFromPath(dev, sid, _destination)
+		So(err, ShouldBeNil)
+
+		So(objectIdDest, ShouldEqual, fi.ObjectId)
+	})
+
+	Convey("Callback return error | UploadFiles | should throw an error ", t, func() {
+		// test the directories: '/mtp-test-files/temp_dir/test_UploadFiles/{random}'
+
+		uploadFile1 := getTestMocksAsset("mock_dir1/")
+		sources := []string{uploadFile1}
+
+		randFName := fmt.Sprintf("%x", rand.Int31())
+		_destination = getFullPath("/mtp-test-files/temp_dir/test_UploadFiles", randFName)
+
+		dirList := []string{
+			"/mock_dir1/1/a.txt", "/mock_dir1/2/b.txt", "/mock_dir1/3/2/b.txt", "/mock_dir1/3/b.txt", "/mock_dir1/a.txt",
+		}
+
+		var currentSentTime int64
+		var currentSentFiles int
+		objectIdDest, totalFiles, totalSize, err := UploadFiles(dev, sid,
+			sources, _destination,
+			func(fi *TransferredFileInfo, err error) error {
+				So(err, ShouldBeNil)
+				So(fi, ShouldNotBeNil)
+				So(fi.StartTime.Year(), ShouldBeGreaterThanOrEqualTo, 2020)
+				So(fi.LatestSentTime.UnixNano(), ShouldBeGreaterThan, currentSentTime)
+				So(fi.Speed, ShouldBeGreaterThanOrEqualTo, 0)
+				So(fi.FilesSent, ShouldBeGreaterThanOrEqualTo, 0)
+
+				So(fi.FileInfo.ParentId, ShouldBeGreaterThan, 0)
+				So(fi.FileInfo.FullPath, ShouldStartWith, _destination)
+
+				So(fi.FileInfo.FullPath, ShouldEndWith, dirList[fi.FilesSent-1])
+
+				currentSentTime = fi.LatestSentTime.UnixNano()
+				currentSentFiles = fi.FilesSent
+
+				return FilePermissionError{error: fmt.Errorf("some random error")}
+			},
+		)
+
+		So(err, ShouldHaveSameTypeAs, FileTransferError{})
+		So(currentSentFiles, ShouldEqual, 1)
+		So(totalFiles, ShouldEqual, 1)
+		So(totalFiles, ShouldEqual, currentSentFiles)
+		So(totalSize, ShouldEqual, 8)
 
 		fi, err := GetObjectFromPath(dev, sid, _destination)
 		So(err, ShouldBeNil)

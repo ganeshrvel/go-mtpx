@@ -27,18 +27,20 @@ func TestWalk(t *testing.T) {
 		fullPath := "/mtp-test-files"
 
 		var children []*FileInfo
-		objectId1, totalFiles1, err := Walk(dev, sid, fullPath, false, func(objectId uint32, fi *FileInfo) error {
-			So(fi.FullPath, ShouldNotEqual, "/mtp-test-files")
-			So(fi.FullPath, ShouldContainSubstring, "/mtp-test-files/")
-			So(objectId, ShouldBeGreaterThan, 0)
-			So(fi, ShouldNotBeNil)
-			So(fi.ParentId, ShouldBeGreaterThan, 0)
-			So(objectId, ShouldEqual, fi.ObjectId)
+		objectId1, totalFiles1, err := Walk(dev, sid, fullPath, false,
+			func(objectId uint32, fi *FileInfo, err error) error {
+				So(err, ShouldBeNil)
+				So(fi.FullPath, ShouldNotEqual, "/mtp-test-files")
+				So(fi.FullPath, ShouldContainSubstring, "/mtp-test-files/")
+				So(objectId, ShouldBeGreaterThan, 0)
+				So(fi, ShouldNotBeNil)
+				So(fi.ParentId, ShouldBeGreaterThan, 0)
+				So(objectId, ShouldEqual, fi.ObjectId)
 
-			children = append(children, fi)
+				children = append(children, fi)
 
-			return nil
-		})
+				return nil
+			})
 
 		So(err, ShouldBeNil)
 		So(totalFiles1, ShouldBeGreaterThanOrEqualTo, 4)
@@ -56,19 +58,21 @@ func TestWalk(t *testing.T) {
 		/////////////////
 		fullPath = "/mtp-test-files/"
 		children = []*FileInfo{}
-		objectId2, totalFiles2, err := Walk(dev, sid, fullPath, false, func(objectId uint32, fi *FileInfo) error {
-			// make sure that the first item is not the parent path itself
-			So(fi.FullPath, ShouldNotEqual, "/mtp-test-files")
-			So(fi.FullPath, ShouldContainSubstring, "/mtp-test-files/")
-			So(objectId, ShouldBeGreaterThan, 0)
-			So(fi, ShouldNotBeNil)
-			So(fi.ParentId, ShouldBeGreaterThan, 0)
-			So(objectId, ShouldEqual, fi.ObjectId)
+		objectId2, totalFiles2, err := Walk(dev, sid, fullPath, false,
+			func(objectId uint32, fi *FileInfo, err error) error {
+				So(err, ShouldBeNil)
+				// make sure that the first item is not the parent path itself
+				So(fi.FullPath, ShouldNotEqual, "/mtp-test-files")
+				So(fi.FullPath, ShouldContainSubstring, "/mtp-test-files/")
+				So(objectId, ShouldBeGreaterThan, 0)
+				So(fi, ShouldNotBeNil)
+				So(fi.ParentId, ShouldBeGreaterThan, 0)
+				So(objectId, ShouldEqual, fi.ObjectId)
 
-			children = append(children, fi)
+				children = append(children, fi)
 
-			return nil
-		})
+				return nil
+			})
 
 		So(err, ShouldBeNil)
 		So(totalFiles2, ShouldBeGreaterThanOrEqualTo, totalFiles1)
@@ -87,19 +91,21 @@ func TestWalk(t *testing.T) {
 		/////////////////
 		fullPath = "mtp-test-files/"
 		children = []*FileInfo{}
-		objectId3, totalFiles3, err := Walk(dev, sid, fullPath, false, func(objectId uint32, fi *FileInfo) error {
-			// make sure that the first item is not the parent path itself
-			So(fi.FullPath, ShouldNotEqual, "/mtp-test-files")
-			So(fi.FullPath, ShouldContainSubstring, "/mtp-test-files/")
-			So(objectId, ShouldBeGreaterThan, 0)
-			So(fi, ShouldNotBeNil)
-			So(fi.ParentId, ShouldBeGreaterThan, 0)
-			So(objectId, ShouldEqual, fi.ObjectId)
+		objectId3, totalFiles3, err := Walk(dev, sid, fullPath, false,
+			func(objectId uint32, fi *FileInfo, err error) error {
+				So(err, ShouldBeNil)
+				// make sure that the first item is not the parent path itself
+				So(fi.FullPath, ShouldNotEqual, "/mtp-test-files")
+				So(fi.FullPath, ShouldContainSubstring, "/mtp-test-files/")
+				So(objectId, ShouldBeGreaterThan, 0)
+				So(fi, ShouldNotBeNil)
+				So(fi.ParentId, ShouldBeGreaterThan, 0)
+				So(objectId, ShouldEqual, fi.ObjectId)
 
-			children = append(children, fi)
+				children = append(children, fi)
 
-			return nil
-		})
+				return nil
+			})
 
 		So(err, ShouldBeNil)
 		So(totalFiles3, ShouldBeGreaterThanOrEqualTo, totalFiles1)
@@ -118,19 +124,22 @@ func TestWalk(t *testing.T) {
 		fullPath = "mtp-test-files/mock_dir3/"
 		children = []*FileInfo{}
 
-		objectId4, totalFiles4, err := Walk(dev, sid, fullPath, false, func(objectId uint32, fi *FileInfo) error {
-			// make sure that the first item is not the parent path itself
-			So(fi.FullPath, ShouldNotEqual, "/mtp-test-files/mock_dir3")
-			So(fi.FullPath, ShouldContainSubstring, "/mtp-test-files/mock_dir3/")
-			So(objectId, ShouldBeGreaterThan, 0)
-			So(fi, ShouldNotBeNil)
-			So(fi.ParentId, ShouldBeGreaterThan, 0)
-			So(objectId, ShouldEqual, fi.ObjectId)
+		objectId4, totalFiles4, err := Walk(dev, sid, fullPath, false,
+			func(objectId uint32, fi *FileInfo, err error) error {
+				So(err, ShouldBeNil)
 
-			children = append(children, fi)
+				// make sure that the first item is not the parent path itself
+				So(fi.FullPath, ShouldNotEqual, "/mtp-test-files/mock_dir3")
+				So(fi.FullPath, ShouldContainSubstring, "/mtp-test-files/mock_dir3/")
+				So(objectId, ShouldBeGreaterThan, 0)
+				So(fi, ShouldNotBeNil)
+				So(fi.ParentId, ShouldBeGreaterThan, 0)
+				So(objectId, ShouldEqual, fi.ObjectId)
 
-			return nil
-		})
+				children = append(children, fi)
+
+				return nil
+			})
 
 		So(err, ShouldBeNil)
 		So(totalFiles4, ShouldBeGreaterThanOrEqualTo, totalFiles1)
@@ -149,19 +158,22 @@ func TestWalk(t *testing.T) {
 		fullPath := "/mtp-test-files/mock_dir1/1"
 
 		var children []*FileInfo
-		objectId, totalFiles, err := Walk(dev, sid, fullPath, false, func(objectId uint32, fi *FileInfo) error {
-			// make sure that the first item is not the parent path itself
-			So(fi.FullPath, ShouldNotEqual, "/mtp-test-files/mock_dir1/1")
-			So(fi.FullPath, ShouldContainSubstring, "/mtp-test-files/mock_dir1/1/")
-			So(objectId, ShouldBeGreaterThan, 0)
-			So(fi, ShouldNotBeNil)
-			So(fi.ParentId, ShouldBeGreaterThan, 0)
-			So(objectId, ShouldEqual, fi.ObjectId)
+		objectId, totalFiles, err := Walk(dev, sid, fullPath, false,
+			func(objectId uint32, fi *FileInfo, err error) error {
+				So(err, ShouldBeNil)
 
-			children = append(children, fi)
+				// make sure that the first item is not the parent path itself
+				So(fi.FullPath, ShouldNotEqual, "/mtp-test-files/mock_dir1/1")
+				So(fi.FullPath, ShouldContainSubstring, "/mtp-test-files/mock_dir1/1/")
+				So(objectId, ShouldBeGreaterThan, 0)
+				So(fi, ShouldNotBeNil)
+				So(fi.ParentId, ShouldBeGreaterThan, 0)
+				So(objectId, ShouldEqual, fi.ObjectId)
 
-			return nil
-		})
+				children = append(children, fi)
+
+				return nil
+			})
 
 		So(err, ShouldBeNil)
 
@@ -187,19 +199,22 @@ func TestWalk(t *testing.T) {
 		fullPath := "/mtp-test-files/mock_dir1/"
 
 		var children []*FileInfo
-		objectId, totalFiles, err := Walk(dev, sid, fullPath, false, func(objectId uint32, fi *FileInfo) error {
-			// make sure that the first item is not the parent path itself
-			So(fi.FullPath, ShouldNotEqual, "/mtp-test-files/mock_dir1")
-			So(fi.FullPath, ShouldContainSubstring, "/mtp-test-files/mock_dir1/")
-			So(objectId, ShouldBeGreaterThan, 0)
-			So(fi, ShouldNotBeNil)
-			So(fi.ParentId, ShouldBeGreaterThan, 0)
-			So(objectId, ShouldEqual, fi.ObjectId)
+		objectId, totalFiles, err := Walk(dev, sid, fullPath, false,
+			func(objectId uint32, fi *FileInfo, err error) error {
+				So(err, ShouldBeNil)
 
-			children = append(children, fi)
+				// make sure that the first item is not the parent path itself
+				So(fi.FullPath, ShouldNotEqual, "/mtp-test-files/mock_dir1")
+				So(fi.FullPath, ShouldContainSubstring, "/mtp-test-files/mock_dir1/")
+				So(objectId, ShouldBeGreaterThan, 0)
+				So(fi, ShouldNotBeNil)
+				So(fi.ParentId, ShouldBeGreaterThan, 0)
+				So(objectId, ShouldEqual, fi.ObjectId)
 
-			return nil
-		})
+				children = append(children, fi)
+
+				return nil
+			})
 
 		So(err, ShouldBeNil)
 
@@ -225,20 +240,23 @@ func TestWalk(t *testing.T) {
 		fullPath := "/mtp-test-files/mock_dir1/"
 
 		var children []*FileInfo
-		objectId, totalFiles, err := Walk(dev, sid, fullPath, true, func(objectId uint32, fi *FileInfo) error {
-			// make sure that the first item is not the parent path itself
-			So(fi.FullPath, ShouldNotEqual, "/mtp-test-files/mock_dir1")
-			So(fi.FullPath, ShouldContainSubstring, "/mtp-test-files/mock_dir1/")
+		objectId, totalFiles, err := Walk(dev, sid, fullPath, true,
+			func(objectId uint32, fi *FileInfo, err error) error {
+				So(err, ShouldBeNil)
 
-			So(objectId, ShouldBeGreaterThan, 0)
-			So(fi, ShouldNotBeNil)
-			So(fi.ParentId, ShouldBeGreaterThan, 0)
-			So(objectId, ShouldEqual, fi.ObjectId)
+				// make sure that the first item is not the parent path itself
+				So(fi.FullPath, ShouldNotEqual, "/mtp-test-files/mock_dir1")
+				So(fi.FullPath, ShouldContainSubstring, "/mtp-test-files/mock_dir1/")
 
-			children = append(children, fi)
+				So(objectId, ShouldBeGreaterThan, 0)
+				So(fi, ShouldNotBeNil)
+				So(fi.ParentId, ShouldBeGreaterThan, 0)
+				So(objectId, ShouldEqual, fi.ObjectId)
 
-			return nil
-		})
+				children = append(children, fi)
+
+				return nil
+			})
 
 		So(err, ShouldBeNil)
 
@@ -273,12 +291,14 @@ func TestWalk(t *testing.T) {
 	Convey("Testing valid file | recursive=true | Walk", t, func() {
 		// test the directory '/mtp-test-files/a.txt'
 		var children []*FileInfo
-		objectId, totalFiles, err := Walk(dev, sid, "/mtp-test-files/a.txt", true, func(objectId uint32, fi *FileInfo) error {
-			children = append(children, fi)
-			So(fi.FullPath, ShouldEqual, "/mtp-test-files/a.txt")
+		objectId, totalFiles, err := Walk(dev, sid, "/mtp-test-files/a.txt", true,
+			func(objectId uint32, fi *FileInfo, err error) error {
+				So(err, ShouldBeNil)
+				children = append(children, fi)
+				So(fi.FullPath, ShouldEqual, "/mtp-test-files/a.txt")
 
-			return nil
-		})
+				return nil
+			})
 
 		So(err, ShouldBeNil)
 		So(objectId, ShouldBeGreaterThan, 0)
@@ -289,11 +309,13 @@ func TestWalk(t *testing.T) {
 	Convey("Testing non exisiting file | Walk | It should throw an error", t, func() {
 		// test the directory '/fake' | recursive=true
 		var children []*FileInfo
-		objectId, totalFiles, err := Walk(dev, sid, "/fake", true, func(objectId uint32, fi *FileInfo) error {
-			children = append(children, fi)
+		objectId, totalFiles, err := Walk(dev, sid, "/fake", true,
+			func(objectId uint32, fi *FileInfo, err error) error {
+				So(err, ShouldBeNil)
+				children = append(children, fi)
 
-			return nil
-		})
+				return nil
+			})
 
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
@@ -303,11 +325,13 @@ func TestWalk(t *testing.T) {
 
 		// test the directory '/fake' | recursive=false
 		children = []*FileInfo{}
-		objectId, totalFiles, err = Walk(dev, sid, "/fake", false, func(objectId uint32, fi *FileInfo) error {
-			children = append(children, fi)
+		objectId, totalFiles, err = Walk(dev, sid, "/fake", false,
+			func(objectId uint32, fi *FileInfo, err error) error {
+				So(err, ShouldBeNil)
+				children = append(children, fi)
 
-			return nil
-		})
+				return nil
+			})
 
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
@@ -317,11 +341,13 @@ func TestWalk(t *testing.T) {
 
 		// test the directory '/mtp-test-files/fake' | recursive=true
 		children = []*FileInfo{}
-		objectId, totalFiles, err = Walk(dev, sid, "/mtp-test-files/fake", true, func(objectId uint32, fi *FileInfo) error {
-			children = append(children, fi)
+		objectId, totalFiles, err = Walk(dev, sid, "/mtp-test-files/fake", true,
+			func(objectId uint32, fi *FileInfo, err error) error {
+				So(err, ShouldBeNil)
+				children = append(children, fi)
 
-			return nil
-		})
+				return nil
+			})
 
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
@@ -331,11 +357,13 @@ func TestWalk(t *testing.T) {
 
 		// test the directory '/mtp-test-files/fake' | recursive=false
 		children = []*FileInfo{}
-		objectId, totalFiles, err = Walk(dev, sid, "/mtp-test-files/fake", false, func(objectId uint32, fi *FileInfo) error {
-			children = append(children, fi)
+		objectId, totalFiles, err = Walk(dev, sid, "/mtp-test-files/fake", false,
+			func(objectId uint32, fi *FileInfo, err error) error {
+				So(err, ShouldBeNil)
+				children = append(children, fi)
 
-			return nil
-		})
+				return nil
+			})
 
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
@@ -344,11 +372,13 @@ func TestWalk(t *testing.T) {
 		So(len(children), ShouldEqual, 0)
 
 		// test the directory=''
-		objectId, totalFiles, err = Walk(dev, sid, "", true, func(objectId uint32, fi *FileInfo) error {
-			children = append(children, fi)
+		objectId, totalFiles, err = Walk(dev, sid, "", true,
+			func(objectId uint32, fi *FileInfo, err error) error {
+				So(err, ShouldBeNil)
+				children = append(children, fi)
 
-			return nil
-		})
+				return nil
+			})
 
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
@@ -359,10 +389,12 @@ func TestWalk(t *testing.T) {
 
 	Convey("Testing callback error | Walk | It should throw an error", t, func() {
 		// test the directory '/mtp-test-files' | recursive=true
-		_, _, err := Walk(dev, sid, "/mtp-test-files", true, func(objectId uint32, fi *FileInfo) error {
+		_, _, err := Walk(dev, sid, "/mtp-test-files", true,
+			func(objectId uint32, fi *FileInfo, err error) error {
+				So(err, ShouldBeNil)
 
-			return InvalidPathError{error: fmt.Errorf("some error occured")}
-		})
+				return InvalidPathError{error: fmt.Errorf("some error occured")}
+			})
 
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, InvalidPathError{})

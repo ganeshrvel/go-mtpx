@@ -28,7 +28,7 @@ type FileInfo struct {
 	Info *mtp.ObjectInfo
 }
 
-type WalkCb func(objectId uint32, fi *FileInfo) error
+type WalkCb func(objectId uint32, fi *FileInfo, err error) error
 
 type TransferredFileInfo struct {
 	FileInfo *FileInfo
@@ -39,4 +39,4 @@ type TransferredFileInfo struct {
 	Speed          float64
 }
 
-type TransferFilesCb func(fi *TransferredFileInfo)
+type TransferFilesCb func(fi *TransferredFileInfo, err error) error

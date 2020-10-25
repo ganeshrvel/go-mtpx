@@ -303,7 +303,7 @@ func proccessWalk(dev *mtp.Device, storageId, objectId uint32, fullPath string, 
 
 		totalFiles += 1
 
-		err = cb(objId, fi)
+		err = cb(objId, fi, nil)
 		if err != nil {
 			return totalFiles, err
 		}
@@ -322,7 +322,7 @@ func proccessWalk(dev *mtp.Device, storageId, objectId uint32, fullPath string, 
 			dev, storageId, objId, fi.FullPath, recursive, cb,
 		)
 		if err != nil {
-			continue
+			return totalFiles, err
 		}
 
 		totalFiles += _totalFiles

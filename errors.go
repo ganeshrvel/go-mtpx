@@ -40,7 +40,7 @@ type InvalidPathError struct {
 	error
 }
 
-type UploadFileError struct {
+type FileTransferError struct {
 	error
 }
 
