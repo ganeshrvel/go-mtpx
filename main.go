@@ -438,10 +438,10 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 func DownloadFiles(dev *mtp.Device, storageId uint32, sources []string, destination string, cb TransferFilesCb) (rTotalFiles int, rTotalSize int64, rError error) {
 	_destination := fixSlash(destination)
 
-	//downloadFi := TransferredFileInfo{
-	//	StartTime:      time.Now(),
-	//	LatestSentTime: time.Now(),
-	//}
+	downloadFi := TransferredFileInfo{
+		StartTime:      time.Now(),
+		LatestSentTime: time.Now(),
+	}
 
 	totalFiles := 0
 	var totalSize int64 = 0
@@ -488,6 +488,13 @@ func DownloadFiles(dev *mtp.Device, storageId uint32, sources []string, destinat
 			if err != nil {
 				return err
 			}
+
+			downloadFi.FileInfo = fi
+			downloadFi.FilesSent = totalFiles
+			downloadFi.Speed = transferRateInMBs(fi.Size, downloadFi.LatestSentTime, downloadFi.Speed)
+			downloadFi.LatestSentTime = time.Now()
+
+			cb(&downloadFi)
 
 			return nil
 		})
