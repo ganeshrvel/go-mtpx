@@ -204,7 +204,7 @@ func handleMakeDirectory(dev *mtp.Device, storageId, parentId uint32, filename s
 		ObjectFormat:     mtp.OFC_Association,
 		ParentObject:     parentId,
 		Filename:         filename,
-		CompressedSize:   0xFFFFFFFF,
+		CompressedSize:   0,
 		ModificationDate: time.Now(),
 	}
 

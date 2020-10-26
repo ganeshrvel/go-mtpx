@@ -12,7 +12,9 @@ import (
 	"time"
 )
 
-// todo work on documentations
+// todo: work on documentations
+// todo: hotplug
+// todo: information mode -> get total files, break the buf into smaller chunks and calculate the transfer reate
 
 // initialize the mtp device
 // returns mtp device
@@ -93,7 +95,6 @@ func MakeDirectory(dev *mtp.Device, storageId, parentId uint32, parentPath, name
 
 	// check if the path exists in the MTP device
 	fi, err := GetObjectFromParentIdAndFilename(dev, storageId, parentId, name)
-
 	if err == nil {
 		// the object exists and if it's a file then throw an error
 		if !fi.IsDir {
@@ -105,7 +106,6 @@ func MakeDirectory(dev *mtp.Device, storageId, parentId uint32, parentPath, name
 
 	// check if the parent exists
 	parentFi, err := GetObjectFromObjectIdOrPath(dev, storageId, parentId, parentPath)
-
 	if err != nil {
 		return 0, err
 	}
@@ -582,20 +582,12 @@ func main() {
 	pretty.Println("objectId: ", objectId)*/
 
 	///MakeDirectory
-	//objectId, err := MakeDirectory(dev, sid, "/", "name")
+	//objectId, err := MakeDirectory(dev, sid, ParentObjectId, "/", "name")
 	//if err != nil {
 	//	log.Panic(err)
 	//}
 	//
 	//pretty.Println(objectId)
-
-	///ListDirectory
-	//files, err := ListDirectory(dev, sid, 0, "/")
-	//if err != nil {
-	//	log.Panic(err)
-	//}
-	//
-	//pretty.Println("Listing directory test: ", files)
 
 	//GetObjectFromPath
 	//fileObj, err := GetObjectFromPath(dev, sid, "/tests/s")
@@ -619,34 +611,35 @@ func main() {
 	//	log.Panic(err)
 	//}
 
-	//////RenameFile
+	////RenameFile
 	//objId, err := RenameFile(dev, sid, 0, "/mtp-test-files/temp_dir/b.txt", "b.txt")
 	//if err != nil {
 	//	log.Panic(err)
 	//}
 	//pretty.Println(objId)
 
-	////UploadFiles
-	//uploadFile := getTestMocksAsset("mock_dir1")
-	//uploadFile2 := getTestMocksAsset("mock_dir2")
-	//start := time.Now()
-	//
-	//objId, totalFiles, totalSize, err := UploadFiles(dev, sid,
-	//	[]string{uploadFile, uploadFile2, uploadFile}, "/mtp-test-files/temp_dir/test_UploadFiles",
-	//	func(uploadFi *TransferredFileInfo) {
-	//		fmt.Printf("Current filepath: %s\n", uploadFi.FileInfo.FullPath)
-	//		fmt.Printf("%x MB/s\n", uploadFi.Speed)
-	//	},
-	//)
-	//if err != nil {
-	//
-	//	log.Panic(err)
-	//}
-	//
-	//pretty.Println(objId)
-	//pretty.Println(totalFiles)
-	//pretty.Println(totalSize)
-	//pretty.Println("time elapsed: ", time.Since(start).Seconds())
+	//UploadFiles
+	uploadFile2 := getTestMocksAsset("")
+	start := time.Now()
+
+	objId, totalFiles, totalSize, err := UploadFiles(dev, sid,
+		[]string{uploadFile2}, "/mtp-test-files/",
+		func(uploadFi *TransferredFileInfo, err error) error {
+			fmt.Printf("Current filepath: %s\n", uploadFi.FileInfo.FullPath)
+			fmt.Printf("%x MB/s\n", uploadFi.Speed)
+
+			return nil
+		},
+	)
+	if err != nil {
+
+		log.Panic(err)
+	}
+
+	pretty.Println(objId)
+	pretty.Println(totalFiles)
+	pretty.Println(totalSize)
+	pretty.Println("time elapsed: ", time.Since(start).Seconds())
 
 	////DownloadFiles
 	//downloadFile := newTempMocksDir("test_DownloadTest", true)
@@ -655,9 +648,11 @@ func main() {
 	//
 	//totalFiles, totalSize, err := DownloadFiles(dev, sid,
 	//	[]string{sourceFile1}, downloadFile,
-	//	func(downloadFi *TransferredFileInfo) {
+	//	func(downloadFi *TransferredFileInfo, err error) error {
 	//		fmt.Printf("Current filepath: %s\n", downloadFi.FileInfo.FullPath)
 	//		fmt.Printf("%d MB/s\n", downloadFi.Speed)
+	//
+	//		return nil
 	//	},
 	//)
 	//if err != nil {
