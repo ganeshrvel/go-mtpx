@@ -66,7 +66,7 @@ func TestDownloadFiles(t *testing.T) {
 		sourceFile1 := "/mtp-test-files/mock_dir1/"
 		sources := []string{sourceFile1}
 
-		dirList := []string{"/mock_dir1/1/a.txt", "/mock_dir1/a.txt", "/mock_dir1/3/b.txt", "/mock_dir1/3/2/b.txt", "/mock_dir1/2/b.txt"}
+		dirList := []string{"/mtp-test-files/mock_dir1/1/a.txt", "/mtp-test-files/mock_dir1/a.txt", "/mtp-test-files/mock_dir1/3/b.txt", "/mtp-test-files/mock_dir1/3/2/b.txt", "/mtp-test-files/mock_dir1/2/b.txt"}
 
 		var currentSentTime int64
 		var currentSentFiles int
@@ -83,7 +83,10 @@ func TestDownloadFiles(t *testing.T) {
 
 				So(fi.FileInfo.ParentId, ShouldBeGreaterThan, 0)
 				So(fi.FileInfo.FullPath, ShouldStartWith, sources[0])
-				So(fi.FileInfo.FullPath, ShouldEndWith, dirList[fi.FilesSent-1])
+
+				contains, index := StringContains(dirList, fi.FileInfo.FullPath)
+				So(contains, ShouldEqual, true)
+				dirList = RemoveIndex(dirList, index)
 
 				currentSentTime = fi.LatestSentTime.UnixNano()
 				currentSentFiles = fi.FilesSent
@@ -132,8 +135,8 @@ func TestDownloadFiles(t *testing.T) {
 		sources := []string{sourceFile1, sourceFile2}
 
 		dirList := []string{
-			"/mock_dir1/1/a.txt", "/mock_dir1/a.txt", "/mock_dir1/3/b.txt", "/mock_dir1/3/2/b.txt", "/mock_dir1/2/b.txt",
-			"/mock_dir2/1/a.txt", "/mock_dir2/a.txt", "/mock_dir2/3/b.txt", "/mock_dir2/3/2/b.txt", "/mock_dir2/2/b.txt",
+			"/mtp-test-files/mock_dir1/1/a.txt", "/mtp-test-files/mock_dir1/a.txt", "/mtp-test-files/mock_dir1/3/b.txt", "/mtp-test-files/mock_dir1/3/2/b.txt", "/mtp-test-files/mock_dir1/2/b.txt",
+			"/mtp-test-files/mock_dir2/1/a.txt", "/mtp-test-files/mock_dir2/a.txt", "/mtp-test-files/mock_dir2/3/b.txt", "/mtp-test-files/mock_dir2/3/2/b.txt", "/mtp-test-files/mock_dir2/2/b.txt",
 		}
 
 		var currentSentTime int64
@@ -158,7 +161,9 @@ func TestDownloadFiles(t *testing.T) {
 				}
 
 				So(fi.FileInfo.FullPath, ShouldStartWith, sources[sIndex])
-				So(fi.FileInfo.FullPath, ShouldEndWith, dirList[fi.FilesSent-1])
+				contains, index := StringContains(dirList, fi.FileInfo.FullPath)
+				So(contains, ShouldEqual, true)
+				dirList = RemoveIndex(dirList, index)
 
 				currentSentTime = fi.LatestSentTime.UnixNano()
 				currentSentFiles = fi.FilesSent
@@ -185,8 +190,8 @@ func TestDownloadFiles(t *testing.T) {
 		sources := []string{sourceFile1, sourceFile2}
 
 		dirList := []string{
-			"/mock_dir1/1/a.txt", "/mock_dir1/a.txt", "/mock_dir1/3/b.txt", "/mock_dir1/3/2/b.txt", "/mock_dir1/2/b.txt",
-			"/mock_dir1/1/a.txt", "/mock_dir1/a.txt", "/mock_dir1/3/b.txt", "/mock_dir1/3/2/b.txt", "/mock_dir1/2/b.txt",
+			"/mtp-test-files/mock_dir1/1/a.txt", "/mtp-test-files/mock_dir1/a.txt", "/mtp-test-files/mock_dir1/3/b.txt", "/mtp-test-files/mock_dir1/3/2/b.txt", "/mtp-test-files/mock_dir1/2/b.txt",
+			"/mtp-test-files/mock_dir1/1/a.txt", "/mtp-test-files/mock_dir1/a.txt", "/mtp-test-files/mock_dir1/3/b.txt", "/mtp-test-files/mock_dir1/3/2/b.txt", "/mtp-test-files/mock_dir1/2/b.txt",
 		}
 
 		var currentSentTime int64
@@ -205,7 +210,9 @@ func TestDownloadFiles(t *testing.T) {
 				So(fi.FileInfo.ParentId, ShouldBeGreaterThan, 0)
 
 				So(fi.FileInfo.FullPath, ShouldStartWith, sources[0])
-				So(fi.FileInfo.FullPath, ShouldEndWith, dirList[fi.FilesSent-1])
+				contains, index := StringContains(dirList, fi.FileInfo.FullPath)
+				So(contains, ShouldEqual, true)
+				dirList = RemoveIndex(dirList, index)
 
 				currentSentTime = fi.LatestSentTime.UnixNano()
 				currentSentFiles = fi.FilesSent
@@ -370,9 +377,9 @@ func TestDownloadFiles(t *testing.T) {
 		sources := []string{sourceFile1, sourceFile2}
 
 		dirList := []string{
-			"/mock_dir1/1/a.txt", "/mock_dir1/a.txt", "/mock_dir1/3/b.txt", "/mock_dir1/3/2/b.txt", "/mock_dir1/2/b.txt",
+			"/mtp-test-files/mock_dir1/1/a.txt", "/mtp-test-files/mock_dir1/a.txt", "/mtp-test-files/mock_dir1/3/b.txt", "/mtp-test-files/mock_dir1/3/2/b.txt", "/mtp-test-files/mock_dir1/2/b.txt",
 
-			"a.txt",
+			"/mtp-test-files/mock_dir1/1/a.txt",
 		}
 
 		var currentSentTime int64
@@ -396,7 +403,10 @@ func TestDownloadFiles(t *testing.T) {
 				}
 				So(fi.FileInfo.FullPath, ShouldStartWith, sources[sIndex])
 
-				So(fi.FileInfo.FullPath, ShouldEndWith, dirList[fi.FilesSent-1])
+				contains, index := StringContains(dirList, fi.FileInfo.FullPath)
+				So(contains, ShouldEqual, true)
+				dirList = RemoveIndex(dirList, index)
+
 
 				currentSentTime = fi.LatestSentTime.UnixNano()
 				currentSentFiles = fi.FilesSent
@@ -419,9 +429,9 @@ func TestDownloadFiles(t *testing.T) {
 		sources := []string{sourceFile1, sourceFile2}
 
 		dirList := []string{
-			"/mock_dir1/1/a.txt", "/mock_dir1/a.txt", "/mock_dir1/3/b.txt", "/mock_dir1/3/2/b.txt", "/mock_dir1/2/b.txt",
+			"/mtp-test-files/mock_dir1/1/a.txt", "/mtp-test-files/mock_dir1/a.txt", "/mtp-test-files/mock_dir1/3/b.txt", "/mtp-test-files/mock_dir1/3/2/b.txt", "/mtp-test-files/mock_dir1/2/b.txt",
 
-			"a.txt",
+			"/mtp-test-files/mock_dir1/1/a.txt",
 		}
 
 		var currentSentTime int64
@@ -445,7 +455,9 @@ func TestDownloadFiles(t *testing.T) {
 				}
 				So(fi.FileInfo.FullPath, ShouldStartWith, sources[sIndex])
 
-				So(fi.FileInfo.FullPath, ShouldEndWith, dirList[fi.FilesSent-1])
+				contains, index := StringContains(dirList, fi.FileInfo.FullPath)
+				So(contains, ShouldEqual, true)
+				dirList = RemoveIndex(dirList, index)
 
 				currentSentTime = fi.LatestSentTime.UnixNano()
 				currentSentFiles = fi.FilesSent
@@ -472,8 +484,7 @@ func TestDownloadFiles(t *testing.T) {
 		sources := []string{sourceFile1, sourceFile2}
 
 		dirList := []string{
-			"/mock_dir1/1/a.txt", "/mock_dir1/a.txt", "/mock_dir1/3/b.txt", "/mock_dir1/3/2/b.txt", "/mock_dir1/2/b.txt",
-			"a.txt",
+			"/mtp-test-files/mock_dir1/1/a.txt", "/mtp-test-files/mock_dir1/a.txt", "/mtp-test-files/mock_dir1/3/b.txt", "/mtp-test-files/mock_dir1/3/2/b.txt", "/mtp-test-files/mock_dir1/2/b.txt",
 		}
 
 		var currentSentTime int64
@@ -497,7 +508,9 @@ func TestDownloadFiles(t *testing.T) {
 				}
 				So(fi.FileInfo.FullPath, ShouldStartWith, sources[sIndex])
 
-				So(fi.FileInfo.FullPath, ShouldEndWith, dirList[fi.FilesSent-1])
+				contains, index := StringContains(dirList, fi.FileInfo.FullPath)
+				So(contains, ShouldEqual, true)
+				dirList = RemoveIndex(dirList, index)
 
 				currentSentTime = fi.LatestSentTime.UnixNano()
 				currentSentFiles = fi.FilesSent

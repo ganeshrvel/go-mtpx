@@ -160,7 +160,9 @@ func isSymlinkLocal(fi os.FileInfo) bool {
 }
 
 func isDisallowedFiles(filename string) bool {
-	return StringContains(disallowedFiles, filename)
+	contains, _ := StringContains(disallowedFiles, filename)
+
+	return contains
 }
 
 func existsLocal(filename string) bool {
@@ -185,14 +187,20 @@ func StringFilter(x []string, f func(string) bool) []string {
 	return a
 }
 
-func StringContains(list []string, search string) bool {
-	for _, a := range list {
+func StringContains(list []string, search string) (contains bool, index int, ) {
+	for i, a := range list {
 		if a == search {
-			return true
+			return true, i
 		}
 	}
 
-	return false
+	return false, 0
+}
+
+func RemoveIndex(s []string, index int) []string {
+	ret := make([]string, 0)
+	ret = append(ret, s[:index]...)
+	return append(ret, s[index+1:]...)
 }
 
 func subpathExists(path, searchPath string) bool {
