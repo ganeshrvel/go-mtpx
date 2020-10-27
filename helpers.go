@@ -249,8 +249,7 @@ func handleMakeFile(dev *mtp.Device, storageId uint32, obj *mtp.ObjectInfo, fInf
 	}
 
 	// send the bytes data to the newly create object handle
-	_fileInfo := *fInfo
-	err = dev.SendObject(fileBuf, _fileInfo.Size())
+	err = dev.SendObject(fileBuf, (*fInfo).Size())
 	if err != nil {
 		return objId, SendObjectError{error: err}
 	}
@@ -280,8 +279,9 @@ func handleMakeLocalFile(dev *mtp.Device, fi *FileInfo, destination string) erro
 // if [objectId] is not available then [fullPath] will be used to fetch the [objectId]
 // dont leave both [objectId] and [fullPath] empty
 // Tips: use [objectId] whenever possible to avoid traversing down the whole file tree to process and find the [objectId]
+// if [skipDisallowedFiles] is true then files matching the [disallowedFiles] list will be ignored
 // returns total number of objects
-func proccessWalk(dev *mtp.Device, storageId, objectId uint32, fullPath string, recursive bool, cb WalkCb) (rTotalFiles int, rError error) {
+func proccessWalk(dev *mtp.Device, storageId, objectId uint32, fullPath string, recursive, skipDisallowedFiles bool, cb WalkCb) (rTotalFiles int, rError error) {
 	fi, err := GetObjectFromObjectIdOrPath(dev, storageId, objectId, fullPath)
 
 	if err != nil {
@@ -299,6 +299,15 @@ func proccessWalk(dev *mtp.Device, storageId, objectId uint32, fullPath string, 
 		fi, err := GetObjectFromObjectId(dev, objId, fullPath)
 		if err != nil {
 			continue
+		}
+
+		// if the object file name matches [disallowedFiles] list then ignore it
+		if skipDisallowedFiles {
+			fName := (*fi).Name
+
+			if ok := isDisallowedFiles(fName); ok {
+				continue
+			}
 		}
 
 		totalFiles += 1
@@ -319,7 +328,7 @@ func proccessWalk(dev *mtp.Device, storageId, objectId uint32, fullPath string, 
 		}
 
 		_totalFiles, err := proccessWalk(
-			dev, storageId, objId, fi.FullPath, recursive, cb,
+			dev, storageId, objId, fi.FullPath, recursive, skipDisallowedFiles, cb,
 		)
 		if err != nil {
 			return totalFiles, err

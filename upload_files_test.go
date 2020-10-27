@@ -124,7 +124,7 @@ func TestUploadFiles(t *testing.T) {
 			"/mock_dir1/3/b.txt",
 			"/mock_dir1/a.txt"}
 
-		objectId, totalListFiles, err := Walk(dev, sid, destination, true, func(objectId uint32, fi *FileInfo, err error) error {
+		objectId, totalListFiles, err := Walk(dev, sid, destination, true, true, func(objectId uint32, fi *FileInfo, err error) error {
 			So(err, ShouldBeNil)
 
 			contains, index := StringContains(dirList1, strings.TrimPrefix(fi.FullPath, destination))

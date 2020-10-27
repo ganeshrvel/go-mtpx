@@ -28,7 +28,7 @@ func TestRenameFile(t *testing.T) {
 		fileName := fmt.Sprintf("/mtp-test-files/temp_dir/test-RenameFile/%x", rand.Int31())
 		renameRandFileName := fmt.Sprintf("renamed-%x", rand.Int31())
 
-		objectId, err := MakeDirectoryRecursive(dev, sid, fileName)
+		objectId, err := MakeDirectory(dev, sid, fileName)
 
 		So(err, ShouldBeNil)
 		So(objectId, ShouldBeGreaterThan, 0)
@@ -51,7 +51,7 @@ func TestRenameFile(t *testing.T) {
 		fileName := fmt.Sprintf("/mtp-test-files/temp_dir/test-RenameFile/%x", rand.Int31())
 		renameRandFileName := fmt.Sprintf("renamed-%x", rand.Int31())
 
-		objectId, err := MakeDirectoryRecursive(dev, sid, fileName)
+		objectId, err := MakeDirectory(dev, sid, fileName)
 
 		So(err, ShouldBeNil)
 		So(objectId, ShouldBeGreaterThan, 0)

@@ -26,7 +26,7 @@ func TestDeleteFile(t *testing.T) {
 		// test the directory '/mtp-test-files/temp_dir/test-DeleteFile/{random}'
 		directoryName := fmt.Sprintf("/mtp-test-files/temp_dir/test-DeleteFile/%x", rand.Int31())
 
-		objectId, err := MakeDirectoryRecursive(dev, sid, directoryName)
+		objectId, err := MakeDirectory(dev, sid, directoryName)
 
 		So(err, ShouldBeNil)
 		So(objectId, ShouldBeGreaterThan, 0)
@@ -42,7 +42,7 @@ func TestDeleteFile(t *testing.T) {
 		// test the directory '/mtp-test-files/temp_dir/test-DeleteFile/{random}'
 		directoryName := fmt.Sprintf("/mtp-test-files/temp_dir/test-DeleteFile/%x", rand.Int31())
 
-		objectId, err := MakeDirectoryRecursive(dev, sid, directoryName)
+		objectId, err := MakeDirectory(dev, sid, directoryName)
 
 		So(err, ShouldBeNil)
 		So(objectId, ShouldBeGreaterThan, 0)

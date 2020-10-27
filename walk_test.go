@@ -27,7 +27,7 @@ func TestWalk(t *testing.T) {
 		fullPath := "/mtp-test-files"
 
 		var children []*FileInfo
-		objectId1, totalFiles1, err := Walk(dev, sid, fullPath, false,
+		objectId1, totalFiles1, err := Walk(dev, sid, fullPath, false, true,
 			func(objectId uint32, fi *FileInfo, err error) error {
 				So(err, ShouldBeNil)
 				So(fi.FullPath, ShouldNotEqual, "/mtp-test-files")
@@ -58,7 +58,7 @@ func TestWalk(t *testing.T) {
 		/////////////////
 		fullPath = "/mtp-test-files/"
 		children = []*FileInfo{}
-		objectId2, totalFiles2, err := Walk(dev, sid, fullPath, false,
+		objectId2, totalFiles2, err := Walk(dev, sid, fullPath, false, true,
 			func(objectId uint32, fi *FileInfo, err error) error {
 				So(err, ShouldBeNil)
 				// make sure that the first item is not the parent path itself
@@ -91,7 +91,7 @@ func TestWalk(t *testing.T) {
 		/////////////////
 		fullPath = "mtp-test-files/"
 		children = []*FileInfo{}
-		objectId3, totalFiles3, err := Walk(dev, sid, fullPath, false,
+		objectId3, totalFiles3, err := Walk(dev, sid, fullPath, false, true,
 			func(objectId uint32, fi *FileInfo, err error) error {
 				So(err, ShouldBeNil)
 				// make sure that the first item is not the parent path itself
@@ -124,7 +124,7 @@ func TestWalk(t *testing.T) {
 		fullPath = "mtp-test-files/mock_dir3/"
 		children = []*FileInfo{}
 
-		objectId4, totalFiles4, err := Walk(dev, sid, fullPath, false,
+		objectId4, totalFiles4, err := Walk(dev, sid, fullPath, false, true,
 			func(objectId uint32, fi *FileInfo, err error) error {
 				So(err, ShouldBeNil)
 
@@ -158,7 +158,7 @@ func TestWalk(t *testing.T) {
 		fullPath := "/mtp-test-files/mock_dir1/1"
 
 		var children []*FileInfo
-		objectId, totalFiles, err := Walk(dev, sid, fullPath, false,
+		objectId, totalFiles, err := Walk(dev, sid, fullPath, false, true,
 			func(objectId uint32, fi *FileInfo, err error) error {
 				So(err, ShouldBeNil)
 
@@ -199,7 +199,7 @@ func TestWalk(t *testing.T) {
 		fullPath := "/mtp-test-files/mock_dir1/"
 
 		var children []*FileInfo
-		objectId, totalFiles, err := Walk(dev, sid, fullPath, false,
+		objectId, totalFiles, err := Walk(dev, sid, fullPath, false, true,
 			func(objectId uint32, fi *FileInfo, err error) error {
 				So(err, ShouldBeNil)
 
@@ -240,7 +240,7 @@ func TestWalk(t *testing.T) {
 		fullPath := "/mtp-test-files/mock_dir1/"
 
 		var children []*FileInfo
-		objectId, totalFiles, err := Walk(dev, sid, fullPath, true,
+		objectId, totalFiles, err := Walk(dev, sid, fullPath, true, true,
 			func(objectId uint32, fi *FileInfo, err error) error {
 				So(err, ShouldBeNil)
 
@@ -291,7 +291,7 @@ func TestWalk(t *testing.T) {
 	Convey("Testing valid file | recursive=true | Walk", t, func() {
 		// test the directory '/mtp-test-files/a.txt'
 		var children []*FileInfo
-		objectId, totalFiles, err := Walk(dev, sid, "/mtp-test-files/a.txt", true,
+		objectId, totalFiles, err := Walk(dev, sid, "/mtp-test-files/a.txt", true, true,
 			func(objectId uint32, fi *FileInfo, err error) error {
 				So(err, ShouldBeNil)
 				children = append(children, fi)
@@ -306,10 +306,96 @@ func TestWalk(t *testing.T) {
 		So(len(children), ShouldEqual, 1)
 	})
 
+	Convey("Testing recursive=false | Walk", t, func() {
+		// test the directory '/mtp-test-files/mock_dir1/' | recursive=false
+		count := 0
+		_, _, err := Walk(dev, sid, "/mtp-test-files/mock_dir1/", false, true,
+			func(objectId uint32, fi *FileInfo, err error) error {
+				So(err, ShouldBeNil)
+
+				count += 1
+				return nil
+			})
+
+		So(count, ShouldEqual, 4)
+		So(err, ShouldBeNil)
+	})
+
+	Convey("Testing skipDisallowedFiles=true inside the tree | Walk", t, func() {
+		// test the directory '/mtp-test-files/mock_dir1/' | recursive=true
+		count := 0
+		_, _, err := Walk(dev, sid, "/mtp-test-files/mock_dir1/", true, true,
+			func(objectId uint32, fi *FileInfo, err error) error {
+				So(err, ShouldBeNil)
+
+				count += 1
+				return nil
+			})
+
+		So(count, ShouldEqual, 9)
+		So(err, ShouldBeNil)
+	})
+
+	Convey("Testing skipDisallowedFiles=false inside the tree | Walk", t, func() {
+		// test the directory '/mtp-test-files/mock_dir1/' | recursive=true
+		count := 0
+		_, _, err := Walk(dev, sid, "/mtp-test-files/mock_dir1/", true, false,
+			func(objectId uint32, fi *FileInfo, err error) error {
+				So(err, ShouldBeNil)
+
+				count += 1
+				return nil
+			})
+
+		So(count, ShouldEqual, 10)
+		So(err, ShouldBeNil)
+	})
+
+	Convey("Testing skipDisallowedFiles=false | rootfile=.DS_Store | Walk", t, func() {
+		// test the directory '/mtp-test-files/mock_dir1/.DS_Store' | recursive=true
+		count := 0
+		_, _, err := Walk(dev, sid, "/mtp-test-files/mock_dir1/.DS_Store", true, false,
+			func(objectId uint32, fi *FileInfo, err error) error {
+				So(err, ShouldBeNil)
+
+				count += 1
+				return nil
+			})
+
+		So(count, ShouldEqual, 1)
+		So(err, ShouldBeNil)
+	})
+
+	Convey("Testing skipDisallowedFiles=true | Walk | It should throw an error", t, func() {
+		// test the directory '/mtp-test-files' | recursive=true
+		_, _, err := Walk(dev, sid, "/mtp-test-files/mock_dir1/.DS_Store", true, true,
+			func(objectId uint32, fi *FileInfo, err error) error {
+				So(err, ShouldBeNil)
+
+				return nil
+			})
+
+		So(err, ShouldBeError)
+		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
+	})
+
+	Convey("Testing skipDisallowedFiles=true | rootfile=.DS_Store | Walk | It should throw an error", t, func() {
+		// test the directory '/mtp-test-files/mock_dir1/.DS_Store' | recursive=true
+		_, _, err := Walk(dev, sid, "/mtp-test-files/mock_dir1/.DS_Store", true, true,
+			func(objectId uint32, fi *FileInfo, err error) error {
+				So(err, ShouldBeNil)
+
+				return nil
+			})
+
+		So(err, ShouldBeError)
+		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
+	})
+
 	Convey("Testing non exisiting file | Walk | It should throw an error", t, func() {
 		// test the directory '/fake' | recursive=true
 		var children []*FileInfo
-		objectId, totalFiles, err := Walk(dev, sid, "/fake", true,
+		objectId, totalFiles, err := Walk(dev, sid, "/fake", true, true,
 			func(objectId uint32, fi *FileInfo, err error) error {
 				So(err, ShouldBeNil)
 				children = append(children, fi)
@@ -325,7 +411,7 @@ func TestWalk(t *testing.T) {
 
 		// test the directory '/fake' | recursive=false
 		children = []*FileInfo{}
-		objectId, totalFiles, err = Walk(dev, sid, "/fake", false,
+		objectId, totalFiles, err = Walk(dev, sid, "/fake", false, true,
 			func(objectId uint32, fi *FileInfo, err error) error {
 				So(err, ShouldBeNil)
 				children = append(children, fi)
@@ -341,7 +427,7 @@ func TestWalk(t *testing.T) {
 
 		// test the directory '/mtp-test-files/fake' | recursive=true
 		children = []*FileInfo{}
-		objectId, totalFiles, err = Walk(dev, sid, "/mtp-test-files/fake", true,
+		objectId, totalFiles, err = Walk(dev, sid, "/mtp-test-files/fake", true, true,
 			func(objectId uint32, fi *FileInfo, err error) error {
 				So(err, ShouldBeNil)
 				children = append(children, fi)
@@ -357,7 +443,7 @@ func TestWalk(t *testing.T) {
 
 		// test the directory '/mtp-test-files/fake' | recursive=false
 		children = []*FileInfo{}
-		objectId, totalFiles, err = Walk(dev, sid, "/mtp-test-files/fake", false,
+		objectId, totalFiles, err = Walk(dev, sid, "/mtp-test-files/fake", false, true,
 			func(objectId uint32, fi *FileInfo, err error) error {
 				So(err, ShouldBeNil)
 				children = append(children, fi)
@@ -372,7 +458,7 @@ func TestWalk(t *testing.T) {
 		So(len(children), ShouldEqual, 0)
 
 		// test the directory=''
-		objectId, totalFiles, err = Walk(dev, sid, "", true,
+		objectId, totalFiles, err = Walk(dev, sid, "", true, true,
 			func(objectId uint32, fi *FileInfo, err error) error {
 				So(err, ShouldBeNil)
 				children = append(children, fi)
@@ -389,7 +475,7 @@ func TestWalk(t *testing.T) {
 
 	Convey("Testing callback error | Walk | It should throw an error", t, func() {
 		// test the directory '/mtp-test-files' | recursive=true
-		_, _, err := Walk(dev, sid, "/mtp-test-files", true,
+		_, _, err := Walk(dev, sid, "/mtp-test-files", true, true,
 			func(objectId uint32, fi *FileInfo, err error) error {
 				So(err, ShouldBeNil)
 
