@@ -41,7 +41,6 @@ func TestRenameFile(t *testing.T) {
 
 		//try renaming the object using using the same [newFileName]
 		objId, err = RenameFile(dev, sid, objectId, "", renameRandFileName)
-
 		So(err, ShouldBeNil)
 		So(objId, ShouldEqual, objectId)
 	})

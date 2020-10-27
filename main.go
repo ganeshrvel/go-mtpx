@@ -12,9 +12,10 @@ import (
 	"time"
 )
 
+// todo: .DS_Store issue in Walk test
 // todo: work on documentations
 // todo: hotplug
-// todo: information mode -> get total files, break the buf into smaller chunks and calculate the transfer reate
+// todo: information mode -> get total files, break the buf into smaller chunks and calculate the transfer rate
 
 // initialize the mtp device
 // returns mtp device
@@ -81,42 +82,6 @@ func FetchStorages(dev *mtp.Device) ([]StorageData, error) {
 	}
 
 	return result, nil
-}
-
-// create a new directory using [parentPath] and [name]
-// this is non recursive
-// if the parentpath does not exists then an error will be thrown
-// [parentPath] -> path to the parent directory
-// [name] -> directory name
-func MakeDirectory(dev *mtp.Device, storageId, parentId uint32, parentPath, name string) (rObjectId uint32, rError error) {
-	if name == "" {
-		return 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The name cannot be empty", parentPath)}
-	}
-
-	// check if the path exists in the MTP device
-	fi, err := GetObjectFromParentIdAndFilename(dev, storageId, parentId, name)
-	if err == nil {
-		// the object exists and if it's a file then throw an error
-		if !fi.IsDir {
-			return 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The object is not a directory", parentPath)}
-		}
-
-		return fi.ObjectId, nil
-	}
-
-	// check if the parent exists
-	parentFi, err := GetObjectFromObjectIdOrPath(dev, storageId, parentId, parentPath)
-	if err != nil {
-		return 0, err
-	}
-
-	// if the parent object is a file then throw an error
-	if !parentFi.IsDir {
-		return 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The object is not a directory", parentPath)}
-	}
-
-	// create the directory
-	return handleMakeDirectory(dev, storageId, parentFi.ObjectId, name)
 }
 
 // create a new directory recursively using [fullPath]
@@ -227,6 +192,13 @@ func RenameFile(dev *mtp.Device, storageId, objectId uint32, fullPath, newFileNa
 	}
 
 	if err := dev.SetObjectPropValue(fi.ObjectId, mtp.OPC_ObjectFileName, &mtp.StringValue{Value: newFileName}); err != nil {
+		switch v := err.(type) {
+		case mtp.RCError:
+			if v == 0x2002 {
+				return fi.ObjectId, nil
+			}
+		}
+
 		return 0, FileObjectError{error: err}
 	}
 
@@ -271,6 +243,7 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 				}
 
 				name := fInfo.Name()
+
 				// don't follow symlinks
 				if isSymlinkLocal(fInfo) {
 					return nil
@@ -294,10 +267,8 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 				// if the object is a directory then create a directory using [MakeDirectory] or [MakeDirectoryRecursive]
 				if isDir {
 					// if the parent path exists within the [destinationFilesDict] then fetch the [parentId] (value) and make the destination directory
-					if parentId, ok := destinationFilesDict[destinationParentPath]; ok {
-						objId, err := MakeDirectory(
-							dev, storageId, parentId, destinationParentPath, name,
-						)
+					if _, ok := destinationFilesDict[destinationParentPath]; ok {
+						objId, err := MakeDirectoryRecursive(dev, storageId, destinationFilePath)
 						if err != nil {
 							return err
 						}
@@ -581,7 +552,7 @@ func main() {
 	pretty.Println("totalFiles: ", totalFiles)
 	pretty.Println("objectId: ", objectId)*/
 
-	///MakeDirectory
+	////MakeDirectory
 	//objectId, err := MakeDirectory(dev, sid, ParentObjectId, "/", "name")
 	//if err != nil {
 	//	log.Panic(err)
@@ -619,14 +590,14 @@ func main() {
 	//pretty.Println(objId)
 
 	//UploadFiles
-	uploadFile2 := getTestMocksAsset("")
+	uploadFile2 := getTestMocksAsset("mock_dir1")
 	start := time.Now()
 
 	objId, totalFiles, totalSize, err := UploadFiles(dev, sid,
 		[]string{uploadFile2}, "/mtp-test-files/",
 		func(uploadFi *TransferredFileInfo, err error) error {
 			fmt.Printf("Current filepath: %s\n", uploadFi.FileInfo.FullPath)
-			fmt.Printf("%x MB/s\n", uploadFi.Speed)
+			fmt.Printf("%f MB/s\n", uploadFi.Speed)
 
 			return nil
 		},
@@ -641,16 +612,16 @@ func main() {
 	pretty.Println(totalSize)
 	pretty.Println("time elapsed: ", time.Since(start).Seconds())
 
-	////DownloadFiles
+	//DownloadFiles
 	//downloadFile := newTempMocksDir("test_DownloadTest", true)
-	//sourceFile1 := "/mtp-test-files/temp_dir/openmtp.dmg"
+	//sourceFile1 := "/mtp-test-files/2"
 	//start := time.Now()
 	//
 	//totalFiles, totalSize, err := DownloadFiles(dev, sid,
 	//	[]string{sourceFile1}, downloadFile,
 	//	func(downloadFi *TransferredFileInfo, err error) error {
 	//		fmt.Printf("Current filepath: %s\n", downloadFi.FileInfo.FullPath)
-	//		fmt.Printf("%d MB/s\n", downloadFi.Speed)
+	//		fmt.Printf("%f MB/s\n", downloadFi.Speed)
 	//
 	//		return nil
 	//	},

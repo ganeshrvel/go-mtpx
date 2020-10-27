@@ -4,3 +4,5 @@ tests/mtp-test-files-build/*
 resources
 build
 mocks-build
+profiling
+test-large-file

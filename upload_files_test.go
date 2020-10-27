@@ -5,6 +5,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 	"log"
 	"math/rand"
+	"strings"
 	"testing"
 )
 
@@ -110,9 +111,9 @@ func TestUploadFiles(t *testing.T) {
 
 		So(objectIdDest, ShouldEqual, fi.ObjectId)
 
-		// walk the directory on device and verify
+		//walk the directory on device and verify
 		dirList1 := []string{
-			"/mock_dir1/",
+			"/mock_dir1",
 			"/mock_dir1/1",
 			"/mock_dir1/1/a.txt",
 			"/mock_dir1/2",
@@ -123,12 +124,12 @@ func TestUploadFiles(t *testing.T) {
 			"/mock_dir1/3/b.txt",
 			"/mock_dir1/a.txt"}
 
-		index := 0
 		objectId, totalListFiles, err := Walk(dev, sid, destination, true, func(objectId uint32, fi *FileInfo, err error) error {
 			So(err, ShouldBeNil)
-			So(fi.FullPath, ShouldEqual, getFullPath(destination, dirList1[index]))
 
-			index += 1
+			contains, index := StringContains(dirList1, strings.TrimPrefix(fi.FullPath, destination))
+			So(contains, ShouldEqual, true)
+			dirList1 = RemoveIndex(dirList1, index)
 
 			return nil
 		})
