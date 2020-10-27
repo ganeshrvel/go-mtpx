@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"github.com/ganeshrvel/go-mtpfs/mtp"
@@ -78,6 +79,18 @@ func GetObjectFromParentIdAndFilename(dev *mtp.Device, storageId uint32, parentI
 	}
 
 	for _, objectId := range handles.Values {
+		// fetch the ObjectFileName
+		var val mtp.StringValue
+		if err := dev.GetObjectPropValue(objectId, mtp.OPC_ObjectFileName, &val); err != nil {
+			return nil, FileObjectError{error: err}
+		}
+
+		// if the ObjectFileName doesn't match the [filename] then skip the current iteration
+		// this will avoid fetching the whole object properties and improve the performance a bit.
+		if val.Value != filename {
+			continue
+		}
+
 		fi, err := GetObjectFromObjectId(dev, objectId, "")
 
 		if err != nil {
@@ -212,6 +225,11 @@ func handleMakeDirectory(dev *mtp.Device, storageId, parentId uint32, filename s
 	_, _, objId, err := dev.SendObjectInfo(storageId, parentId, &send)
 	if err != nil {
 		return 0, SendObjectError{error: err}
+	}
+
+	err = dev.SendObject(&bytes.Buffer{}, 0)
+	if err != nil {
+		return objId, SendObjectError{error: err}
 	}
 
 	return objId, nil

@@ -2,7 +2,7 @@
   <configuration default="false" name="go test" type="GoTestRunConfiguration" factoryName="Go Test">
     <module name="go-mtpx" />
     <working_directory value="$PROJECT_DIR$" />
-    <go_parameters value="-i --parallel 1 -race " />
+    <go_parameters value="-i --parallel 1 -race" />
     <framework value="gotest" />
     <kind value="DIRECTORY" />
     <package value="github.com/ganeshrvel/one-archiver" />

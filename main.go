@@ -12,7 +12,6 @@ import (
 	"time"
 )
 
-// todo: .DS_Store issue in Walk test
 // todo: work on documentations
 // todo: hotplug
 // todo: information mode -> get total files, break the buf into smaller chunks and calculate the transfer rate
@@ -602,46 +601,22 @@ func main() {
 	//uploadFile2 := getTestMocksAsset("test-large-file")
 	//start := time.Now()
 	//
-	//objId, totalFiles, totalSize, err := UploadFiles(dev, sid,
-	//	[]string{uploadFile2}, "/mtp-test-files/",
-	//	func(uploadFi *TransferredFileInfo, err error) error {
-	//		fmt.Printf("Current filepath: %s\n", uploadFi.FileInfo.FullPath)
-	//		fmt.Printf("%f MB/s\n", uploadFi.Speed)
+	//totalFiles, totalSize, err := DownloadFiles(dev, sid,
+	//	[]string{sourceFile1}, downloadFile,
+	//	func(downloadFi *TransferredFileInfo, err error) error {
+	//		fmt.Printf("Current filepath: %s\n", downloadFi.FileInfo.FullPath)
+	//		fmt.Printf("%f MB/s\n", downloadFi.Speed)
 	//
 	//		return nil
 	//	},
 	//)
 	//if err != nil {
-	//
 	//	log.Panic(err)
 	//}
 	//
-	//pretty.Println(objId)
 	//pretty.Println(totalFiles)
 	//pretty.Println(totalSize)
 	//pretty.Println("time elapsed: ", time.Since(start).Seconds())
-
-	//DownloadFiles
-	downloadFile := newTempMocksDir("test_DownloadTest", true)
-	sourceFile1 := "/mtp-test-files/test-large-file"
-	start := time.Now()
-
-	totalFiles, totalSize, err := DownloadFiles(dev, sid,
-		[]string{sourceFile1}, downloadFile,
-		func(downloadFi *TransferredFileInfo, err error) error {
-			fmt.Printf("Current filepath: %s\n", downloadFi.FileInfo.FullPath)
-			fmt.Printf("%f MB/s\n", downloadFi.Speed)
-
-			return nil
-		},
-	)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	pretty.Println(totalFiles)
-	pretty.Println(totalSize)
-	pretty.Println("time elapsed: ", time.Since(start).Seconds())
 
 	Dispose(dev)
 }
