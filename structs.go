@@ -1,4 +1,4 @@
-package main
+package mtpx
 
 import (
 	"github.com/ganeshrvel/go-mtpfs/mtp"

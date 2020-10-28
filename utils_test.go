@@ -1,4 +1,4 @@
-package main
+package mtpx
 
 import (
 	. "github.com/smartystreets/goconvey/convey"
