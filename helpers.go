@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"github.com/ganeshrvel/go-mtpfs/mtp"
@@ -225,11 +224,6 @@ func handleMakeDirectory(dev *mtp.Device, storageId, parentId uint32, filename s
 	_, _, objId, err := dev.SendObjectInfo(storageId, parentId, &send)
 	if err != nil {
 		return 0, SendObjectError{error: err}
-	}
-
-	err = dev.SendObject(&bytes.Buffer{}, 0)
-	if err != nil {
-		return objId, SendObjectError{error: err}
 	}
 
 	return objId, nil

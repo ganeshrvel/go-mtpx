@@ -15,7 +15,7 @@ func TestMtpInitialize(t *testing.T) {
 		dev = d
 
 		So(err, ShouldBeNil)
-		So(dev, ShouldNotBeNil)
+		So(d.Timeout, ShouldBeGreaterThan, 1)
 	})
 
 	Convey("Testing FetchDeviceInfo", t, func() {
