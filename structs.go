@@ -44,8 +44,13 @@ type TransferFilesCb func(fi *TransferredFileInfo, err error) error
 type ProgressCb func(fi *ProgressInfo, err error) error
 
 type TransferSizeInfo struct {
+	// total size
 	Total      int64
+
+	// total size transferred
 	Sent       int64
+
+	// progress in percentage
 	Percentage float32
 }
 
@@ -58,7 +63,7 @@ type ProgressInfo struct {
 	// most recent transfer time
 	LatestSentTime time.Time
 
-	// transfer rate
+	// transfer rate (in MB/s)
 	Speed float64
 
 	// total files to transfer
@@ -67,6 +72,9 @@ type ProgressInfo struct {
 
 	// total files transferred
 	FilesSent int64
+
+	// total file transfer progress in percentage
+	FilesSentProgress float32
 
 	// size information of the current file which is being transferred
 	Current *TransferSizeInfo

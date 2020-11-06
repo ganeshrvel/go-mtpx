@@ -223,19 +223,25 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 	_destination := fixSlash(destination)
 
 	// todo pick these values from preprocessing steps
+	// total number of files in this upload session
 	var totalFiles int64 = 0
-	var totalFilesSize int64 = 0
+
+	// total size of all the files combined in this upload session
+	var totalSize int64 = 0
 
 	pInfo := ProgressInfo{
 		StartTime: time.Now(),
 	}
 
-	var allFilesSent int64 = 0
-	var allFilesSizeSent int64 = 0
+	// total number of files sent
+	var bulkFilesSent int64 = 0
+
+	// total size of data sent
+	var bulkSizeSent int64 = 0
 
 	destParentId, err := MakeDirectory(dev, storageId, _destination)
 	if err != nil {
-		return 0, allFilesSent, allFilesSizeSent, err
+		return 0, bulkFilesSent, bulkSizeSent, err
 	}
 
 	for _, source := range sources {
@@ -349,11 +355,11 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 					ModificationDate: time.Now(),
 				}
 
-				// keep track of [allFilesSent]
-				allFilesSent += 1
+				// keep track of [bulkFilesSent]
+				bulkFilesSent += 1
 
-				// keep track of [allFilesSizeSent]
-				allFilesSizeSent += size
+				// keep track of [bulkSizeSent]
+				bulkSizeSent += size
 
 				pInfo.FileInfo = &FileInfo{
 					Info:       &fObj,
@@ -393,11 +399,11 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 				}
 
 				pInfo.TotalFiles = totalFiles
-				pInfo.FilesSent = allFilesSent
+				pInfo.FilesSent = bulkFilesSent
 				pInfo.Bulk = &TransferSizeInfo{
-					Total:      totalFilesSize,
-					Sent:       allFilesSizeSent,
-					Percentage: Percent(float32(allFilesSizeSent), float32(size)),
+					Total:      totalSize,
+					Sent:       bulkSizeSent,
+					Percentage: Percent(float32(bulkSizeSent), float32(totalSize)),
 				}
 
 				pInfo.FileInfo.ObjectId = objId
@@ -415,26 +421,26 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 		if err != nil {
 			switch err.(type) {
 			case InvalidPathError:
-				return destParentId, allFilesSent, allFilesSizeSent, err
+				return destParentId, bulkFilesSent, bulkSizeSent, err
 
 			case *os.PathError:
 				if errors.Is(err, os.ErrPermission) {
-					return destParentId, allFilesSent, allFilesSizeSent, FilePermissionError{error: err}
+					return destParentId, bulkFilesSent, bulkSizeSent, FilePermissionError{error: err}
 				}
 
 				if errors.Is(err, os.ErrNotExist) {
-					return destParentId, allFilesSent, allFilesSizeSent, InvalidPathError{error: err}
+					return destParentId, bulkFilesSent, bulkSizeSent, InvalidPathError{error: err}
 				}
 
-				return destParentId, allFilesSent, allFilesSizeSent, LocalFileError{error: err}
+				return destParentId, bulkFilesSent, bulkSizeSent, LocalFileError{error: err}
 			default:
-				return destParentId, allFilesSent, allFilesSizeSent,
+				return destParentId, bulkFilesSent, bulkSizeSent,
 					FileTransferError{error: fmt.Errorf("an error occured while uploading files. %+v", err.Error())}
 			}
 		}
 	}
 
-	return destParentId, allFilesSent, allFilesSizeSent, nil
+	return destParentId, bulkFilesSent, bulkSizeSent, nil
 }
 
 // Transfer files from the device to the local disk

@@ -246,9 +246,12 @@ func transferRateInMBs(size int64, lastSentTime time.Time, prevSpeed float64) fl
 	return math.Round(rate*100) / 100
 }
 
-//todo divided by 0 case fix
 func transferRate(size int64, lastSentTime time.Time) float64 {
 	var elapsedTime = time.Since(lastSentTime).Nanoseconds()
+
+	if elapsedTime <= 0 {
+		return 0
+	}
 
 	rate := float64(size) / float64(elapsedTime) * 1000
 
