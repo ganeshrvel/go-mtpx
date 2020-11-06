@@ -172,6 +172,10 @@ func existsLocal(filename string) bool {
 }
 
 func Percent(partial float32, total float32) float32 {
+	if total <= 0 {
+		return 0
+	}
+
 	return (partial / total) * 100
 }
 

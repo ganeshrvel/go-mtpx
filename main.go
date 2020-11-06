@@ -380,9 +380,9 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 					dev, storageId, &fObj, &fInfo, fileBuf, true, func(total, sent int64, objId uint32) {
 						pInfo.FileInfo.ObjectId = objId
 						pInfo.Current = &TransferSizeInfo{
-							Total:      total,
-							Sent:       sent,
-							Percentage: Percent(float32(sent), float32(total)),
+							Total:    total,
+							Sent:     sent,
+							Progress: Percent(float32(sent), float32(total)),
 						}
 
 						pInfo.Speed = transferRate(sent-prevSentSize, pInfo.LatestSentTime)
@@ -400,10 +400,11 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 
 				pInfo.TotalFiles = totalFiles
 				pInfo.FilesSent = bulkFilesSent
+				pInfo.FilesSentProgress = Percent(float32(bulkFilesSent), float32(totalFiles))
 				pInfo.Bulk = &TransferSizeInfo{
-					Total:      totalSize,
-					Sent:       bulkSizeSent,
-					Percentage: Percent(float32(bulkSizeSent), float32(totalSize)),
+					Total:    totalSize,
+					Sent:     bulkSizeSent,
+					Progress: Percent(float32(bulkSizeSent), float32(totalSize)),
 				}
 
 				pInfo.FileInfo.ObjectId = objId

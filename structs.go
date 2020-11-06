@@ -51,7 +51,7 @@ type TransferSizeInfo struct {
 	Sent       int64
 
 	// progress in percentage
-	Percentage float32
+	Progress float32
 }
 
 type ProgressInfo struct {

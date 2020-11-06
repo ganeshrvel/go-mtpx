@@ -98,7 +98,9 @@ func TestRun(t *testing.T) {
 			fmt.Printf("Total size: %d\n", pi.Current.Total)
 			fmt.Printf("Size sent: %d\n", pi.Current.Sent)
 			fmt.Printf("Speed: %f\n", pi.Speed)
-			fmt.Printf("Object Id: %d\n\n\n", pi.FileInfo.ObjectId)
+			fmt.Printf("Object Id: %d\n", pi.FileInfo.ObjectId)
+			fmt.Printf("Current progress: %f\n", pi.Current.Progress)
+			fmt.Printf("file sent progress: %f\n\n\n", pi.FilesSentProgress)
 
 			return nil
 		},
