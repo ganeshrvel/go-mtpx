@@ -17,7 +17,7 @@ func TestGetObjectFromPath(t *testing.T) {
 		log.Panic(err)
 	}
 
-	sid := storages[0].sid
+	sid := storages[0].Sid
 
 	Convey("Testing valid file | GetObjectFromPath", t, func() {
 		// test the directory '/mtp-test-files'
@@ -129,7 +129,7 @@ func TestGetObjectFromParentIdAndFilename(t *testing.T) {
 		log.Panic(err)
 	}
 
-	sid := storages[0].sid
+	sid := storages[0].Sid
 
 	Convey("Testing valid file | GetObjectFromParentIdAndFilename", t, func() {
 		// test the directory '/mtp-test-files'
@@ -184,7 +184,7 @@ func TestFileExists(t *testing.T) {
 		log.Panic(err)
 	}
 
-	sid := storages[0].sid
+	sid := storages[0].Sid
 
 	Convey("Testing valid file | filepath | FileExists", t, func() {
 		// test the directory '/mtp-test-files'
@@ -272,7 +272,7 @@ func TestGetObjectFromObjectIdOrPath(t *testing.T) {
 		log.Panic(err)
 	}
 
-	sid := storages[0].sid
+	sid := storages[0].Sid
 
 	Convey("Testing valid files | GetObjectFromObjectIdOrPath", t, func() {
 		// objectId=0 && fullPath="/mtp-test-files/"

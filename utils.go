@@ -171,8 +171,8 @@ func existsLocal(filename string) bool {
 	return !os.IsNotExist(err)
 }
 
-func Percent(percent float32, all float32) float32 {
-	return (percent / all) * 100
+func Percent(partial float32, total float32) float32 {
+	return (partial / total) * 100
 }
 
 func StringFilter(x []string, f func(string) bool) []string {
@@ -231,7 +231,8 @@ func SanitizeDosName(name string) string {
 	return string(dest)
 }
 
-func transferRateInMBs(size int64, lastSentTime time.Time, speed float64) float64 {
+//todo remove
+func transferRateInMBs(size int64, lastSentTime time.Time, prevSpeed float64) float64 {
 	var _size = float64(size)
 	var elapsedTime = time.Since(lastSentTime).Seconds()
 
@@ -239,8 +240,17 @@ func transferRateInMBs(size int64, lastSentTime time.Time, speed float64) float6
 
 	// prevent polluted values
 	if elapsedTime <= 1 {
-		return speed
+		return prevSpeed
 	}
+
+	return math.Round(rate*100) / 100
+}
+
+//todo divided by 0 case fix
+func transferRate(size int64, lastSentTime time.Time) float64 {
+	var elapsedTime = time.Since(lastSentTime).Nanoseconds()
+
+	rate := float64(size) / float64(elapsedTime) * 1000
 
 	return math.Round(rate*100) / 100
 }

@@ -19,7 +19,7 @@ func TestMakeDirectory(t *testing.T) {
 		log.Panic(err)
 	}
 
-	sid := storages[0].sid
+	sid := storages[0].Sid
 
 	var _objectId uint32
 	Convey("Creating a new dir | MakeDirectory", t, func() {

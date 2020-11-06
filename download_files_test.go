@@ -20,7 +20,7 @@ func TestDownloadFiles(t *testing.T) {
 		log.Panic(err)
 	}
 
-	sid := storages[0].sid
+	sid := storages[0].Sid
 
 	Convey("General | DownloadFiles", t, func() {
 		// test the directories: '/mtp-test-files/mock_dir1/'

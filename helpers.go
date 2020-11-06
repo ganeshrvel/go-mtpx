@@ -230,7 +230,7 @@ func handleMakeDirectory(dev *mtp.Device, storageId, parentId uint32, filename s
 }
 
 // helper function to create a device file
-func handleMakeFile(dev *mtp.Device, storageId uint32, obj *mtp.ObjectInfo, fInfo *os.FileInfo, fileBuf *os.File, overwriteExisting bool) (rObjectId uint32, rError error) {
+func handleMakeFile(dev *mtp.Device, storageId uint32, obj *mtp.ObjectInfo, fInfo *os.FileInfo, fileBuf *os.File, overwriteExisting bool, progressCb SizeProgressCb) (rObjectId uint32, rError error) {
 	fi, err := GetObjectFromParentIdAndFilename(dev, storageId, obj.ParentObject, obj.Filename)
 
 	// file exists
@@ -260,8 +260,11 @@ func handleMakeFile(dev *mtp.Device, storageId uint32, obj *mtp.ObjectInfo, fInf
 		return objId, SendObjectError{error: err}
 	}
 
+	size := (*fInfo).Size()
 	// send the bytes data to the newly create object handle
-	err = dev.SendObject(fileBuf, (*fInfo).Size())
+	err = dev.SendObject(fileBuf, size, func(sent int64) {
+		progressCb(size, sent, objId)
+	})
 	if err != nil {
 		return objId, SendObjectError{error: err}
 	}

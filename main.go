@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ganeshrvel/go-mtpfs/mtp"
-	"github.com/kr/pretty"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,6 +13,8 @@ import (
 // todo: work on documentations
 // todo: hotplug
 // todo: information mode -> get total files, break the buf into smaller chunks and calculate the transfer rate
+// todo: implement the progress info, check for progressCount in gomtpfs
+// update go.mod
 
 // initialize the mtp device
 // returns mtp device
@@ -25,9 +25,9 @@ func Initialize(init Init) (*mtp.Device, error) {
 		return nil, MtpDetectFailedError{error: err}
 	}
 
-	dev.MTPDebug = init.debugMode
-	dev.DataDebug = init.debugMode
-	dev.USBDebug = init.debugMode
+	dev.MTPDebug = init.DebugMode
+	dev.DataDebug = init.DebugMode
+	dev.USBDebug = init.DebugMode
 
 	dev.Timeout = devTimeout
 
@@ -43,7 +43,7 @@ func Dispose(dev *mtp.Device) {
 	dev.Close()
 }
 
-// fetch device info
+// fetch device Info
 func FetchDeviceInfo(dev *mtp.Device) (*mtp.DeviceInfo, error) {
 	info := mtp.DeviceInfo{}
 	err := dev.GetDeviceInfo(&info)
@@ -75,8 +75,8 @@ func FetchStorages(dev *mtp.Device) ([]StorageData, error) {
 		}
 
 		result = append(result, StorageData{
-			sid:  sids.Values[0],
-			info: info,
+			Sid:  sids.Values[0],
+			Info: info,
 		})
 	}
 
@@ -219,20 +219,23 @@ func RenameFile(dev *mtp.Device, storageId, objectId uint32, fullPath, newFileNa
 // rDestinationObjectId: objectId of [destination] directory
 // rTotalFiles: total transferred files (directory count not included)
 // rTotalSize: total size of the uploaded files
-func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destination string, cb TransferFilesCb) (rDestinationObjectId uint32, rTotalFiles int, rTotalSize int64, rError error) {
+func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destination string, cb ProgressCb) (rDestinationObjectId uint32, rTotalFiles int64, rTotalSize int64, rError error) {
 	_destination := fixSlash(destination)
 
-	uploadFi := TransferredFileInfo{
-		StartTime:      time.Now(),
-		LatestSentTime: time.Now(),
+	// todo pick these values from preprocessing steps
+	var totalFiles int64 = 0
+	var totalFilesSize int64 = 0
+
+	pInfo := ProgressInfo{
+		StartTime: time.Now(),
 	}
 
-	totalFiles := 0
-	var totalSize int64 = 0
+	var allFilesSent int64 = 0
+	var allFilesSizeSent int64 = 0
 
 	destParentId, err := MakeDirectory(dev, storageId, _destination)
 	if err != nil {
-		return 0, totalFiles, totalSize, err
+		return 0, allFilesSent, allFilesSizeSent, err
 	}
 
 	for _, source := range sources {
@@ -346,20 +349,13 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 					ModificationDate: time.Now(),
 				}
 
-				objId, err := handleMakeFile(
-					dev, storageId, &fObj, &fInfo, fileBuf, true,
-				)
-				if err != nil {
-					return err
-				}
+				// keep track of [allFilesSent]
+				allFilesSent += 1
 
-				// keep track of [totalFiles]
-				totalFiles += 1
+				// keep track of [allFilesSizeSent]
+				allFilesSizeSent += size
 
-				// keep track of [totalSize]
-				totalSize += size
-
-				uploadFi.FileInfo = &FileInfo{
+				pInfo.FileInfo = &FileInfo{
 					Info:       &fObj,
 					Size:       size,
 					IsDir:      isDir,
@@ -369,14 +365,43 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 					ParentPath: destinationParentPath,
 					Extension:  extension(fObj.Filename, isDir),
 					ParentId:   fObj.ParentObject,
-					ObjectId:   objId,
+				}
+				pInfo.LatestSentTime = time.Now()
+
+				// create file
+				var prevSentSize int64 = 0
+				objId, err := handleMakeFile(
+					dev, storageId, &fObj, &fInfo, fileBuf, true, func(total, sent int64, objId uint32) {
+						pInfo.FileInfo.ObjectId = objId
+						pInfo.Current = &TransferSizeInfo{
+							Total:      total,
+							Sent:       sent,
+							Percentage: Percent(float32(sent), float32(total)),
+						}
+
+						pInfo.Speed = transferRate(sent-prevSentSize, pInfo.LatestSentTime)
+
+						_ = cb(&pInfo, nil)
+
+						pInfo.LatestSentTime = time.Now()
+						prevSentSize = sent
+					},
+				)
+
+				if err != nil {
+					return err
 				}
 
-				uploadFi.FilesSent = totalFiles
-				uploadFi.Speed = transferRateInMBs(size, uploadFi.LatestSentTime, uploadFi.Speed)
-				uploadFi.LatestSentTime = time.Now()
+				pInfo.TotalFiles = totalFiles
+				pInfo.FilesSent = allFilesSent
+				pInfo.Bulk = &TransferSizeInfo{
+					Total:      totalFilesSize,
+					Sent:       allFilesSizeSent,
+					Percentage: Percent(float32(allFilesSizeSent), float32(size)),
+				}
 
-				if err := cb(&uploadFi, nil); err != nil {
+				pInfo.FileInfo.ObjectId = objId
+				if err := cb(&pInfo, nil); err != nil {
 					return err
 				}
 
@@ -390,26 +415,26 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 		if err != nil {
 			switch err.(type) {
 			case InvalidPathError:
-				return destParentId, totalFiles, totalSize, err
+				return destParentId, allFilesSent, allFilesSizeSent, err
 
 			case *os.PathError:
 				if errors.Is(err, os.ErrPermission) {
-					return destParentId, totalFiles, totalSize, FilePermissionError{error: err}
+					return destParentId, allFilesSent, allFilesSizeSent, FilePermissionError{error: err}
 				}
 
 				if errors.Is(err, os.ErrNotExist) {
-					return destParentId, totalFiles, totalSize, InvalidPathError{error: err}
+					return destParentId, allFilesSent, allFilesSizeSent, InvalidPathError{error: err}
 				}
 
-				return destParentId, totalFiles, totalSize, LocalFileError{error: err}
+				return destParentId, allFilesSent, allFilesSizeSent, LocalFileError{error: err}
 			default:
-				return destParentId, totalFiles, totalSize,
+				return destParentId, allFilesSent, allFilesSizeSent,
 					FileTransferError{error: fmt.Errorf("an error occured while uploading files. %+v", err.Error())}
 			}
 		}
 	}
 
-	return destParentId, totalFiles, totalSize, nil
+	return destParentId, allFilesSent, allFilesSizeSent, nil
 }
 
 // Transfer files from the device to the local disk
@@ -521,102 +546,4 @@ func DownloadFiles(dev *mtp.Device, storageId uint32, sources []string, destinat
 	return totalFiles, totalSize, nil
 }
 
-func main() {
-	dev, err := Initialize(Init{debugMode: false})
-
-	if err != nil {
-		log.Panic(err)
-	}
-
-	_, err = FetchDeviceInfo(dev)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	storages, err := FetchStorages(dev)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	sid := storages[0].sid
-	pretty.Println("storage id: ", sid)
-
-	//totalFiles, err := dev.GetNumObjects(sid, mtp.GOH_ALL_ASSOCS, ParentObjectId)
-	//if err != nil {
-	//	log.Panic(err)
-	//}
-	//
-	//pretty.Println(int64(totalFiles))
-	//
-
-	/*objectId, totalFiles, err := Walk(dev, sid, 0, "/mtp-test-files/mock_dir1", true, func(objectId uint32, fi *FileInfo) {
-		pretty.Println("objectId is: ", objectId)
-	})
-
-	if err != nil {
-		log.Panic(err)
-	}
-
-	pretty.Println("totalFiles: ", totalFiles)
-	pretty.Println("objectId: ", objectId)*/
-
-	////MakeDirectory
-	//objectId, err := MakeDirectory(dev, sid, ParentObjectId, "/", "name")
-	//if err != nil {
-	//	log.Panic(err)
-	//}
-	//
-	//pretty.Println(objectId)
-
-	//GetObjectFromPath
-	//fileObj, err := GetObjectFromPath(dev, sid, "/tests/s")
-	//if err != nil {
-	//	log.Panic(err)
-	//}
-	//
-	//pretty.Println("======\n")
-	//pretty.Println(fileObj)
-	//
-
-	// FileExists
-	//exists := FileExists(dev, sid, 0, "/tests/test.txt")
-	//
-	//pretty.Println("======\n")
-	//pretty.Println("Does File exists:", exists)
-
-	///DeleteFile
-	//err = DeleteFile(dev, sid, 0, "/mtp-test-files/temp_dir/this is a test")
-	//if err != nil {
-	//	log.Panic(err)
-	//}
-
-	////RenameFile
-	//objId, err := RenameFile(dev, sid, 0, "/mtp-test-files/temp_dir/b.txt", "b.txt")
-	//if err != nil {
-	//	log.Panic(err)
-	//}
-	//pretty.Println(objId)
-
-	//UploadFiles
-	//uploadFile2 := getTestMocksAsset("test-large-file")
-	//start := time.Now()
-	//
-	//totalFiles, totalSize, err := DownloadFiles(dev, sid,
-	//	[]string{sourceFile1}, downloadFile,
-	//	func(downloadFi *TransferredFileInfo, err error) error {
-	//		fmt.Printf("Current filepath: %s\n", downloadFi.FileInfo.FullPath)
-	//		fmt.Printf("%f MB/s\n", downloadFi.Speed)
-	//
-	//		return nil
-	//	},
-	//)
-	//if err != nil {
-	//	log.Panic(err)
-	//}
-	//
-	//pretty.Println(totalFiles)
-	//pretty.Println(totalSize)
-	//pretty.Println("time elapsed: ", time.Since(start).Seconds())
-
-	Dispose(dev)
-}
+func main() {}

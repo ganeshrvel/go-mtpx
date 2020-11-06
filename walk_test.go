@@ -18,7 +18,7 @@ func TestWalk(t *testing.T) {
 		log.Panic(err)
 	}
 
-	sid := storages[0].sid
+	sid := storages[0].Sid
 
 	Convey("Testing valid directory | Walk", t, func() {
 		/////////////////

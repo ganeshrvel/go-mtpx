@@ -19,7 +19,7 @@ func TestDeleteFile(t *testing.T) {
 		log.Panic(err)
 	}
 
-	sid := storages[0].sid
+	sid := storages[0].Sid
 
 	Convey("Delete an existing object | using objectId | DeleteFile", t, func() {
 		// create a random directory

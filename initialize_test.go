@@ -28,7 +28,7 @@ func TestMtpInitialize(t *testing.T) {
 	Convey("Testing FetchStorages", t, func() {
 		storages, err := FetchStorages(dev)
 
-		sid = storages[0].sid
+		sid = storages[0].Sid
 
 		So(err, ShouldBeNil)
 		So(sid, ShouldEqual, 0x10001)

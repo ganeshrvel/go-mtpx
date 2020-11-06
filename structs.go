@@ -6,12 +6,12 @@ import (
 )
 
 type Init struct {
-	debugMode bool
+	DebugMode bool
 }
 
 type StorageData struct {
-	sid  uint32
-	info mtp.StorageInfo
+	Sid  uint32
+	Info mtp.StorageInfo
 }
 
 type FileInfo struct {
@@ -40,3 +40,39 @@ type TransferredFileInfo struct {
 }
 
 type TransferFilesCb func(fi *TransferredFileInfo, err error) error
+
+type ProgressCb func(fi *ProgressInfo, err error) error
+
+type TransferSizeInfo struct {
+	Total      int64
+	Sent       int64
+	Percentage float32
+}
+
+type ProgressInfo struct {
+	FileInfo *FileInfo
+
+	// transfer starting time
+	StartTime time.Time
+
+	// most recent transfer time
+	LatestSentTime time.Time
+
+	// transfer rate
+	Speed float64
+
+	// total files to transfer
+	// note: this value will be available only if the pre-processing of file transfer is enabled
+	TotalFiles int64
+
+	// total files transferred
+	FilesSent int64
+
+	// size information of the current file which is being transferred
+	Current *TransferSizeInfo
+
+	// total size information of the files for the transfer session
+	Bulk *TransferSizeInfo
+}
+
+type SizeProgressCb func(total, sent int64, objectId uint32)

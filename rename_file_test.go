@@ -20,7 +20,7 @@ func TestRenameFile(t *testing.T) {
 		log.Panic(err)
 	}
 
-	sid := storages[0].sid
+	sid := storages[0].Sid
 
 	Convey("Rename an existing object | using objectId | RenameFile", t, func() {
 		// create a random directory
