@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/ganeshrvel/go-mtpfs/mtp"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -355,6 +356,7 @@ func proccessWalk(dev *mtp.Device, storageId, objectId uint32, fullPath string, 
 	return totalFiles, nil
 }
 
+// create a local directory
 func makeLocalDirectory(filename string) error {
 	err := os.MkdirAll(filename, os.FileMode(newLocalDirectoryMode))
 	if err != nil {
@@ -372,4 +374,57 @@ func makeLocalDirectory(filename string) error {
 	}
 
 	return nil
+}
+
+// walks through the local files
+func walkLocalFile(sources []string, cb LocalWalkCb) (totalFiles, totalSize int64, err error) {
+	totalFiles = 0
+	totalSize = 0
+
+	for _, source := range sources {
+		// walk through the source
+		err := filepath.Walk(source,
+			func(path string, fInfo os.FileInfo, err error) error {
+				if err != nil {
+					return err
+				}
+
+				name := fInfo.Name()
+
+				// don't follow symlinks
+				if isSymlinkLocal(fInfo) {
+					return nil
+				}
+
+				// filter out disallowed files
+				if isDisallowedFiles(name) {
+					return nil
+				}
+
+				if err := cb(&fInfo, nil); err != nil {
+					return err
+				}
+
+				totalFiles += 1
+				totalSize += fInfo.Size()
+
+				return nil
+			})
+
+		if err != nil {
+			switch err.(type) {
+			case *os.PathError:
+				if errors.Is(err, os.ErrPermission) {
+					return totalFiles, totalSize, FilePermissionError{error: err}
+				}
+
+				return totalFiles, totalSize, LocalFileError{error: err}
+
+			default:
+				return totalFiles, totalSize, err
+			}
+		}
+	}
+
+	return totalFiles, totalSize, nil
 }

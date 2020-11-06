@@ -216,28 +216,49 @@ func RenameFile(dev *mtp.Device, storageId, objectId uint32, fullPath, newFileNa
 // Transfer files from the local disk to the device
 // sources: can be the list of files/directories that are to be sent to the device
 // destination: fullPath to the destination directory
+// preprocessFiles: if enabled, will fetch the total file size and count of the source. Use this will caution as it may take a few seconds to minutes to procress the files.
 // rDestinationObjectId: objectId of [destination] directory
 // rTotalFiles: total transferred files (directory count not included)
 // rTotalSize: total size of the uploaded files
-func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destination string, cb ProgressCb) (rDestinationObjectId uint32, rTotalFiles int64, rTotalSize int64, rError error) {
+func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destination string, preprocessFiles bool, progressCb ProgressCb, preprocessCb PreprocessCb) (rDestinationObjectId uint32, rTotalFiles int64, rTotalSize int64, rError error) {
 	_destination := fixSlash(destination)
 
-	// todo pick these values from preprocessing steps
+	pInfo := ProgressInfo{
+		StartTime: time.Now(),
+	}
+
 	// total number of files in this upload session
 	var totalFiles int64 = 0
 
 	// total size of all the files combined in this upload session
 	var totalSize int64 = 0
 
-	pInfo := ProgressInfo{
-		StartTime: time.Now(),
-	}
-
 	// total number of files sent
 	var bulkFilesSent int64 = 0
 
 	// total size of data sent
 	var bulkSizeSent int64 = 0
+
+	if preprocessFiles {
+		_totalFiles, _totalSize, err := walkLocalFile(sources, func(fi *os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+
+			if err = preprocessCb(fi, nil); err != nil {
+				return err
+			}
+
+			return nil
+		})
+
+		if err != nil {
+			return 0, 0, 0, nil
+		}
+
+		totalFiles = _totalFiles
+		totalSize = _totalSize
+	}
 
 	destParentId, err := MakeDirectory(dev, storageId, _destination)
 	if err != nil {
@@ -387,7 +408,7 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 
 						pInfo.Speed = transferRate(sent-prevSentSize, pInfo.LatestSentTime)
 
-						_ = cb(&pInfo, nil)
+						_ = progressCb(&pInfo, nil)
 
 						pInfo.LatestSentTime = time.Now()
 						prevSentSize = sent
@@ -408,7 +429,7 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 				}
 
 				pInfo.FileInfo.ObjectId = objId
-				if err := cb(&pInfo, nil); err != nil {
+				if err := progressCb(&pInfo, nil); err != nil {
 					return err
 				}
 

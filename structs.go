@@ -2,6 +2,7 @@ package mtpx
 
 import (
 	"github.com/ganeshrvel/go-mtpfs/mtp"
+	"os"
 	"time"
 )
 
@@ -30,6 +31,7 @@ type FileInfo struct {
 
 type WalkCb func(objectId uint32, fi *FileInfo, err error) error
 
+// todo remove
 type TransferredFileInfo struct {
 	FileInfo *FileInfo
 
@@ -39,16 +41,19 @@ type TransferredFileInfo struct {
 	Speed          float64
 }
 
+// todo remove
 type TransferFilesCb func(fi *TransferredFileInfo, err error) error
 
 type ProgressCb func(fi *ProgressInfo, err error) error
 
+type PreprocessCb func(fi *os.FileInfo, err error) error
+
 type TransferSizeInfo struct {
 	// total size
-	Total      int64
+	Total int64
 
 	// total size transferred
-	Sent       int64
+	Sent int64
 
 	// progress in percentage
 	Progress float32
@@ -84,3 +89,5 @@ type ProgressInfo struct {
 }
 
 type SizeProgressCb func(total, sent int64, objectId uint32)
+
+type LocalWalkCb func(fi *os.FileInfo, err error) error

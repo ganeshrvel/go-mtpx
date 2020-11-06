@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/kr/pretty"
 	"log"
+	"os"
 	"testing"
 )
 
@@ -86,13 +87,13 @@ func TestRun(t *testing.T) {
 
 	//UploadFiles
 	//start := time.Now()
-	uploadFile1 := getTestMocksAsset("test-large-file/1")
+	uploadFile1 := getTestMocksAsset("")
 	sources := []string{uploadFile1}
 	destination := "/mtp-test-files/temp_dir/test_UploadFiles"
-	//objectIdDest, totalFiles, totalSize, err := UploadFiles(dev, sid,
 	_, _, _, err = UploadFiles(dev, sid,
 		sources,
 		destination,
+		true,
 		func(pi *ProgressInfo, err error) error {
 			fmt.Printf("File name: %s\n", pi.FileInfo.FullPath)
 			fmt.Printf("Total size: %d\n", pi.Current.Total)
@@ -101,6 +102,14 @@ func TestRun(t *testing.T) {
 			fmt.Printf("Object Id: %d\n", pi.FileInfo.ObjectId)
 			fmt.Printf("Current progress: %f\n", pi.Current.Progress)
 			fmt.Printf("file sent progress: %f\n\n\n", pi.FilesSentProgress)
+
+			return nil
+		}, func(fi *os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("Preprocessing File name: %s\n", (*fi).Name())
 
 			return nil
 		},
