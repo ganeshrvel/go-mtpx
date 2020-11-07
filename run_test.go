@@ -87,7 +87,7 @@ func TestRun(t *testing.T) {
 
 	//UploadFiles
 	//start := time.Now()
-	uploadFile1 := getTestMocksAsset("mock_dir1")
+	uploadFile1 := getTestMocksAsset("")
 	uploadFile2 := getTestMocksAsset("mock_dir2")
 	sources := []string{uploadFile1, uploadFile2}
 	destination := "/mtp-test-files/temp_dir/test_UploadFiles"
@@ -103,6 +103,7 @@ func TestRun(t *testing.T) {
 			//fmt.Printf("Object Id: %d\n", pi.FileInfo.ObjectId)
 			//fmt.Printf("Current progress: %f\n", pi.Current.Progress)
 			fmt.Printf("TotalFiles: %d\n", pi.TotalFiles)
+			fmt.Printf("totalDirectories: %d\n", pi.TotalDirectories)
 			fmt.Printf("FilesSent: %d\n", pi.FilesSent)
 			fmt.Printf("FilesSentProgress: %f\n\n\n", pi.FilesSentProgress)
 

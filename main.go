@@ -242,6 +242,7 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 		LatestSentTime:    time.Time{},
 		Speed:             0,
 		TotalFiles:        0,
+		TotalDirectories:  0,
 		FilesSent:         0,
 		FilesSentProgress: 0,
 		Current:           &TransferSizeInfo{},
@@ -250,6 +251,9 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 
 	// total number of files in this upload session
 	var totalFiles int64 = 0
+
+	// total number of files in this upload session
+	var totalDirectories int64 = 0
 
 	// total size of all the files combined in this upload session
 	var totalSize int64 = 0
@@ -261,7 +265,7 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 	var bulkSizeSent int64 = 0
 
 	if preprocessFiles {
-		_totalFiles, _, _totalSize, err := walkLocalFiles(sources, func(fi *os.FileInfo, err error) error {
+		_totalFiles, _totalDirectories, _totalSize, err := walkLocalFiles(sources, func(fi *os.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}
@@ -278,6 +282,7 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 		}
 
 		totalFiles = _totalFiles
+		totalDirectories = _totalDirectories
 		totalSize = _totalSize
 	}
 
@@ -441,6 +446,7 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 				}
 
 				pInfo.TotalFiles = totalFiles
+				pInfo.TotalDirectories = totalDirectories
 				pInfo.FilesSent = bulkFilesSent
 				pInfo.FilesSentProgress = Percent(float32(bulkFilesSent), float32(totalFiles))
 				pInfo.Bulk = &TransferSizeInfo{

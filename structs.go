@@ -75,6 +75,8 @@ type ProgressInfo struct {
 	// note: this value will be available only if the pre-processing of file transfer is enabled
 	TotalFiles int64
 
+	TotalDirectories int64
+
 	// total files transferred
 	FilesSent int64
 
