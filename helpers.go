@@ -192,19 +192,6 @@ func GetObjectFromObjectIdOrPath(dev *mtp.Device, storageId, objectId uint32, fu
 	return fo, nil
 }
 
-// check if a file exists
-// returns exists: bool, isDir: bool, objectId: uint32
-// Since the [parentPath] is unavailable here the [fullPath] property of the resulting object [FileInfo] may not be valid.
-func FileExists(dev *mtp.Device, storageId, objectId uint32, filePath string) (exists bool, fileInfo *FileInfo) {
-	fi, err := GetObjectFromObjectIdOrPath(dev, storageId, objectId, filePath)
-
-	if err != nil {
-		return false, nil
-	}
-
-	return true, fi
-}
-
 // check if the object is a directory
 func isObjectADir(obj *mtp.ObjectInfo) bool {
 	return obj.ObjectFormat == mtp.OFC_Association
@@ -377,8 +364,9 @@ func makeLocalDirectory(filename string) error {
 }
 
 // walks through the local files
-func walkLocalFile(sources []string, cb LocalWalkCb) (totalFiles, totalSize int64, err error) {
+func walkLocalFiles(sources []string, cb LocalWalkCb) (totalFiles, totalDirectories, totalSize int64, err error) {
 	totalFiles = 0
+	totalDirectories = 0
 	totalSize = 0
 
 	for _, source := range sources {
@@ -405,8 +393,12 @@ func walkLocalFile(sources []string, cb LocalWalkCb) (totalFiles, totalSize int6
 					return err
 				}
 
-				totalFiles += 1
-				totalSize += fInfo.Size()
+				if !fInfo.IsDir() {
+					totalFiles += 1
+					totalSize += fInfo.Size()
+				} else {
+					totalDirectories += 1
+				}
 
 				return nil
 			})
@@ -415,16 +407,16 @@ func walkLocalFile(sources []string, cb LocalWalkCb) (totalFiles, totalSize int6
 			switch err.(type) {
 			case *os.PathError:
 				if errors.Is(err, os.ErrPermission) {
-					return totalFiles, totalSize, FilePermissionError{error: err}
+					return totalFiles, totalDirectories, totalSize, FilePermissionError{error: err}
 				}
 
-				return totalFiles, totalSize, LocalFileError{error: err}
+				return totalFiles, totalDirectories, totalSize, LocalFileError{error: err}
 
 			default:
-				return totalFiles, totalSize, err
+				return totalFiles, totalDirectories, totalSize, err
 			}
 		}
 	}
 
-	return totalFiles, totalSize, nil
+	return totalFiles, totalDirectories, totalSize, nil
 }

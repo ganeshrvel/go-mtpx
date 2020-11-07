@@ -167,6 +167,19 @@ func Walk(dev *mtp.Device, storageId uint32, fullPath string, recursive bool, sk
 	return fi.ObjectId, totalFiles, nil
 }
 
+// check if a file exists
+// returns exists: bool, isDir: bool, objectId: uint32
+// Since the [parentPath] is unavailable here the [fullPath] property of the resulting object [FileInfo] may not be valid.
+func FileExists(dev *mtp.Device, storageId, objectId uint32, filePath string) (exists bool, fileInfo *FileInfo) {
+	fi, err := GetObjectFromObjectIdOrPath(dev, storageId, objectId, filePath)
+
+	if err != nil {
+		return false, nil
+	}
+
+	return true, fi
+}
+
 // Delete an file/directory
 // [objectId] and [fullPath] are optional parameters
 // if [objectId] is not available then [fullPath] will be used to fetch the [objectId]
@@ -224,7 +237,15 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 	_destination := fixSlash(destination)
 
 	pInfo := ProgressInfo{
-		StartTime: time.Now(),
+		FileInfo:          &FileInfo{},
+		StartTime:         time.Now(),
+		LatestSentTime:    time.Time{},
+		Speed:             0,
+		TotalFiles:        0,
+		FilesSent:         0,
+		FilesSentProgress: 0,
+		Current:           &TransferSizeInfo{},
+		Bulk:              &TransferSizeInfo{},
 	}
 
 	// total number of files in this upload session
@@ -240,7 +261,7 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 	var bulkSizeSent int64 = 0
 
 	if preprocessFiles {
-		_totalFiles, _totalSize, err := walkLocalFile(sources, func(fi *os.FileInfo, err error) error {
+		_totalFiles, _, _totalSize, err := walkLocalFiles(sources, func(fi *os.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}

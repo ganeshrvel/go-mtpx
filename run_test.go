@@ -87,8 +87,9 @@ func TestRun(t *testing.T) {
 
 	//UploadFiles
 	//start := time.Now()
-	uploadFile1 := getTestMocksAsset("")
-	sources := []string{uploadFile1}
+	uploadFile1 := getTestMocksAsset("mock_dir1")
+	uploadFile2 := getTestMocksAsset("mock_dir2")
+	sources := []string{uploadFile1, uploadFile2}
 	destination := "/mtp-test-files/temp_dir/test_UploadFiles"
 	_, _, _, err = UploadFiles(dev, sid,
 		sources,
@@ -96,12 +97,14 @@ func TestRun(t *testing.T) {
 		true,
 		func(pi *ProgressInfo, err error) error {
 			fmt.Printf("File name: %s\n", pi.FileInfo.FullPath)
-			fmt.Printf("Total size: %d\n", pi.Current.Total)
-			fmt.Printf("Size sent: %d\n", pi.Current.Sent)
-			fmt.Printf("Speed: %f\n", pi.Speed)
-			fmt.Printf("Object Id: %d\n", pi.FileInfo.ObjectId)
-			fmt.Printf("Current progress: %f\n", pi.Current.Progress)
-			fmt.Printf("file sent progress: %f\n\n\n", pi.FilesSentProgress)
+			//fmt.Printf("Total size: %d\n", pi.Current.Total)
+			//fmt.Printf("Size sent: %d\n", pi.Current.Sent)
+			//fmt.Printf("Speed: %f\n", pi.Speed)
+			//fmt.Printf("Object Id: %d\n", pi.FileInfo.ObjectId)
+			//fmt.Printf("Current progress: %f\n", pi.Current.Progress)
+			fmt.Printf("TotalFiles: %d\n", pi.TotalFiles)
+			fmt.Printf("FilesSent: %d\n", pi.FilesSent)
+			fmt.Printf("FilesSentProgress: %f\n\n\n", pi.FilesSentProgress)
 
 			return nil
 		}, func(fi *os.FileInfo, err error) error {
