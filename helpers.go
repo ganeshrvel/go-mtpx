@@ -289,17 +289,19 @@ func handleMakeLocalFile(dev *mtp.Device, fi *FileInfo, destination string) erro
 // dont leave both [objectId] and [fullPath] empty
 // Tips: use [objectId] whenever possible to avoid traversing down the whole file tree to process and find the [objectId]
 // if [skipDisallowedFiles] is true then files matching the [disallowedFiles] list will be ignored
-// returns total number of objects
-func proccessWalk(dev *mtp.Device, storageId uint32, fileProp FileProp, recursive, skipDisallowedFiles bool, cb WalkCb) (totalFiles int, err error) {
+// return:
+// [totalFiles]: total number of files
+// [totalDirectories]: total number of directories
+func proccessWalk(dev *mtp.Device, storageId uint32, fileProp FileProp, recursive, skipDisallowedFiles bool, cb WalkCb) (totalFiles, totalDirectories int64, err error) {
 	fi, err := GetObjectFromObjectIdOrPath(dev, storageId, FileProp{fileProp.ObjectId, fileProp.FullPath})
 
 	if err != nil {
-		return 0, err
+		return totalFiles, totalDirectories, err
 	}
 
 	handles := mtp.Uint32Array{}
 	if err := dev.GetObjectHandles(storageId, mtp.GOH_ALL_ASSOCS, fi.ObjectId, &handles); err != nil {
-		return 0, ListDirectoryError{error: err}
+		return totalFiles, totalDirectories, ListDirectoryError{error: err}
 	}
 
 	totalFiles = 0
@@ -319,11 +321,15 @@ func proccessWalk(dev *mtp.Device, storageId uint32, fileProp FileProp, recursiv
 			}
 		}
 
-		totalFiles += 1
+		if fi.IsDir {
+			totalDirectories += 1
+		} else {
+			totalFiles += 1
+		}
 
 		err = cb(objId, fi, nil)
 		if err != nil {
-			return totalFiles, err
+			return totalFiles, totalDirectories, err
 		}
 
 		// don't traverse down the tree if [recursive] is false
@@ -336,17 +342,18 @@ func proccessWalk(dev *mtp.Device, storageId uint32, fileProp FileProp, recursiv
 			continue
 		}
 
-		_totalFiles, err := proccessWalk(
+		_totalFiles, _totalDirectories, err := proccessWalk(
 			dev, storageId, FileProp{objId, fi.FullPath}, recursive, skipDisallowedFiles, cb,
 		)
 		if err != nil {
-			return totalFiles, err
+			return totalFiles, totalDirectories, err
 		}
 
 		totalFiles += _totalFiles
+		totalDirectories += _totalDirectories
 	}
 
-	return totalFiles, nil
+	return totalFiles, totalDirectories, nil
 }
 
 // create a local directory

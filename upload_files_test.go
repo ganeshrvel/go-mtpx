@@ -209,7 +209,7 @@ func TestUploadFiles(t *testing.T) {
 			"/mock_dir1/3/b.txt",
 			"/mock_dir1/a.txt"}
 
-		objectId, totalListFiles, err := Walk(dev, sid, destination, true, true, func(objectId uint32, fi *FileInfo, err error) error {
+		objectId, totalListFiles, totalDirectories, err := Walk(dev, sid, destination, true, true, func(objectId uint32, fi *FileInfo, err error) error {
 			So(err, ShouldBeNil)
 
 			contains, index := StringContains(dirList1, strings.TrimPrefix(fi.FullPath, destination))
@@ -221,7 +221,8 @@ func TestUploadFiles(t *testing.T) {
 
 		So(err, ShouldBeNil)
 		So(objectIdDest, ShouldEqual, objectId)
-		So(totalListFiles, ShouldEqual, 10)
+		So(totalListFiles, ShouldEqual, 5)
+		So(totalDirectories, ShouldEqual, 5)
 	})
 
 	Convey("Multiple directories | Random destination | UploadFiles", t, func() {
@@ -338,7 +339,7 @@ func TestUploadFiles(t *testing.T) {
 			"/mock_dir2/a.txt",
 		}
 
-		objectId, totalListFiles, err := Walk(dev, sid, destination, true, true, func(objectId uint32, fi *FileInfo, err error) error {
+		objectId, totalListFiles, totalDirectories, err := Walk(dev, sid, destination, true, true, func(objectId uint32, fi *FileInfo, err error) error {
 			So(err, ShouldBeNil)
 
 			contains, index := StringContains(dirList1, strings.TrimPrefix(fi.FullPath, destination))
@@ -353,7 +354,8 @@ func TestUploadFiles(t *testing.T) {
 
 		So(objectIdDest, ShouldEqual, fi.ObjectId)
 		So(objectIdDest, ShouldEqual, objectId)
-		So(totalListFiles, ShouldEqual, 10*2)
+		So(totalListFiles, ShouldEqual, 5*2)
+		So(totalDirectories, ShouldEqual, 5*2)
 	})
 
 	Convey("Multiple directories | same name | Random destination | UploadFiles", t, func() {
@@ -460,7 +462,7 @@ func TestUploadFiles(t *testing.T) {
 			"/mock_dir1/a.txt",
 		}
 
-		objectId, totalListFiles, err := Walk(dev, sid, destination, true, true, func(objectId uint32, fi *FileInfo, err error) error {
+		objectId, totalListFiles, totalDirectories, err := Walk(dev, sid, destination, true, true, func(objectId uint32, fi *FileInfo, err error) error {
 			So(err, ShouldBeNil)
 
 			contains, index := StringContains(dirList1, strings.TrimPrefix(fi.FullPath, destination))
@@ -474,7 +476,8 @@ func TestUploadFiles(t *testing.T) {
 
 		So(objectIdDest, ShouldEqual, fi.ObjectId)
 		So(objectIdDest, ShouldEqual, objectId)
-		So(totalListFiles, ShouldEqual, 10*1)
+		So(totalListFiles, ShouldEqual, 5)
+		So(totalDirectories, ShouldEqual, 5)
 	})
 
 	Convey("Single File | Random destination | UploadFiles", t, func() {
@@ -1052,7 +1055,7 @@ func TestUploadFiles(t *testing.T) {
 			"/4mb_txt_file",
 		}
 
-		objectId, totalListFiles, err := Walk(dev, sid, destination, true, true, func(objectId uint32, fi *FileInfo, err error) error {
+		objectId, totalListFiles, totalDirectories, err := Walk(dev, sid, destination, true, true, func(objectId uint32, fi *FileInfo, err error) error {
 			So(err, ShouldBeNil)
 
 			contains, index := StringContains(dirList1, strings.TrimPrefix(fi.FullPath, destination))
@@ -1065,6 +1068,7 @@ func TestUploadFiles(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(objectIdDest, ShouldEqual, objectId)
 		So(totalListFiles, ShouldEqual, 1)
+		So(totalDirectories, ShouldEqual, 0)
 
 		fi, err := GetObjectFromPath(dev, sid, destination)
 		So(err, ShouldBeNil)
@@ -1180,7 +1184,7 @@ func TestUploadFiles(t *testing.T) {
 			"/4mb_txt_file_2",
 		}
 
-		objectId, totalListFiles, err := Walk(dev, sid, destination, true, true, func(objectId uint32, fi *FileInfo, err error) error {
+		objectId, totalListFiles, totalDirectories, err := Walk(dev, sid, destination, true, true, func(objectId uint32, fi *FileInfo, err error) error {
 			So(err, ShouldBeNil)
 
 			contains, index := StringContains(dirList1, strings.TrimPrefix(fi.FullPath, destination))
@@ -1192,7 +1196,8 @@ func TestUploadFiles(t *testing.T) {
 
 		So(err, ShouldBeNil)
 		So(objectIdDest, ShouldEqual, objectId)
-		So(totalListFiles, ShouldEqual, 1*2)
+		So(totalListFiles, ShouldEqual, 2)
+		So(totalDirectories, ShouldEqual, 0)
 
 		fi, err := GetObjectFromPath(dev, sid, destination)
 		So(err, ShouldBeNil)
@@ -1333,7 +1338,7 @@ func TestUploadFiles(t *testing.T) {
 			"/mock_dir1/a.txt",
 		}
 
-		objectId, totalListFiles, err := Walk(dev, sid, destination, true, true, func(objectId uint32, fi *FileInfo, err error) error {
+		objectId, totalListFiles, totalDirectories, err := Walk(dev, sid, destination, true, true, func(objectId uint32, fi *FileInfo, err error) error {
 			So(err, ShouldBeNil)
 
 			contains, index := StringContains(dirList1, strings.TrimPrefix(fi.FullPath, destination))
@@ -1345,7 +1350,8 @@ func TestUploadFiles(t *testing.T) {
 
 		So(err, ShouldBeNil)
 		So(objectIdDest, ShouldEqual, objectId)
-		So(totalListFiles, ShouldEqual, 13)
+		So(totalListFiles, ShouldEqual, 8)
+		So(totalDirectories, ShouldEqual, 5)
 
 		fi, err := GetObjectFromPath(dev, sid, destination)
 		So(err, ShouldBeNil)
@@ -1469,7 +1475,7 @@ func TestUploadFiles(t *testing.T) {
 			"/mock_dir1/3/b.txt",
 			"/mock_dir1/a.txt"}
 
-		objectId, totalListFiles, err := Walk(dev, sid, destination, true, true, func(objectId uint32, fi *FileInfo, err error) error {
+		objectId, totalListFiles, totalDirectories, err := Walk(dev, sid, destination, true, true, func(objectId uint32, fi *FileInfo, err error) error {
 			So(err, ShouldBeNil)
 
 			contains, index := StringContains(dirList1, strings.TrimPrefix(fi.FullPath, destination))
@@ -1481,7 +1487,8 @@ func TestUploadFiles(t *testing.T) {
 
 		So(err, ShouldBeNil)
 		So(objectIdDest, ShouldEqual, objectId)
-		So(totalListFiles, ShouldEqual, 10)
+		So(totalListFiles, ShouldEqual, 5)
+		So(totalDirectories, ShouldEqual, 5)
 	})
 
 	Convey("preprocessing=true | Multiple Large files and Muliple assorted files and directories | Random destination | UploadFiles", t, func() {
@@ -1626,7 +1633,7 @@ func TestUploadFiles(t *testing.T) {
 			"/mock_dir1/a.txt",
 		}
 
-		objectId, totalListFiles, err := Walk(dev, sid, destination, true, true, func(objectId uint32, fi *FileInfo, err error) error {
+		objectId, totalListFiles, totalDirectories, err := Walk(dev, sid, destination, true, true, func(objectId uint32, fi *FileInfo, err error) error {
 			So(err, ShouldBeNil)
 
 			contains, index := StringContains(dirList1, strings.TrimPrefix(fi.FullPath, destination))
@@ -1638,7 +1645,8 @@ func TestUploadFiles(t *testing.T) {
 
 		So(err, ShouldBeNil)
 		So(objectIdDest, ShouldEqual, objectId)
-		So(totalListFiles, ShouldEqual, 13)
+		So(totalListFiles, ShouldEqual, 8)
+		So(totalDirectories, ShouldEqual, 5)
 
 		fi, err := GetObjectFromPath(dev, sid, destination)
 		So(err, ShouldBeNil)

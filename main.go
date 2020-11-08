@@ -134,20 +134,20 @@ func MakeDirectory(dev *mtp.Device, storageId uint32, fullPath string) (objectId
 // if [skipDisallowedFiles] is true then files matching the [disallowedFiles] list will be ignored
 // return:
 // [objectId]: objectId of the file/diectory
-// [totalFiles]: total number of files and directories
-// todo separate rTotalFiles and rTotalDirectories
-func Walk(dev *mtp.Device, storageId uint32, fullPath string, recursive bool, skipDisallowedFiles bool, cb WalkCb) (objectId uint32, totalFiles int, err error) {
+// [totalFiles]: total number of files
+// [totalDirectories]: total number of directories
+func Walk(dev *mtp.Device, storageId uint32, fullPath string, recursive bool, skipDisallowedFiles bool, cb WalkCb) (objectId uint32, totalFiles, totalDirectories int64, err error) {
 	// fetch the objectId from [objectId] and/or [fullPath] parameters
 	fi, err := GetObjectFromPath(dev, storageId, fullPath)
 	if err != nil {
-		return 0, 0, err
+		return 0, totalFiles, totalDirectories, err
 	}
 
 	// if the object file name matches [disallowedFiles] list then return an error
 	if skipDisallowedFiles {
 		fName := (*fi).Name
 		if ok := isDisallowedFiles(fName); ok {
-			return 0, 0, InvalidPathError{error: fmt.Errorf("disallowed file %v", fName)}
+			return 0, totalFiles, totalDirectories, InvalidPathError{error: fmt.Errorf("disallowed file %v", fName)}
 		}
 	}
 
@@ -155,18 +155,20 @@ func Walk(dev *mtp.Device, storageId uint32, fullPath string, recursive bool, sk
 	if !fi.IsDir {
 		err := cb(fi.ObjectId, fi, nil)
 		if err != nil {
-			return 0, 0, err
+			return 0, totalFiles, totalDirectories, err
 		}
 
-		return fi.ObjectId, 1, nil
+		totalFiles += 1
+
+		return fi.ObjectId, 1, totalDirectories, nil
 	}
 
-	totalFiles, err = proccessWalk(dev, storageId, FileProp{fi.ObjectId, fullPath}, recursive, skipDisallowedFiles, cb)
+	totalFiles, totalDirectories, err = proccessWalk(dev, storageId, FileProp{fi.ObjectId, fullPath}, recursive, skipDisallowedFiles, cb)
 	if err != nil {
-		return 0, 0, err
+		return 0, totalFiles, totalDirectories, err
 	}
 
-	return fi.ObjectId, totalFiles, nil
+	return fi.ObjectId, totalFiles, totalDirectories, nil
 }
 
 // check if a file exists
@@ -536,7 +538,7 @@ func DownloadFiles(dev *mtp.Device, storageId uint32, sources []string, destinat
 			return totalFiles, totalSize, err
 		}
 
-		_, _, err = Walk(dev, storageId, _source, true, false,
+		_, _, _, err = Walk(dev, storageId, _source, true, false,
 			func(objectId uint32, fi *FileInfo, err error) error {
 				destinationFileParentPath, destinationFilePath := mapSourcePathToDestinationPath(
 					fi.FullPath, sourceParentPath, _destination,
