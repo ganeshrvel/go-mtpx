@@ -134,6 +134,7 @@ func MakeDirectory(dev *mtp.Device, storageId uint32, fullPath string) (rObjectI
 // if [skipDisallowedFiles] is true then files matching the [disallowedFiles] list will be ignored
 // rObjectId: objectId of the file/diectory
 // rTotalFiles: total number of files and directories
+// todo separate rTotalFiles and rTotalDirectories
 func Walk(dev *mtp.Device, storageId uint32, fullPath string, recursive bool, skipDisallowedFiles bool, cb WalkCb) (rObjectId uint32, rTotalFiles int, rError error) {
 	// fetch the objectId from [objectId] and/or [fullPath] parameters
 	fi, err := GetObjectFromPath(dev, storageId, fullPath)
@@ -233,7 +234,7 @@ func RenameFile(dev *mtp.Device, storageId, objectId uint32, fullPath, newFileNa
 // rDestinationObjectId: objectId of [destination] directory
 // rTotalFiles: total transferred files (directory count not included)
 // rTotalSize: total size of the uploaded files
-func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destination string, preprocessFiles bool, progressCb ProgressCb, preprocessCb PreprocessCb) (rDestinationObjectId uint32, rTotalFiles int64, rTotalSize int64, rError error) {
+func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destination string, preprocessFiles bool, preprocessCb PreprocessCb, progressCb ProgressCb) (rDestinationObjectId uint32, rTotalFiles int64, rTotalSize int64, rError error) {
 	_destination := fixSlash(destination)
 
 	pInfo := ProgressInfo{
@@ -247,6 +248,7 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 		FilesSentProgress: 0,
 		Current:           &TransferSizeInfo{},
 		Bulk:              &TransferSizeInfo{},
+		Status:            InProgress,
 	}
 
 	// total number of files in this upload session
@@ -433,7 +435,6 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 						}
 
 						pInfo.Speed = transferRate(sent-prevSentSize, pInfo.LatestSentTime)
-
 						_ = progressCb(&pInfo, nil)
 
 						pInfo.LatestSentTime = time.Now()
@@ -456,9 +457,6 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 				}
 
 				pInfo.FileInfo.ObjectId = objId
-				if err := progressCb(&pInfo, nil); err != nil {
-					return err
-				}
 
 				// append the current objectId to [destinationFilesDict]
 				destinationFilesDict[destinationFilePath] = objId
@@ -487,6 +485,11 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 					FileTransferError{error: fmt.Errorf("an error occured while uploading files. %+v", err.Error())}
 			}
 		}
+	}
+
+	pInfo.Status = Completed
+	if err := progressCb(&pInfo, nil); err != nil {
+		return destParentId, bulkFilesSent, bulkSizeSent, err
 	}
 
 	return destParentId, bulkFilesSent, bulkSizeSent, nil

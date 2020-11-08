@@ -252,7 +252,6 @@ func transferRateInMBs(size int64, lastSentTime time.Time, prevSpeed float64) fl
 
 func transferRate(size int64, lastSentTime time.Time) float64 {
 	var elapsedTime = time.Since(lastSentTime).Nanoseconds()
-
 	if elapsedTime <= 0 {
 		return 0
 	}

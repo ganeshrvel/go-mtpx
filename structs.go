@@ -88,6 +88,8 @@ type ProgressInfo struct {
 
 	// total size information of the files for the transfer session
 	Bulk *TransferSizeInfo
+
+	Status TransferStatus
 }
 
 type SizeProgressCb func(total, sent int64, objectId uint32)
