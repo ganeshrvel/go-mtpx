@@ -188,31 +188,31 @@ func TestFileExists(t *testing.T) {
 
 	Convey("Testing valid file | filepath | FileExists", t, func() {
 		// test the directory '/mtp-test-files'
-		exists, fi := FileExists(dev, sid, 0, "/mtp-test-files/")
+		exists, fi := FileExists(dev, sid, FileProp{0, "/mtp-test-files/"})
 		So(exists, ShouldEqual, true)
 		So(fi.ObjectId, ShouldBeGreaterThan, 0)
 		So(fi.IsDir, ShouldEqual, true)
 
 		// test the file '/mtp-test-files/a.txt'
-		exists, fi = FileExists(dev, sid, 0, "/mtp-test-files/a.txt")
+		exists, fi = FileExists(dev, sid, FileProp{0, "/mtp-test-files/a.txt"})
 		So(exists, ShouldEqual, true)
 		So(fi.ObjectId, ShouldBeGreaterThan, 0)
 		So(fi.IsDir, ShouldEqual, false)
 
 		// test the directory 'mtp-test-files/'
-		exists, fi = FileExists(dev, sid, 0, "mtp-test-files/")
+		exists, fi = FileExists(dev, sid, FileProp{0, "mtp-test-files/"})
 		So(exists, ShouldEqual, true)
 		So(fi.ObjectId, ShouldBeGreaterThan, 0)
 		So(fi.IsDir, ShouldEqual, true)
 
 		// test the directory 'mtp-test-files'
-		exists, fi = FileExists(dev, sid, 0, "mtp-test-files")
+		exists, fi = FileExists(dev, sid, FileProp{0, "mtp-test-files"})
 		So(exists, ShouldEqual, true)
 		So(fi.ObjectId, ShouldBeGreaterThan, 0)
 		So(fi.IsDir, ShouldEqual, true)
 
 		// test the file '/mtp-test-files/a.txt/'
-		exists, fi = FileExists(dev, sid, 0, "/mtp-test-files/a.txt/")
+		exists, fi = FileExists(dev, sid, FileProp{0, "/mtp-test-files/a.txt/"})
 		So(exists, ShouldEqual, true)
 		So(fi.ObjectId, ShouldBeGreaterThan, 0)
 		So(fi.IsDir, ShouldEqual, false)
@@ -227,7 +227,7 @@ func TestFileExists(t *testing.T) {
 
 		_objectId := fi.ObjectId
 
-		exists, fi := FileExists(dev, sid, _objectId, "/mtp-test-files")
+		exists, fi := FileExists(dev, sid, FileProp{_objectId, "/mtp-test-files"})
 		So(exists, ShouldEqual, true)
 		So(fi.ObjectId, ShouldEqual, _objectId)
 		So(fi.IsDir, ShouldEqual, true)
@@ -240,7 +240,7 @@ func TestFileExists(t *testing.T) {
 
 		_objectId = fi.ObjectId
 
-		exists, fi = FileExists(dev, sid, _objectId, "/mtp-test-files/a.txt")
+		exists, fi = FileExists(dev, sid, FileProp{_objectId, "/mtp-test-files/a.txt"})
 		So(exists, ShouldEqual, true)
 		So(fi.ObjectId, ShouldEqual, _objectId)
 		So(fi.IsDir, ShouldEqual, false)
@@ -248,12 +248,12 @@ func TestFileExists(t *testing.T) {
 
 	Convey("Testing non existing file | FileExists | Should throw error", t, func() {
 		// test the directory '/fake'
-		exists, fi := FileExists(dev, sid, 0, "/fake/")
+		exists, fi := FileExists(dev, sid, FileProp{0, "/fake/"})
 		So(exists, ShouldEqual, false)
 		So(fi, ShouldBeNil)
 
 		// test the file '/mtp-test-files/fake.txt'
-		exists, fi = FileExists(dev, sid, 0, "/mtp-test-files/fake.txt")
+		exists, fi = FileExists(dev, sid, FileProp{0, "/mtp-test-files/fake.txt"})
 		So(exists, ShouldEqual, false)
 		So(fi, ShouldBeNil)
 	})
@@ -276,32 +276,32 @@ func TestGetObjectFromObjectIdOrPath(t *testing.T) {
 
 	Convey("Testing valid files | GetObjectFromObjectIdOrPath", t, func() {
 		// objectId=0 && fullPath="/mtp-test-files/"
-		fi, err := GetObjectFromObjectIdOrPath(dev, sid, 0, "/mtp-test-files/")
+		fi, err := GetObjectFromObjectIdOrPath(dev, sid, FileProp{0, "/mtp-test-files/"})
 		So(err, ShouldBeNil)
 		So(fi.IsDir, ShouldEqual, true)
 		So(fi.ObjectId, ShouldBeGreaterThan, 0)
 
 		// objectId=0 && fullPath="mtp-test-files/"
-		fi, err = GetObjectFromObjectIdOrPath(dev, sid, 0, "mtp-test-files/")
+		fi, err = GetObjectFromObjectIdOrPath(dev, sid, FileProp{0, "mtp-test-files/"})
 		So(err, ShouldBeNil)
 		So(fi.IsDir, ShouldEqual, true)
 		So(fi.ObjectId, ShouldBeGreaterThan, 0)
 
 		// objectId=0 && fullPath="mtp-test-files"
-		fi, err = GetObjectFromObjectIdOrPath(dev, sid, 0, "mtp-test-files")
+		fi, err = GetObjectFromObjectIdOrPath(dev, sid, FileProp{0, "mtp-test-files"})
 		So(err, ShouldBeNil)
 		So(fi.IsDir, ShouldEqual, true)
 		So(fi.ObjectId, ShouldBeGreaterThan, 0)
 
 		// objectId=parentId && fullPath="mtp-test-files"
-		fi, err = GetObjectFromObjectIdOrPath(dev, sid, ParentObjectId, "mtp-test-files")
+		fi, err = GetObjectFromObjectIdOrPath(dev, sid, FileProp{ParentObjectId, "mtp-test-files"})
 
 		So(err, ShouldBeNil)
 		So(fi.IsDir, ShouldEqual, true)
 		So(fi.ObjectId, ShouldEqual, ParentObjectId)
 
 		// objectId=parentId && fullPath=""
-		fi, err = GetObjectFromObjectIdOrPath(dev, sid, ParentObjectId, "")
+		fi, err = GetObjectFromObjectIdOrPath(dev, sid, FileProp{ParentObjectId, ""})
 		So(err, ShouldBeNil)
 		So(fi.IsDir, ShouldEqual, true)
 		So(fi.ObjectId, ShouldEqual, ParentObjectId)
@@ -309,19 +309,19 @@ func TestGetObjectFromObjectIdOrPath(t *testing.T) {
 
 	Convey("Testing invalid files | GetObjectFromObjectIdOrPath", t, func() {
 		// objectId=0 && fullPath=""
-		fi, err := GetObjectFromObjectIdOrPath(dev, sid, 0, "")
+		fi, err := GetObjectFromObjectIdOrPath(dev, sid, FileProp{0, ""})
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
 		So(fi, ShouldBeNil)
 
 		// objectId=fake && fullPath=""
-		fi, err = GetObjectFromObjectIdOrPath(dev, sid, 1234567, "")
+		fi, err = GetObjectFromObjectIdOrPath(dev, sid, FileProp{1234567, ""})
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, FileObjectError{})
 		So(fi, ShouldBeNil)
 
 		// objectId=0 && fullPath="/fake"
-		fi, err = GetObjectFromObjectIdOrPath(dev, sid, 0, "/fake")
+		fi, err = GetObjectFromObjectIdOrPath(dev, sid, FileProp{0, "/fake"})
 		So(err, ShouldBeError)
 		So(err, ShouldHaveSameTypeAs, InvalidPathError{})
 		So(fi, ShouldBeNil)

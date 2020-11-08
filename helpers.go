@@ -166,15 +166,16 @@ func GetObjectFromPath(dev *mtp.Device, storageId uint32, fullPath string) (*Fil
 
 // fetch an object using [objectId] and/or [fullPath]
 // Since the [parentPath] is unavailable here the [fullPath] property of the resulting object [FileInfo] may not be valid.
-func GetObjectFromObjectIdOrPath(dev *mtp.Device, storageId, objectId uint32, fullPath string) (*FileInfo, error) {
-	_objectId := objectId
+func GetObjectFromObjectIdOrPath(dev *mtp.Device, storageId uint32, fileProp FileProp) (fInfo *FileInfo, err error) {
+	objectId := fileProp.ObjectId
+	fullPath := fileProp.FullPath
 
-	if _objectId == 0 && fullPath == "" {
+	if objectId == 0 && fullPath == "" {
 		return nil, InvalidPathError{error: fmt.Errorf("invalid path: %s. both objectId and fullPath cannot be empty", fullPath)}
 	}
 
 	// if objectId is not available then fetch the objectId from fullPath
-	if _objectId == 0 {
+	if objectId == 0 {
 		fp, err := GetObjectFromPath(dev, storageId, fullPath)
 
 		if err != nil {
@@ -184,7 +185,7 @@ func GetObjectFromObjectIdOrPath(dev *mtp.Device, storageId, objectId uint32, fu
 		return fp, nil
 	}
 
-	fo, err := GetObjectFromObjectId(dev, _objectId, fullPath)
+	fo, err := GetObjectFromObjectId(dev, objectId, fullPath)
 	if err != nil {
 		return nil, err
 	}
@@ -228,8 +229,9 @@ func handleMakeFile(dev *mtp.Device, storageId uint32, obj *mtp.ObjectInfo, fInf
 			return fi.ObjectId, nil
 		}
 
+		fileProp := FileProp{fi.ObjectId, ""}
 		// if [overwriteExisting] is true then delete the existing file
-		if err := DeleteFile(dev, storageId, fi.ObjectId, ""); err != nil {
+		if err := DeleteFile(dev, storageId, []FileProp{fileProp}); err != nil {
 			return 0, err
 		}
 	} else {
@@ -289,7 +291,7 @@ func handleMakeLocalFile(dev *mtp.Device, fi *FileInfo, destination string) erro
 // if [skipDisallowedFiles] is true then files matching the [disallowedFiles] list will be ignored
 // returns total number of objects
 func proccessWalk(dev *mtp.Device, storageId, objectId uint32, fullPath string, recursive, skipDisallowedFiles bool, cb WalkCb) (rTotalFiles int, rError error) {
-	fi, err := GetObjectFromObjectIdOrPath(dev, storageId, objectId, fullPath)
+	fi, err := GetObjectFromObjectIdOrPath(dev, storageId, FileProp{objectId, fullPath})
 
 	if err != nil {
 		return 0, err

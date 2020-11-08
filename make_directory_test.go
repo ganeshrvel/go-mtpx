@@ -65,7 +65,7 @@ func TestMakeDirectory(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(objectId, ShouldBeGreaterThan, 0)
 
-		exists, fi := FileExists(dev, sid, 0, fullpath)
+		exists, fi := FileExists(dev, sid, FileProp{0, fullpath})
 
 		So(err, ShouldBeNil)
 		So(exists, ShouldEqual, true)

@@ -171,8 +171,8 @@ func Walk(dev *mtp.Device, storageId uint32, fullPath string, recursive bool, sk
 // check if a file exists
 // returns exists: bool, isDir: bool, objectId: uint32
 // Since the [parentPath] is unavailable here the [fullPath] property of the resulting object [FileInfo] may not be valid.
-func FileExists(dev *mtp.Device, storageId, objectId uint32, filePath string) (exists bool, fileInfo *FileInfo) {
-	fi, err := GetObjectFromObjectIdOrPath(dev, storageId, objectId, filePath)
+func FileExists(dev *mtp.Device, storageId uint32, fileProp FileProp) (exists bool, fileInfo *FileInfo) {
+	fi, err := GetObjectFromObjectIdOrPath(dev, storageId, fileProp)
 
 	if err != nil {
 		return false, nil
@@ -186,15 +186,17 @@ func FileExists(dev *mtp.Device, storageId, objectId uint32, filePath string) (e
 // if [objectId] is not available then [fullPath] will be used to fetch the [objectId]
 // dont leave both [objectId] and [fullPath] empty
 // Tip: use [objectId] whenever possible to avoid traversing down the whole file tree to process and find the [objectId]
-func DeleteFile(dev *mtp.Device, storageId, objectId uint32, fullPath string) error {
-	exist, fi := FileExists(dev, storageId, objectId, fullPath)
+func DeleteFile(dev *mtp.Device, storageId uint32, fileProps []FileProp) error {
+	for _, fileProp := range fileProps {
+		exist, fi := FileExists(dev, storageId, fileProp)
 
-	if !exist {
-		return nil
-	}
+		if !exist {
+			return nil
+		}
 
-	if err := dev.DeleteObject(fi.ObjectId); err != nil {
-		return FileObjectError{error: err}
+		if err := dev.DeleteObject(fi.ObjectId); err != nil {
+			return FileObjectError{error: err}
+		}
 	}
 
 	return nil
@@ -207,7 +209,7 @@ func DeleteFile(dev *mtp.Device, storageId, objectId uint32, fullPath string) er
 // Tip: use [objectId] whenever possible to avoid traversing down the whole file tree to process and find the [objectId]
 // rObjectId: objectId of the file/diectory
 func RenameFile(dev *mtp.Device, storageId, objectId uint32, fullPath, newFileName string) (rObjectId uint32, error error) {
-	exist, fi := FileExists(dev, storageId, objectId, fullPath)
+	exist, fi := FileExists(dev, storageId, FileProp{objectId, fullPath})
 
 	if !exist {
 		return 0, InvalidPathError{error: fmt.Errorf("file not found: %s", fullPath)}
