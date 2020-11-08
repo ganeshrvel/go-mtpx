@@ -171,14 +171,17 @@ func Walk(dev *mtp.Device, storageId uint32, fullPath string, recursive bool, sk
 // check if a file exists
 // returns exists: bool, isDir: bool, objectId: uint32
 // Since the [parentPath] is unavailable here the [fullPath] property of the resulting object [FileInfo] may not be valid.
-func FileExists(dev *mtp.Device, storageId uint32, fileProp FileProp) (exists bool, fileInfo *FileInfo) {
-	fi, err := GetObjectFromObjectIdOrPath(dev, storageId, fileProp)
+func FileExists(dev *mtp.Device, storageId uint32, fileProps []FileProp) (exists bool, fileInfo *FileInfo) {
+	for _, fileProp := range fileProps {
+		fi, err := GetObjectFromObjectIdOrPath(dev, storageId, fileProp)
+		fileInfo = fi
 
-	if err != nil {
-		return false, nil
+		if err != nil {
+			return false, nil
+		}
 	}
 
-	return true, fi
+	return true, fileInfo
 }
 
 // Delete an file/directory
@@ -188,7 +191,7 @@ func FileExists(dev *mtp.Device, storageId uint32, fileProp FileProp) (exists bo
 // Tip: use [objectId] whenever possible to avoid traversing down the whole file tree to process and find the [objectId]
 func DeleteFile(dev *mtp.Device, storageId uint32, fileProps []FileProp) error {
 	for _, fileProp := range fileProps {
-		exist, fi := FileExists(dev, storageId, fileProp)
+		exist, fi := FileExists(dev, storageId, []FileProp{fileProp})
 
 		if !exist {
 			return nil
@@ -209,7 +212,8 @@ func DeleteFile(dev *mtp.Device, storageId uint32, fileProps []FileProp) error {
 // Tip: use [objectId] whenever possible to avoid traversing down the whole file tree to process and find the [objectId]
 // rObjectId: objectId of the file/diectory
 func RenameFile(dev *mtp.Device, storageId, objectId uint32, fullPath, newFileName string) (rObjectId uint32, error error) {
-	exist, fi := FileExists(dev, storageId, FileProp{objectId, fullPath})
+	fileProp := FileProp{objectId, fullPath}
+	exist, fi := FileExists(dev, storageId, []FileProp{fileProp})
 
 	if !exist {
 		return 0, InvalidPathError{error: fmt.Errorf("file not found: %s", fullPath)}
