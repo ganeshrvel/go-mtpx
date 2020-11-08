@@ -15,4 +15,4 @@ const newLocalDirectoryMode = 0755
 
 const disallowedFileName = ":*?\"<>|"
 
-var disallowedFiles = []string{".DS_Store"}
+var disallowedFiles = []string{".DS_Store", "[-----DS_Store.mtp.test----].txt"}

@@ -22,8 +22,8 @@ func TestUtils(t *testing.T) {
 	})
 
 	Convey("Test fixSlash", t, func() {
-		filenameList := []string{"", "/", "//", "/abc", "//bcd", "/cde/", "/def//", "efg/", "fgh", "ghi/124", "hij/124/", "/ijk/124/"}
-		dirList := []string{"/", "/", "/", "/abc", "//bcd", "/cde", "/def/", "/efg", "/fgh", "/ghi/124", "/hij/124", "/ijk/124"}
+		filenameList := []string{"", ".", "/./", "././", "/../", "/", "//", "/abc", "//bcd", "/cde/", "/def//", "efg/", "fgh", "ghi/124", "hij/124/", "/ijk/124/"}
+		dirList := []string{"/", "/", "/", "/", "/", "/", "/", "/abc", "/bcd", "/cde", "/def", "/efg", "/fgh", "/ghi/124", "/hij/124", "/ijk/124"}
 
 		for i, f := range filenameList {
 			dir := fixSlash(f)
@@ -46,7 +46,7 @@ func TestUtils(t *testing.T) {
 			s{
 				parentPath: "//",
 				filename:   "bcd",
-				fullPath:   "//bcd",
+				fullPath:   "/bcd",
 			},
 			s{
 				parentPath: "/",

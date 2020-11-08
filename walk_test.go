@@ -351,10 +351,10 @@ func TestWalk(t *testing.T) {
 		So(err, ShouldBeNil)
 	})
 
-	Convey("Testing skipDisallowedFiles=false | rootfile=.DS_Store | Walk", t, func() {
-		// test the directory '/mtp-test-files/mock_dir1/.DS_Store' | recursive=true
+	Convey("Testing skipDisallowedFiles=false | rootfile=[-----DS_Store.mtp.test----].txt | Walk", t, func() {
+		// test the directory '/mtp-test-files/mock_dir1/[-----DS_Store.mtp.test----].txt' | recursive=true
 		count := 0
-		_, _, err := Walk(dev, sid, "/mtp-test-files/mock_dir1/.DS_Store", true, false,
+		_, _, err := Walk(dev, sid, "/mtp-test-files/mock_dir1/[-----DS_Store.mtp.test----].txt", true, false,
 			func(objectId uint32, fi *FileInfo, err error) error {
 				So(err, ShouldBeNil)
 

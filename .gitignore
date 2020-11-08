@@ -6,3 +6,4 @@ build
 mocks-build
 profiling
 test-large-file
+.DS_Store

@@ -30,15 +30,6 @@ func extension(filename string, isDir bool) string {
 
 func getFullPath(parentPath, filename string) string {
 	pathSep := PathSep
-	if parentPath == PathSep {
-		pathSep = ""
-	}
-	if strings.HasSuffix(parentPath, PathSep) {
-		pathSep = ""
-	}
-	if strings.HasPrefix(filename, PathSep) {
-		pathSep = ""
-	}
 
 	_fullPath := fmt.Sprintf("%s%s%s", parentPath, pathSep, filename)
 
@@ -52,11 +43,7 @@ func fixSlash(absFilepath string) string {
 		_absFilepath = fmt.Sprintf("%s%s", PathSep, _absFilepath)
 	}
 
-	if _absFilepath != PathSep && strings.HasSuffix(_absFilepath, PathSep) {
-		_absFilepath = strings.TrimSuffix(_absFilepath, PathSep)
-	}
-
-	return _absFilepath
+	return path.Clean(_absFilepath)
 }
 
 func indexExists(arr interface{}, index int) bool {
