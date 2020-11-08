@@ -59,7 +59,7 @@ func TestUploadFiles(t *testing.T) {
 				So(fi.LatestSentTime.UnixNano(), ShouldBeGreaterThan, prevLatestSentTime)
 				prevLatestSentTime = fi.LatestSentTime.UnixNano()
 
-				So(fi.Speed, ShouldEqual, 0)
+				So(fi.Speed, ShouldBeGreaterThanOrEqualTo, 0)
 				So(fi.FilesSent, ShouldEqual, prevFilesSent)
 
 				if fi.Status == InProgress {
@@ -146,7 +146,7 @@ func TestUploadFiles(t *testing.T) {
 				So(fi.LatestSentTime.UnixNano(), ShouldBeGreaterThan, prevLatestSentTime)
 				prevLatestSentTime = fi.LatestSentTime.UnixNano()
 
-				So(fi.Speed, ShouldEqual, 0)
+				So(fi.Speed, ShouldBeGreaterThanOrEqualTo, 0)
 				So(fi.FilesSent, ShouldEqual, prevFilesSent)
 				if fi.Status == InProgress {
 					prevFilesSent += 1
@@ -269,7 +269,7 @@ func TestUploadFiles(t *testing.T) {
 				So(fi.LatestSentTime.UnixNano(), ShouldBeGreaterThan, prevLatestSentTime)
 				prevLatestSentTime = fi.LatestSentTime.UnixNano()
 
-				So(fi.Speed, ShouldEqual, 0)
+				So(fi.Speed, ShouldBeGreaterThanOrEqualTo, 0)
 				So(fi.FilesSent, ShouldEqual, prevFilesSent)
 				if fi.Status == InProgress {
 					prevFilesSent += 1
@@ -402,7 +402,7 @@ func TestUploadFiles(t *testing.T) {
 				So(fi.LatestSentTime.UnixNano(), ShouldBeGreaterThan, prevLatestSentTime)
 				prevLatestSentTime = fi.LatestSentTime.UnixNano()
 
-				So(fi.Speed, ShouldEqual, 0)
+				So(fi.Speed, ShouldBeGreaterThanOrEqualTo, 0)
 				So(fi.FilesSent, ShouldEqual, prevFilesSent)
 				if fi.Status == InProgress {
 					prevFilesSent += 1
@@ -518,7 +518,7 @@ func TestUploadFiles(t *testing.T) {
 				So(fi.LatestSentTime.UnixNano(), ShouldBeGreaterThan, prevLatestSentTime)
 				prevLatestSentTime = fi.LatestSentTime.UnixNano()
 
-				So(fi.Speed, ShouldEqual, 0)
+				So(fi.Speed, ShouldBeGreaterThanOrEqualTo, 0)
 				So(fi.FilesSent, ShouldEqual, prevFilesSent)
 				if fi.Status == InProgress {
 					prevFilesSent += 1
@@ -612,7 +612,7 @@ func TestUploadFiles(t *testing.T) {
 				So(fi.LatestSentTime.UnixNano(), ShouldBeGreaterThan, prevLatestSentTime)
 				prevLatestSentTime = fi.LatestSentTime.UnixNano()
 
-				So(fi.Speed, ShouldEqual, 0)
+				So(fi.Speed, ShouldBeGreaterThanOrEqualTo, 0)
 				So(fi.FilesSent, ShouldEqual, prevFilesSent)
 				if fi.Status == InProgress {
 					prevFilesSent += 1
@@ -705,7 +705,7 @@ func TestUploadFiles(t *testing.T) {
 				So(fi.LatestSentTime.UnixNano(), ShouldBeGreaterThan, prevLatestSentTime)
 				prevLatestSentTime = fi.LatestSentTime.UnixNano()
 
-				So(fi.Speed, ShouldEqual, 0)
+				So(fi.Speed, ShouldBeGreaterThanOrEqualTo, 0)
 				So(fi.FilesSent, ShouldEqual, prevFilesSent)
 				if fi.Status == InProgress {
 					prevFilesSent += 1
@@ -804,7 +804,7 @@ func TestUploadFiles(t *testing.T) {
 				So(fi.LatestSentTime.UnixNano(), ShouldBeGreaterThan, prevLatestSentTime)
 				prevLatestSentTime = fi.LatestSentTime.UnixNano()
 
-				So(fi.Speed, ShouldEqual, 0)
+				So(fi.Speed, ShouldBeGreaterThanOrEqualTo, 0)
 				So(fi.FilesSent, ShouldEqual, prevFilesSent)
 				if fi.Status == InProgress {
 					prevFilesSent += 1
@@ -899,7 +899,7 @@ func TestUploadFiles(t *testing.T) {
 				So(fi.LatestSentTime.UnixNano(), ShouldBeGreaterThan, prevLatestSentTime)
 				prevLatestSentTime = fi.LatestSentTime.UnixNano()
 
-				So(fi.Speed, ShouldEqual, 0)
+				So(fi.Speed, ShouldBeGreaterThanOrEqualTo, 0)
 				So(fi.FilesSent, ShouldEqual, prevFilesSent)
 				if fi.Status == InProgress {
 					prevFilesSent += 1
@@ -995,7 +995,7 @@ func TestUploadFiles(t *testing.T) {
 				So(fi.LatestSentTime.UnixNano(), ShouldBeGreaterThan, prevLatestSentTime)
 				prevLatestSentTime = fi.LatestSentTime.UnixNano()
 
-				So(fi.Speed, ShouldBeGreaterThan, 0)
+				So(fi.Speed, ShouldBeGreaterThanOrEqualTo, 0)
 
 				if prevObjectId != fi.FileInfo.ObjectId {
 					So(fi.FilesSent, ShouldEqual, prevFilesSent)
@@ -1119,7 +1119,7 @@ func TestUploadFiles(t *testing.T) {
 				So(fi.LatestSentTime.UnixNano(), ShouldBeGreaterThan, prevLatestSentTime)
 				prevLatestSentTime = fi.LatestSentTime.UnixNano()
 
-				So(fi.Speed, ShouldBeGreaterThan, 0)
+				So(fi.Speed, ShouldBeGreaterThanOrEqualTo, 0)
 
 				if prevObjectId != fi.FileInfo.ObjectId {
 					So(fi.FilesSent, ShouldEqual, prevFilesSent)
@@ -1258,7 +1258,7 @@ func TestUploadFiles(t *testing.T) {
 				prevLatestSentTime = fi.LatestSentTime.UnixNano()
 
 				if fi.FileInfo.Size < 100 {
-					So(fi.Speed, ShouldEqual, 0)
+					So(fi.Speed, ShouldBeGreaterThanOrEqualTo, 0)
 				} else {
 					So(fi.Speed, ShouldBeGreaterThanOrEqualTo, 0)
 				}
@@ -1407,7 +1407,7 @@ func TestUploadFiles(t *testing.T) {
 				So(fi.LatestSentTime.UnixNano(), ShouldBeGreaterThan, prevLatestSentTime)
 				prevLatestSentTime = fi.LatestSentTime.UnixNano()
 
-				So(fi.Speed, ShouldEqual, 0)
+				So(fi.Speed, ShouldBeGreaterThanOrEqualTo, 0)
 				So(fi.FilesSent, ShouldEqual, prevFilesSent)
 				if fi.Status == InProgress {
 					prevFilesSent += 1
@@ -1685,7 +1685,7 @@ func TestUploadFiles(t *testing.T) {
 				So(fi.LatestSentTime.UnixNano(), ShouldBeGreaterThan, prevLatestSentTime)
 				prevLatestSentTime = fi.LatestSentTime.UnixNano()
 
-				So(fi.Speed, ShouldEqual, 0)
+				So(fi.Speed, ShouldBeGreaterThanOrEqualTo, 0)
 				So(fi.FilesSent, ShouldEqual, prevFilesSent)
 
 				if fi.Status == InProgress {
@@ -1763,7 +1763,7 @@ func TestUploadFiles(t *testing.T) {
 				So(fi.LatestSentTime.UnixNano(), ShouldBeGreaterThan, prevLatestSentTime)
 				prevLatestSentTime = fi.LatestSentTime.UnixNano()
 
-				So(fi.Speed, ShouldEqual, 0)
+				So(fi.Speed, ShouldBeGreaterThanOrEqualTo, 0)
 				So(fi.FilesSent, ShouldEqual, prevFilesSent)
 
 				if fi.Status == InProgress {
@@ -1838,7 +1838,7 @@ func TestUploadFiles(t *testing.T) {
 				So(fi.LatestSentTime.UnixNano(), ShouldBeGreaterThan, prevLatestSentTime)
 				prevLatestSentTime = fi.LatestSentTime.UnixNano()
 
-				So(fi.Speed, ShouldEqual, 0)
+				So(fi.Speed, ShouldBeGreaterThanOrEqualTo, 0)
 				So(fi.FilesSent, ShouldEqual, prevFilesSent)
 
 				if fi.Status == InProgress {
