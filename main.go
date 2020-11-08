@@ -14,7 +14,7 @@ import (
 // todo: hotplug
 // todo: information mode -> get total files, break the buf into smaller chunks and calculate the transfer rate
 // todo: implement the progress info, check for progressCount in gomtpfs
-// update go.mod
+// todo update go.mod
 
 // initialize the mtp device
 // returns mtp device
@@ -85,7 +85,7 @@ func FetchStorages(dev *mtp.Device) ([]StorageData, error) {
 
 // create a new directory recursively using [fullPath]
 // The path will be created if it does not exists
-func MakeDirectory(dev *mtp.Device, storageId uint32, fullPath string) (rObjectId uint32, rError error) {
+func MakeDirectory(dev *mtp.Device, storageId uint32, fullPath string) (objectId uint32, err error) {
 	_fullPath := fixSlash(fullPath)
 
 	if _fullPath == PathSep {
@@ -93,7 +93,7 @@ func MakeDirectory(dev *mtp.Device, storageId uint32, fullPath string) (rObjectI
 	}
 	splittedFullPath := strings.Split(_fullPath, PathSep)
 
-	var objectId = uint32(ParentObjectId)
+	objectId = uint32(ParentObjectId)
 	const skipIndex = 1
 
 	for _, fName := range splittedFullPath[skipIndex:] {
@@ -132,10 +132,11 @@ func MakeDirectory(dev *mtp.Device, storageId uint32, fullPath string) (rObjectI
 // use [recursive] to fetch the whole nested tree
 // Tip: use [objectId] whenever possible to avoid traversing down the whole file tree to process and find the [objectId]
 // if [skipDisallowedFiles] is true then files matching the [disallowedFiles] list will be ignored
-// rObjectId: objectId of the file/diectory
-// rTotalFiles: total number of files and directories
+// return:
+// [objectId]: objectId of the file/diectory
+// [totalFiles]: total number of files and directories
 // todo separate rTotalFiles and rTotalDirectories
-func Walk(dev *mtp.Device, storageId uint32, fullPath string, recursive bool, skipDisallowedFiles bool, cb WalkCb) (rObjectId uint32, rTotalFiles int, rError error) {
+func Walk(dev *mtp.Device, storageId uint32, fullPath string, recursive bool, skipDisallowedFiles bool, cb WalkCb) (objectId uint32, totalFiles int, err error) {
 	// fetch the objectId from [objectId] and/or [fullPath] parameters
 	fi, err := GetObjectFromPath(dev, storageId, fullPath)
 	if err != nil {
@@ -160,7 +161,7 @@ func Walk(dev *mtp.Device, storageId uint32, fullPath string, recursive bool, sk
 		return fi.ObjectId, 1, nil
 	}
 
-	totalFiles, err := proccessWalk(dev, storageId, fi.ObjectId, fullPath, recursive, skipDisallowedFiles, cb)
+	totalFiles, err = proccessWalk(dev, storageId, FileProp{fi.ObjectId, fullPath}, recursive, skipDisallowedFiles, cb)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -210,13 +211,13 @@ func DeleteFile(dev *mtp.Device, storageId uint32, fileProps []FileProp) error {
 // if [objectId] is not available then [fullPath] will be used to fetch the [objectId]
 // dont leave both [objectId] and [fullPath] empty
 // Tip: use [objectId] whenever possible to avoid traversing down the whole file tree to process and find the [objectId]
-// rObjectId: objectId of the file/diectory
-func RenameFile(dev *mtp.Device, storageId, objectId uint32, fullPath, newFileName string) (rObjectId uint32, error error) {
-	fileProp := FileProp{objectId, fullPath}
+// return
+// [objectId]: objectId of the file/diectory
+func RenameFile(dev *mtp.Device, storageId uint32, fileProp FileProp, newFileName string) (objectId uint32, err error) {
 	exist, fi := FileExists(dev, storageId, []FileProp{fileProp})
 
 	if !exist {
-		return 0, InvalidPathError{error: fmt.Errorf("file not found: %s", fullPath)}
+		return 0, InvalidPathError{error: fmt.Errorf("file not found: %s", fileProp.FullPath)}
 	}
 
 	if err := dev.SetObjectPropValue(fi.ObjectId, mtp.OPC_ObjectFileName, &mtp.StringValue{Value: newFileName}); err != nil {
@@ -237,10 +238,11 @@ func RenameFile(dev *mtp.Device, storageId, objectId uint32, fullPath, newFileNa
 // sources: can be the list of files/directories that are to be sent to the device
 // destination: fullPath to the destination directory
 // preprocessFiles: if enabled, will fetch the total file size and count of the source. Use this will caution as it may take a few seconds to minutes to procress the files.
-// rDestinationObjectId: objectId of [destination] directory
-// rTotalFiles: total transferred files (directory count not included)
-// rTotalSize: total size of the uploaded files
-func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destination string, preprocessFiles bool, preprocessCb PreprocessCb, progressCb ProgressCb) (rDestinationObjectId uint32, rTotalFiles int64, rTotalSize int64, rError error) {
+// return:
+// [destinationObjectId]: objectId of [destination] directory
+// [totalFiles]: total transferred files (directory count not included)
+// [totalSize]: total size of the uploaded files
+func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destination string, preprocessFiles bool, preprocessCb PreprocessCb, progressCb ProgressCb) (destinationObjectId uint32, totalFiles int64, totalSize int64, err error) {
 	_destination := fixSlash(destination)
 
 	pInfo := ProgressInfo{
@@ -258,13 +260,13 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 	}
 
 	// total number of files in this upload session
-	var totalFiles int64 = 0
+	totalFiles = 0
 
 	// total number of files in this upload session
 	var totalDirectories int64 = 0
 
 	// total size of all the files combined in this upload session
-	var totalSize int64 = 0
+	totalSize = 0
 
 	// total number of files sent
 	var bulkFilesSent int64 = 0
@@ -511,9 +513,10 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 // Transfer files from the device to the local disk
 // sources: can be the list of files/directories that are to be sent to the local disk
 // destination: fullPath to the destination directory
-// rTotalFiles: total transferred files (directory count not included)
-// rTotalSize: total size of the uploaded files
-func DownloadFiles(dev *mtp.Device, storageId uint32, sources []string, destination string, cb TransferFilesCb) (rTotalFiles int, rTotalSize int64, rError error) {
+// return:
+// [totalFiles]: total transferred files (directory count not included)
+// [totalSize]: total size of the uploaded files
+func DownloadFiles(dev *mtp.Device, storageId uint32, sources []string, destination string, cb TransferFilesCb) (totalFiles int, totalSize int64, err error) {
 	_destination := fixSlash(destination)
 
 	downloadFi := TransferredFileInfo{
@@ -521,8 +524,8 @@ func DownloadFiles(dev *mtp.Device, storageId uint32, sources []string, destinat
 		LatestSentTime: time.Now(),
 	}
 
-	totalFiles := 0
-	var totalSize int64 = 0
+	totalFiles = 0
+	totalSize = 0
 
 	for _, source := range sources {
 		_source := fixSlash(source)

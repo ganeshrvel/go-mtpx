@@ -1353,7 +1353,6 @@ func TestUploadFiles(t *testing.T) {
 		So(objectIdDest, ShouldEqual, fi.ObjectId)
 	})
 
-	//todo preprocessing error
 	Convey("preprocessing=true | Random destination | UploadFiles", t, func() {
 		// destination directories: '/mtp-test-files/temp_dir/test_UploadFiles'
 		// source directories: 'mock_dir1'

@@ -108,7 +108,7 @@ func GetObjectFromParentIdAndFilename(dev *mtp.Device, storageId uint32, parentI
 
 // fetch the object information using [fullPath]
 // Since the [parentPath] is unavailable here the [fullPath] property of the resulting object [FileInfo] may not be valid.
-func GetObjectFromPath(dev *mtp.Device, storageId uint32, fullPath string) (*FileInfo, error) {
+func GetObjectFromPath(dev *mtp.Device, storageId uint32, fullPath string) (fInfo *FileInfo, err error) {
 	if fullPath == "" {
 		return nil, InvalidPathError{error: fmt.Errorf("path does not exists. path: %s", fullPath)}
 	}
@@ -199,7 +199,7 @@ func isObjectADir(obj *mtp.ObjectInfo) bool {
 }
 
 // helper function to create a directory
-func handleMakeDirectory(dev *mtp.Device, storageId, parentId uint32, filename string) (rObjectId uint32, rError error) {
+func handleMakeDirectory(dev *mtp.Device, storageId, parentId uint32, filename string) (objectId uint32, err error) {
 	send := mtp.ObjectInfo{
 		StorageID:        storageId,
 		ObjectFormat:     mtp.OFC_Association,
@@ -219,7 +219,7 @@ func handleMakeDirectory(dev *mtp.Device, storageId, parentId uint32, filename s
 }
 
 // helper function to create a device file
-func handleMakeFile(dev *mtp.Device, storageId uint32, obj *mtp.ObjectInfo, fInfo *os.FileInfo, fileBuf *os.File, overwriteExisting bool, progressCb SizeProgressCb) (rObjectId uint32, rError error) {
+func handleMakeFile(dev *mtp.Device, storageId uint32, obj *mtp.ObjectInfo, fInfo *os.FileInfo, fileBuf *os.File, overwriteExisting bool, progressCb SizeProgressCb) (objectId uint32, err error) {
 	fi, err := GetObjectFromParentIdAndFilename(dev, storageId, obj.ParentObject, obj.Filename)
 
 	// file exists
@@ -290,8 +290,8 @@ func handleMakeLocalFile(dev *mtp.Device, fi *FileInfo, destination string) erro
 // Tips: use [objectId] whenever possible to avoid traversing down the whole file tree to process and find the [objectId]
 // if [skipDisallowedFiles] is true then files matching the [disallowedFiles] list will be ignored
 // returns total number of objects
-func proccessWalk(dev *mtp.Device, storageId, objectId uint32, fullPath string, recursive, skipDisallowedFiles bool, cb WalkCb) (rTotalFiles int, rError error) {
-	fi, err := GetObjectFromObjectIdOrPath(dev, storageId, FileProp{objectId, fullPath})
+func proccessWalk(dev *mtp.Device, storageId uint32, fileProp FileProp, recursive, skipDisallowedFiles bool, cb WalkCb) (totalFiles int, err error) {
+	fi, err := GetObjectFromObjectIdOrPath(dev, storageId, FileProp{fileProp.ObjectId, fileProp.FullPath})
 
 	if err != nil {
 		return 0, err
@@ -302,10 +302,10 @@ func proccessWalk(dev *mtp.Device, storageId, objectId uint32, fullPath string, 
 		return 0, ListDirectoryError{error: err}
 	}
 
-	totalFiles := 0
+	totalFiles = 0
 
 	for _, objId := range handles.Values {
-		fi, err := GetObjectFromObjectId(dev, objId, fullPath)
+		fi, err := GetObjectFromObjectId(dev, objId, fileProp.FullPath)
 		if err != nil {
 			continue
 		}
@@ -337,7 +337,7 @@ func proccessWalk(dev *mtp.Device, storageId, objectId uint32, fullPath string, 
 		}
 
 		_totalFiles, err := proccessWalk(
-			dev, storageId, objId, fi.FullPath, recursive, skipDisallowedFiles, cb,
+			dev, storageId, FileProp{objId, fi.FullPath}, recursive, skipDisallowedFiles, cb,
 		)
 		if err != nil {
 			return totalFiles, err
