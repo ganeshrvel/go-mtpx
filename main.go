@@ -280,7 +280,7 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 		})
 
 		if err != nil {
-			return 0, 0, 0, nil
+			return 0, bulkFilesSent, bulkSizeSent, err
 		}
 
 		totalFiles = _totalFiles
@@ -292,6 +292,10 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 	if err != nil {
 		return 0, bulkFilesSent, bulkSizeSent, err
 	}
+
+	pInfo.TotalFiles = totalFiles
+	pInfo.TotalDirectories = totalDirectories
+	pInfo.Bulk.Total = totalSize
 
 	for _, source := range sources {
 		_source := fixSlash(source)
@@ -426,19 +430,27 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 				// create file
 				var prevSentSize int64 = 0
 				objId, err := handleMakeFile(
-					dev, storageId, &fObj, &fInfo, fileBuf, true, func(total, sent int64, objId uint32) {
-						pInfo.FileInfo.ObjectId = objId
-						pInfo.Current = &TransferSizeInfo{
-							Total:    total,
-							Sent:     sent,
-							Progress: Percent(float32(sent), float32(total)),
+					dev, storageId, &fObj, &fInfo, fileBuf,
+					true,
+					func(total, sent int64, objId uint32, err error) error {
+						if err != nil {
+							return err
 						}
 
+						pInfo.FileInfo.ObjectId = objId
+						pInfo.Current.Total = total
+						pInfo.Current.Sent = sent
+						pInfo.Current.Progress = Percent(float32(sent), float32(total))
+
 						pInfo.Speed = transferRate(sent-prevSentSize, pInfo.LatestSentTime)
-						_ = progressCb(&pInfo, nil)
+						if err = progressCb(&pInfo, nil); err != nil {
+							return err
+						}
 
 						pInfo.LatestSentTime = time.Now()
 						prevSentSize = sent
+
+						return nil
 					},
 				)
 
@@ -446,15 +458,10 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 					return err
 				}
 
-				pInfo.TotalFiles = totalFiles
-				pInfo.TotalDirectories = totalDirectories
 				pInfo.FilesSent = bulkFilesSent
 				pInfo.FilesSentProgress = Percent(float32(bulkFilesSent), float32(totalFiles))
-				pInfo.Bulk = &TransferSizeInfo{
-					Total:    totalSize,
-					Sent:     bulkSizeSent,
-					Progress: Percent(float32(bulkSizeSent), float32(totalSize)),
-				}
+				pInfo.Bulk.Sent = bulkSizeSent
+				pInfo.Bulk.Progress = Percent(float32(bulkSizeSent), float32(totalSize))
 
 				pInfo.FileInfo.ObjectId = objId
 

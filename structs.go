@@ -92,6 +92,6 @@ type ProgressInfo struct {
 	Status TransferStatus
 }
 
-type SizeProgressCb func(total, sent int64, objectId uint32)
+type SizeProgressCb func(total, sent int64, objectId uint32, err error) error
 
 type LocalWalkCb func(fi *os.FileInfo, err error) error

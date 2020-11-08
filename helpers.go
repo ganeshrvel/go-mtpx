@@ -250,8 +250,12 @@ func handleMakeFile(dev *mtp.Device, storageId uint32, obj *mtp.ObjectInfo, fInf
 
 	size := (*fInfo).Size()
 	// send the bytes data to the newly create object handle
-	err = dev.SendObject(fileBuf, size, func(sent int64) {
-		progressCb(size, sent, objId)
+	err = dev.SendObject(fileBuf, size, func(sent int64) error {
+		if err := progressCb(size, sent, objId, nil); err != nil {
+			return err
+		}
+
+		return nil
 	})
 	if err != nil {
 		return objId, SendObjectError{error: err}
