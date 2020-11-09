@@ -1,5 +1,7 @@
 github.com/ganeshrvel/go-mtpfs v1.0.2-0.20201027070305-429105743bf3 h1:Bzbf0+BJFdGfa+1LgbDVPpA6n164n+ZEvHRIPrGKBaw=
 github.com/ganeshrvel/go-mtpfs v1.0.2-0.20201027070305-429105743bf3/go.mod h1:Y6MsnX7cGktUWDoo/JhEQIpwNtjDnjaE1OQzbXoFWdc=
+github.com/ganeshrvel/go-mtpfs v1.0.3 h1:947CURdaKisv8hfzBMDYRGs6y2n9/X1TZJ1s7ZuQNIg=
+github.com/ganeshrvel/go-mtpfs v1.0.3/go.mod h1:1NAzpj+t5wIoEZ5ELYsZ+r/g4nxjKqNHXXryUrZYmpg=
 github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1 h1:EGx4pi6eqNxGaHF6qqu48+N2wcFQ5qg5FXgOdqsJ5d8=
 github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1/go.mod h1:wJfORRmW1u3UXTncJ5qlYoELFm8eSnnEO6hX4iZ3EWY=
 github.com/hanwen/go-fuse v1.0.0 h1:GxS9Zrn6c35/BnfiVsZVWmsG803xwE7eVRDvcf/BEVc=
