@@ -15,6 +15,8 @@ import (
 // todo: information mode -> get total files, break the buf into smaller chunks and calculate the transfer rate
 // todo: implement the progress info, check for progressCount in gomtpfs
 // todo update go.mod
+// todo: get device info
+
 
 // initialize the mtp device
 // returns mtp device
@@ -244,7 +246,7 @@ func RenameFile(dev *mtp.Device, storageId uint32, fileProp FileProp, newFileNam
 // [destinationObjectId]: objectId of [destination] directory
 // [totalFiles]: total transferred files (directory count not included)
 // [totalSize]: total size of the uploaded files
-func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destination string, preprocessFiles bool, preprocessCb PreprocessCb, progressCb ProgressCb) (destinationObjectId uint32, totalFiles int64, totalSize int64, err error) {
+func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destination string, preprocessFiles bool, preprocessCb LocalPreprocessCb, progressCb ProgressCb) (destinationObjectId uint32, totalFiles int64, totalSize int64, err error) {
 	_destination := fixSlash(destination)
 
 	pInfo := ProgressInfo{
