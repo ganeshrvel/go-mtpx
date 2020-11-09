@@ -222,21 +222,6 @@ func SanitizeDosName(name string) string {
 	return string(dest)
 }
 
-//todo remove
-func transferRateInMBs(size int64, lastSentTime time.Time, prevSpeed float64) float64 {
-	var _size = float64(size)
-	var elapsedTime = time.Since(lastSentTime).Seconds()
-
-	rate := _size / elapsedTime / 1000 / 1000
-
-	// prevent polluted values
-	if elapsedTime <= 1 {
-		return prevSpeed
-	}
-
-	return math.Round(rate*100) / 100
-}
-
 func transferRate(size int64, lastSentTime time.Time) float64 {
 	var elapsedTime = time.Since(lastSentTime).Nanoseconds()
 	if elapsedTime <= 0 {

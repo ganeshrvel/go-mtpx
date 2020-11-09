@@ -37,6 +37,12 @@ func TestWalk(t *testing.T) {
 				So(fi.ParentId, ShouldBeGreaterThan, 0)
 				So(objectId, ShouldEqual, fi.ObjectId)
 
+				if fi.IsDir {
+					So(fi.Size, ShouldEqual, 0)
+				} else {
+					So(fi.Size, ShouldBeGreaterThanOrEqualTo, 0)
+				}
+
 				children = append(children, fi)
 
 				return nil
@@ -68,6 +74,12 @@ func TestWalk(t *testing.T) {
 				So(fi, ShouldNotBeNil)
 				So(fi.ParentId, ShouldBeGreaterThan, 0)
 				So(objectId, ShouldEqual, fi.ObjectId)
+
+				if fi.IsDir {
+					So(fi.Size, ShouldEqual, 0)
+				} else {
+					So(fi.Size, ShouldBeGreaterThanOrEqualTo, 0)
+				}
 
 				children = append(children, fi)
 
@@ -101,6 +113,12 @@ func TestWalk(t *testing.T) {
 				So(fi, ShouldNotBeNil)
 				So(fi.ParentId, ShouldBeGreaterThan, 0)
 				So(objectId, ShouldEqual, fi.ObjectId)
+
+				if fi.IsDir {
+					So(fi.Size, ShouldEqual, 0)
+				} else {
+					So(fi.Size, ShouldBeGreaterThanOrEqualTo, 0)
+				}
 
 				children = append(children, fi)
 
@@ -136,6 +154,12 @@ func TestWalk(t *testing.T) {
 				So(fi.ParentId, ShouldBeGreaterThan, 0)
 				So(objectId, ShouldEqual, fi.ObjectId)
 
+				if fi.IsDir {
+					So(fi.Size, ShouldEqual, 0)
+				} else {
+					So(fi.Size, ShouldBeGreaterThanOrEqualTo, 0)
+				}
+
 				children = append(children, fi)
 
 				return nil
@@ -170,6 +194,12 @@ func TestWalk(t *testing.T) {
 				So(fi, ShouldNotBeNil)
 				So(fi.ParentId, ShouldBeGreaterThan, 0)
 				So(objectId, ShouldEqual, fi.ObjectId)
+
+				if fi.IsDir {
+					So(fi.Size, ShouldEqual, 0)
+				} else {
+					So(fi.Size, ShouldBeGreaterThanOrEqualTo, 0)
+				}
 
 				children = append(children, fi)
 
@@ -212,6 +242,12 @@ func TestWalk(t *testing.T) {
 				So(fi, ShouldNotBeNil)
 				So(fi.ParentId, ShouldBeGreaterThan, 0)
 				So(objectId, ShouldEqual, fi.ObjectId)
+
+				if fi.IsDir {
+					So(fi.Size, ShouldEqual, 0)
+				} else {
+					So(fi.Size, ShouldBeGreaterThanOrEqualTo, 0)
+				}
 
 				children = append(children, fi)
 
@@ -257,6 +293,12 @@ func TestWalk(t *testing.T) {
 				So(fi.ParentId, ShouldBeGreaterThan, 0)
 				So(objectId, ShouldEqual, fi.ObjectId)
 
+				if fi.IsDir {
+					So(fi.Size, ShouldEqual, 0)
+				} else {
+					So(fi.Size, ShouldBeGreaterThanOrEqualTo, 0)
+				}
+
 				children = append(children, fi)
 
 				return nil
@@ -301,6 +343,12 @@ func TestWalk(t *testing.T) {
 				So(err, ShouldBeNil)
 				children = append(children, fi)
 				So(fi.FullPath, ShouldEqual, "/mtp-test-files/a.txt")
+
+				if fi.IsDir {
+					So(fi.Size, ShouldEqual, 0)
+				} else {
+					So(fi.Size, ShouldBeGreaterThanOrEqualTo, 0)
+				}
 
 				return nil
 			})
@@ -423,6 +471,12 @@ func TestWalk(t *testing.T) {
 				So(err, ShouldBeNil)
 				children = append(children, fi)
 
+				if fi.IsDir {
+					So(fi.Size, ShouldEqual, 0)
+				} else {
+					So(fi.Size, ShouldBeGreaterThanOrEqualTo, 0)
+				}
+
 				return nil
 			})
 
@@ -439,6 +493,12 @@ func TestWalk(t *testing.T) {
 			func(objectId uint32, fi *FileInfo, err error) error {
 				So(err, ShouldBeNil)
 				children = append(children, fi)
+
+				if fi.IsDir {
+					So(fi.Size, ShouldEqual, 0)
+				} else {
+					So(fi.Size, ShouldBeGreaterThanOrEqualTo, 0)
+				}
 
 				return nil
 			})
@@ -457,6 +517,12 @@ func TestWalk(t *testing.T) {
 				So(err, ShouldBeNil)
 				children = append(children, fi)
 
+				if fi.IsDir {
+					So(fi.Size, ShouldEqual, 0)
+				} else {
+					So(fi.Size, ShouldBeGreaterThanOrEqualTo, 0)
+				}
+
 				return nil
 			})
 
@@ -472,6 +538,12 @@ func TestWalk(t *testing.T) {
 			func(objectId uint32, fi *FileInfo, err error) error {
 				So(err, ShouldBeNil)
 				children = append(children, fi)
+
+				if fi.IsDir {
+					So(fi.Size, ShouldEqual, 0)
+				} else {
+					So(fi.Size, ShouldBeGreaterThanOrEqualTo, 0)
+				}
 
 				return nil
 			})

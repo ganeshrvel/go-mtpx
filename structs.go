@@ -31,21 +31,9 @@ type FileInfo struct {
 
 type WalkCb func(objectId uint32, fi *FileInfo, err error) error
 
-// todo remove
-type TransferredFileInfo struct {
-	FileInfo *FileInfo
-
-	StartTime      time.Time
-	LatestSentTime time.Time
-	FilesSent      int
-	Speed          float64
-}
-
-// todo remove
-type TransferFilesCb func(fi *TransferredFileInfo, err error) error
-
 type TransferSizeInfo struct {
-	// total size
+	// total size to transfer
+	// note: the value will be 0 if pre-processing was not allowed
 	Total int64
 
 	// total size transferred
@@ -68,9 +56,11 @@ type ProgressInfo struct {
 	Speed float64
 
 	// total files to transfer
-	// note: this value will be available only if the pre-processing of file transfer is enabled
+	// note: the value will be 0 if pre-processing was not allowed
 	TotalFiles int64
 
+	// total directories to transfer
+	// note: the value will be 0 if pre-processing was not allowed
 	TotalDirectories int64
 
 	// total files transferred
@@ -95,6 +85,8 @@ type LocalWalkCb func(fi *os.FileInfo, err error) error
 type ProgressCb func(fi *ProgressInfo, err error) error
 
 type LocalPreprocessCb func(fi *os.FileInfo, err error) error
+
+type MtpPreprocessCb func(fi *FileInfo, err error) error
 
 type FileProp struct {
 	ObjectId uint32

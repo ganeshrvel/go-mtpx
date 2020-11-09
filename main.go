@@ -12,8 +12,6 @@ import (
 
 // todo: work on documentations
 // todo: hotplug
-// todo: information mode -> get total files, break the buf into smaller chunks and calculate the transfer rate
-// todo: implement the progress info, check for progressCount in gomtpfs
 // todo update go.mod
 // todo: get device info
 
@@ -519,16 +517,70 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 // return:
 // [totalFiles]: total transferred files (directory count not included)
 // [totalSize]: total size of the uploaded files
-func DownloadFiles(dev *mtp.Device, storageId uint32, sources []string, destination string, cb TransferFilesCb) (totalFiles int, totalSize int64, err error) {
+func DownloadFiles(dev *mtp.Device, storageId uint32, sources []string, destination string,
+	preprocessFiles bool, preprocessCb MtpPreprocessCb, progressCb ProgressCb) (bulkFilesSent int64, bulkSizeSent int64, err error) {
 	_destination := fixSlash(destination)
 
-	downloadFi := TransferredFileInfo{
-		StartTime:      time.Now(),
-		LatestSentTime: time.Now(),
+	pInfo := ProgressInfo{
+		FileInfo:          &FileInfo{},
+		StartTime:         time.Now(),
+		LatestSentTime:    time.Now(),
+		Speed:             0,
+		TotalFiles:        0,
+		TotalDirectories:  0,
+		FilesSent:         0,
+		FilesSentProgress: 0,
+		ActiveFileSize:    &TransferSizeInfo{},
+		BulkFileSize:      &TransferSizeInfo{},
+		Status:            InProgress,
 	}
 
-	totalFiles = 0
-	totalSize = 0
+	// if [preprocessFiles] is true then fetch the total number of files from the file tree
+	// total number of files in the current download session
+	// if [preprocessFiles] is false then [totalFiles] is 0
+	var totalFiles int64 = 0
+
+	// if [preprocessFiles] is true then fetch the total number of files from the file tree
+	// total number of directories in the current download session
+	// if [preprocessFiles] is false then [totalDirectories] is 0
+	var totalDirectories int64 = 0
+
+	// if [preprocessFiles] is true then fetch the total number of files from the file tree
+	// 	// total size of all the files combined in the current download session
+	// if [preprocessFiles] is false then [totalDirectories] is 0
+	var totalSize int64 = 0
+
+	if preprocessFiles {
+		for _, source := range sources {
+			_source := fixSlash(source)
+
+			_, _totalFiles, _totalDirectories, err := Walk(dev, storageId, _source, true, false,
+				func(objectId uint32, fi *FileInfo, err error) error {
+					if err != nil {
+						return err
+					}
+
+					if err = preprocessCb(fi, nil); err != nil {
+						return err
+					}
+
+					totalSize += fi.Size
+
+					return nil
+				})
+
+			if err != nil {
+				return bulkFilesSent, bulkSizeSent, err
+			}
+
+			totalFiles = _totalFiles
+			totalDirectories = _totalDirectories
+		}
+	}
+
+	pInfo.TotalFiles = totalFiles
+	pInfo.TotalDirectories = totalDirectories
+	pInfo.BulkFileSize.Total = totalSize
 
 	for _, source := range sources {
 		_source := fixSlash(source)
@@ -536,7 +588,7 @@ func DownloadFiles(dev *mtp.Device, storageId uint32, sources []string, destinat
 
 		_, err := GetObjectFromPath(dev, storageId, _source)
 		if err != nil {
-			return totalFiles, totalSize, err
+			return bulkFilesSent, bulkSizeSent, err
 		}
 
 		_, _, _, err = Walk(dev, storageId, _source, true, false,
@@ -565,7 +617,6 @@ func DownloadFiles(dev *mtp.Device, storageId uint32, sources []string, destinat
 				}
 
 				/// if the object is a file then create one
-
 				// if the local parent directory does not exists then create one
 				if !fileExistsLocal(destinationFileParentPath) {
 					err := makeLocalDirectory(destinationFileParentPath)
@@ -574,26 +625,45 @@ func DownloadFiles(dev *mtp.Device, storageId uint32, sources []string, destinat
 					}
 				}
 
+				// keep track of [bulkFilesSent]
+				bulkFilesSent += 1
+
+				// keep track of [bulkSizeSent]
+				bulkSizeSent += fi.Size
+
+				pInfo.LatestSentTime = time.Now()
+				pInfo.FileInfo.ObjectId = fi.ObjectId
+
 				// create the local file
-				err = handleMakeLocalFile(dev, fi, destinationFilePath)
+				var prevSentSize int64 = 0
+				err = handleMakeLocalFile(dev, fi, destinationFilePath,
+					func(total, sent int64, _ uint32, err error) error {
+						if err != nil {
+							return err
+						}
+
+						pInfo.ActiveFileSize.Total = total
+						pInfo.ActiveFileSize.Sent = sent
+						pInfo.ActiveFileSize.Progress = Percent(float32(sent), float32(total))
+
+						pInfo.Speed = transferRate(sent-prevSentSize, pInfo.LatestSentTime)
+						if err = progressCb(&pInfo, nil); err != nil {
+							return err
+						}
+
+						pInfo.LatestSentTime = time.Now()
+						prevSentSize = sent
+
+						return nil
+					})
 				if err != nil {
 					return err
 				}
 
-				// keep track of [totalFiles]
-				totalFiles += 1
-
-				// keep track of [totalSize]
-				totalSize += fi.Size
-
-				downloadFi.FileInfo = fi
-				downloadFi.FilesSent = totalFiles
-				downloadFi.Speed = transferRateInMBs(fi.Size, downloadFi.LatestSentTime, downloadFi.Speed)
-				downloadFi.LatestSentTime = time.Now()
-
-				if err := cb(&downloadFi, nil); err != nil {
-					return err
-				}
+				pInfo.FilesSent = bulkFilesSent
+				pInfo.FilesSentProgress = Percent(float32(bulkFilesSent), float32(totalFiles))
+				pInfo.BulkFileSize.Sent = bulkSizeSent
+				pInfo.BulkFileSize.Progress = Percent(float32(bulkSizeSent), float32(totalSize))
 
 				return nil
 			})
@@ -601,26 +671,31 @@ func DownloadFiles(dev *mtp.Device, storageId uint32, sources []string, destinat
 		if err != nil {
 			switch err.(type) {
 			case InvalidPathError:
-				return totalFiles, totalSize, err
+				return bulkFilesSent, bulkSizeSent, err
 
 			case *os.PathError:
 				if errors.Is(err, os.ErrPermission) {
-					return totalFiles, totalSize, FilePermissionError{error: err}
+					return bulkFilesSent, bulkSizeSent, FilePermissionError{error: err}
 				}
 
 				if errors.Is(err, os.ErrNotExist) {
-					return totalFiles, totalSize, InvalidPathError{error: err}
+					return bulkFilesSent, bulkSizeSent, InvalidPathError{error: err}
 				}
 
-				return totalFiles, totalSize, LocalFileError{error: err}
+				return bulkFilesSent, bulkSizeSent, LocalFileError{error: err}
 			default:
-				return totalFiles, totalSize,
+				return bulkFilesSent, bulkSizeSent,
 					FileTransferError{error: fmt.Errorf("an error occured while downloading the files. %+v", err.Error())}
 			}
 		}
 	}
 
-	return totalFiles, totalSize, nil
+	pInfo.Status = Completed
+	if err := progressCb(&pInfo, nil); err != nil {
+		return bulkFilesSent, bulkSizeSent, err
+	}
+
+	return bulkFilesSent, bulkSizeSent, nil
 }
 
 func main() {}

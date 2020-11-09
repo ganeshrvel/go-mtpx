@@ -11,7 +11,11 @@ import (
 )
 
 // fetch the file size of the object
-func GetFileSize(dev *mtp.Device, obj *mtp.ObjectInfo, objectId uint32) (int64, error) {
+func GetFileSize(dev *mtp.Device, obj *mtp.ObjectInfo, objectId uint32, isDir bool) (int64, error) {
+	if isDir {
+		return 0, nil
+	}
+
 	var size int64
 	if obj.CompressedSize == 0xffffffff {
 		var val mtp.Uint64Value
@@ -37,7 +41,7 @@ func GetObjectFromObjectId(dev *mtp.Device, objectId uint32, parentPath string) 
 	// if the [objectId] is root then return the basic root directory information
 	if objectId == ParentObjectId {
 		return &FileInfo{
-			Size:     0xFFFFFFFF,
+			Size:     0,
 			IsDir:    true,
 			FullPath: "/",
 			ObjectId: ParentObjectId,
@@ -49,8 +53,12 @@ func GetObjectFromObjectId(dev *mtp.Device, objectId uint32, parentPath string) 
 		return nil, FileObjectError{error: err}
 	}
 
-	size, _ := GetFileSize(dev, &obj, objectId)
 	isDir := isObjectADir(&obj)
+	size, err := GetFileSize(dev, &obj, objectId, isDir)
+	if err != nil {
+		return nil, FileObjectError{error: err}
+	}
+
 	filename := obj.Filename
 	_parentPath := fixSlash(parentPath)
 	fullPath := getFullPath(_parentPath, filename)
@@ -267,19 +275,31 @@ func handleMakeFile(dev *mtp.Device, storageId uint32, obj *mtp.ObjectInfo, fInf
 }
 
 // helper function to create a local file
-func handleMakeLocalFile(dev *mtp.Device, fi *FileInfo, destination string) error {
+func handleMakeLocalFile(dev *mtp.Device, fi *FileInfo, destination string, progressCb SizeProgressCb) error {
 	f, err := os.Create(destination)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 
+	var totalSent int64 = 0
 	err = dev.GetObject(fi.ObjectId, f, func(sent int64) error {
+		if err := progressCb(fi.Size, sent, fi.ObjectId, err); err != nil {
+			return err
+		}
 
+		totalSent = sent
 		return nil
 	})
 	if err != nil {
 		return err
+	}
+
+	// fix the incorrect sent size
+	if totalSent < fi.Size {
+		if err := progressCb(fi.Size, fi.Size, fi.ObjectId, err); err != nil {
+			return err
+		}
 	}
 
 	return err

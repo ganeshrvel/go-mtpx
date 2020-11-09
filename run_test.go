@@ -1,6 +1,7 @@
 package mtpx
 
 import (
+	"fmt"
 	"github.com/kr/pretty"
 	"log"
 	"testing"
@@ -207,23 +208,31 @@ func TestRun(t *testing.T) {
 	//pretty.Println(totalSize)
 	//pretty.Println("time elapsed: ", time.Since(start).Seconds())
 
-	//
-	//totalFiles, totalSize, err := DownloadFiles(dev, Sid,
-	//	[]string{sourceFile1}, downloadFile,
-	//	func(downloadFi *TransferredFileInfo, err error) error {
-	//		fmt.Printf("ActiveFileSize filepath: %s\n", downloadFi.FileInfo.FullPath)
-	//		fmt.Printf("%f MB/s\n", downloadFi.Speed)
-	//
-	//		return nil
-	//	},
-	//)
-	//if err != nil {
-	//	log.Panic(err)
-	//}
-	//
-	//pretty.Println(totalFiles)
-	//pretty.Println(totalSize)
-	//pretty.Println("time elapsed: ", time.Since(start).Seconds())
+	sourceFile1 := "/mtp-test-files/mock_dir2"
+	destination := newTempMocksAsset("mock_dir2")
+	//totalFiles, totalSize, err := DownloadFiles(dev, sid,
+	_, _, err = DownloadFiles(dev, sid,
+		[]string{sourceFile1}, destination, true,
+		func(fi *FileInfo, err error) error {
+			fmt.Printf("Preprocessing files 'FullPath': %s\n", fi.FullPath)
+			fmt.Printf("Preprocessing files 'Size': %d\n", fi.Size)
+
+			return nil
+		},
+		func(fi *ProgressInfo, err error) error {
+			fmt.Printf("Current filepath: %s\n", fi.FileInfo.FullPath)
+			fmt.Printf("%f MB/s\n", fi.Speed)
+			fmt.Printf("BulkFileSize Total: %d\n", fi.BulkFileSize.Total)
+			fmt.Printf("BulkFileSize Sent: %d\n", fi.BulkFileSize.Sent)
+			fmt.Printf("ActiveFileSize Total: %d\n", fi.ActiveFileSize.Total)
+			fmt.Printf("ActiveFileSize Sent: %d\n\n", fi.ActiveFileSize.Sent)
+
+			return nil
+		},
+	)
+	if err != nil {
+		log.Panic(err)
+	}
 
 	Dispose(dev)
 }
