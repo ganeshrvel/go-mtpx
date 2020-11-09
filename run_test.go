@@ -48,11 +48,11 @@ func TestRun(t *testing.T) {
 	//	},
 	//	func(pi *ProgressInfo, err error) error {
 	//		//fmt.Printf("\nFile name: %s\n", pi.FileInfo.FullPath)
-	//		//fmt.Printf("Total size: %d\n", pi.Current.Total)
-	//		//fmt.Printf("Size sent: %d\n", pi.Current.Sent)
+	//		//fmt.Printf("Total size: %d\n", pi.ActiveFileSize.Total)
+	//		//fmt.Printf("Size sent: %d\n", pi.ActiveFileSize.Sent)
 	//		//fmt.Printf("Speed: %f\n", pi.Speed)
 	//		//fmt.Printf("Object Id: %d\n", pi.FileInfo.ObjectId)
-	//		//fmt.Printf("Current progress: %f\n", pi.Current.Progress)
+	//		//fmt.Printf("ActiveFileSize progress: %f\n", pi.ActiveFileSize.Progress)
 	//		//fmt.Printf("TotalFiles: %d\n", pi.TotalFiles)
 	//		//fmt.Printf("totalDirectories: %d\n", pi.TotalDirectories)
 	//		//fmt.Printf("FilesSent: %d\n", pi.FilesSent)
@@ -188,11 +188,11 @@ func TestRun(t *testing.T) {
 	//	},
 	//	func(pi *ProgressInfo, err error) error {
 	//		fmt.Printf("File name: %s\n", pi.FileInfo.FullPath)
-	//		//fmt.Printf("Total size: %d\n", pi.Current.Total)
-	//		//fmt.Printf("Size sent: %d\n", pi.Current.Sent)
+	//		//fmt.Printf("Total size: %d\n", pi.ActiveFileSize.Total)
+	//		//fmt.Printf("Size sent: %d\n", pi.ActiveFileSize.Sent)
 	//		//fmt.Printf("Speed: %f\n", pi.Speed)
 	//		//fmt.Printf("Object Id: %d\n", pi.FileInfo.ObjectId)
-	//		//fmt.Printf("Current progress: %f\n", pi.Current.Progress)
+	//		//fmt.Printf("ActiveFileSize progress: %f\n", pi.ActiveFileSize.Progress)
 	//		fmt.Printf("TotalFiles: %d\n", pi.TotalFiles)
 	//		fmt.Printf("totalDirectories: %d\n", pi.TotalDirectories)
 	//		fmt.Printf("FilesSent: %d\n", pi.FilesSent)
@@ -211,7 +211,7 @@ func TestRun(t *testing.T) {
 	//totalFiles, totalSize, err := DownloadFiles(dev, Sid,
 	//	[]string{sourceFile1}, downloadFile,
 	//	func(downloadFi *TransferredFileInfo, err error) error {
-	//		fmt.Printf("Current filepath: %s\n", downloadFi.FileInfo.FullPath)
+	//		fmt.Printf("ActiveFileSize filepath: %s\n", downloadFi.FileInfo.FullPath)
 	//		fmt.Printf("%f MB/s\n", downloadFi.Speed)
 	//
 	//		return nil

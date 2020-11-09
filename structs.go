@@ -80,10 +80,10 @@ type ProgressInfo struct {
 	FilesSentProgress float32
 
 	// size information of the current file which is being transferred
-	Current *TransferSizeInfo
+	ActiveFileSize *TransferSizeInfo
 
 	// total size information of the files for the transfer session
-	Bulk *TransferSizeInfo
+	BulkFileSize *TransferSizeInfo
 
 	Status TransferStatus
 }

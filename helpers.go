@@ -274,7 +274,10 @@ func handleMakeLocalFile(dev *mtp.Device, fi *FileInfo, destination string) erro
 	}
 	defer f.Close()
 
-	err = dev.GetObject(fi.ObjectId, f)
+	err = dev.GetObject(fi.ObjectId, f, func(sent int64) error {
+
+		return nil
+	})
 	if err != nil {
 		return err
 	}

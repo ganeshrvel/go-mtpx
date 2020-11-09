@@ -17,7 +17,6 @@ import (
 // todo update go.mod
 // todo: get device info
 
-
 // initialize the mtp device
 // returns mtp device
 func Initialize(init Init) (*mtp.Device, error) {
@@ -244,39 +243,39 @@ func RenameFile(dev *mtp.Device, storageId uint32, fileProp FileProp, newFileNam
 // preprocessFiles: if enabled, will fetch the total file size and count of the source. Use this will caution as it may take a few seconds to minutes to procress the files.
 // return:
 // [destinationObjectId]: objectId of [destination] directory
-// [totalFiles]: total transferred files (directory count not included)
-// [totalSize]: total size of the uploaded files
-func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destination string, preprocessFiles bool, preprocessCb LocalPreprocessCb, progressCb ProgressCb) (destinationObjectId uint32, totalFiles int64, totalSize int64, err error) {
+// [bulkFilesSent]: total transferred files (directory count not included)
+// [bulkSizeSent]: total size of the uploaded files
+func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destination string, preprocessFiles bool, preprocessCb LocalPreprocessCb, progressCb ProgressCb) (destinationObjectId uint32, bulkFilesSent int64, bulkSizeSent int64, err error) {
 	_destination := fixSlash(destination)
 
 	pInfo := ProgressInfo{
 		FileInfo:          &FileInfo{},
 		StartTime:         time.Now(),
-		LatestSentTime:    time.Time{},
+		LatestSentTime:    time.Now(),
 		Speed:             0,
 		TotalFiles:        0,
 		TotalDirectories:  0,
 		FilesSent:         0,
 		FilesSentProgress: 0,
-		Current:           &TransferSizeInfo{},
-		Bulk:              &TransferSizeInfo{},
+		ActiveFileSize:    &TransferSizeInfo{},
+		BulkFileSize:      &TransferSizeInfo{},
 		Status:            InProgress,
 	}
 
-	// total number of files in this upload session
-	totalFiles = 0
+	// if [preprocessFiles] is true then fetch the total number of files from the file tree
+	// total number of files in the current upload session
+	// if [preprocessFiles] is false then [totalFiles] is 0
+	var totalFiles int64 = 0
 
-	// total number of files in this upload session
+	// if [preprocessFiles] is true then fetch the total number of files from the file tree
+	// total number of directories in the current upload session
+	// if [preprocessFiles] is false then [totalDirectories] is 0
 	var totalDirectories int64 = 0
 
-	// total size of all the files combined in this upload session
-	totalSize = 0
-
-	// total number of files sent
-	var bulkFilesSent int64 = 0
-
-	// total size of data sent
-	var bulkSizeSent int64 = 0
+	// if [preprocessFiles] is true then fetch the total number of files from the file tree
+	// 	// total size of all the files combined in the current upload session
+	// if [preprocessFiles] is false then [totalDirectories] is 0
+	var totalSize int64 = 0
 
 	if preprocessFiles {
 		_totalFiles, _totalDirectories, _totalSize, err := walkLocalFiles(sources, func(fi *os.FileInfo, err error) error {
@@ -307,7 +306,7 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 
 	pInfo.TotalFiles = totalFiles
 	pInfo.TotalDirectories = totalDirectories
-	pInfo.Bulk.Total = totalSize
+	pInfo.BulkFileSize.Total = totalSize
 
 	for _, source := range sources {
 		_source := fixSlash(source)
@@ -450,9 +449,9 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 						}
 
 						pInfo.FileInfo.ObjectId = objId
-						pInfo.Current.Total = total
-						pInfo.Current.Sent = sent
-						pInfo.Current.Progress = Percent(float32(sent), float32(total))
+						pInfo.ActiveFileSize.Total = total
+						pInfo.ActiveFileSize.Sent = sent
+						pInfo.ActiveFileSize.Progress = Percent(float32(sent), float32(total))
 
 						pInfo.Speed = transferRate(sent-prevSentSize, pInfo.LatestSentTime)
 						if err = progressCb(&pInfo, nil); err != nil {
@@ -472,8 +471,8 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 
 				pInfo.FilesSent = bulkFilesSent
 				pInfo.FilesSentProgress = Percent(float32(bulkFilesSent), float32(totalFiles))
-				pInfo.Bulk.Sent = bulkSizeSent
-				pInfo.Bulk.Progress = Percent(float32(bulkSizeSent), float32(totalSize))
+				pInfo.BulkFileSize.Sent = bulkSizeSent
+				pInfo.BulkFileSize.Progress = Percent(float32(bulkSizeSent), float32(totalSize))
 
 				pInfo.FileInfo.ObjectId = objId
 

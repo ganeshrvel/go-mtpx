@@ -75,19 +75,19 @@ func TestUploadFiles(t *testing.T) {
 				prevFilesSentProgress = fi.FilesSentProgress
 
 				// current progress tests
-				So(fi.Current.Total, ShouldBeGreaterThan, 0)
-				So(fi.Current.Sent, ShouldEqual, fi.Current.Total)
+				So(fi.ActiveFileSize.Total, ShouldBeGreaterThan, 0)
+				So(fi.ActiveFileSize.Sent, ShouldEqual, fi.ActiveFileSize.Total)
 
-				So(fi.Current.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
-				prevCurrentSentProgress = fi.Current.Progress
+				So(fi.ActiveFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
+				prevCurrentSentProgress = fi.ActiveFileSize.Progress
 
 				// bulk progress tests
-				So(fi.Bulk.Total, ShouldEqual, 0)
-				So(fi.Bulk.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
-				prevBulkSent = fi.Bulk.Sent
+				So(fi.BulkFileSize.Total, ShouldEqual, 0)
+				So(fi.BulkFileSize.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
+				prevBulkSent = fi.BulkFileSize.Sent
 
-				So(fi.Bulk.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
-				prevBulkSentProgress = fi.Bulk.Progress
+				So(fi.BulkFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
+				prevBulkSentProgress = fi.BulkFileSize.Progress
 
 				return nil
 			},
@@ -165,19 +165,19 @@ func TestUploadFiles(t *testing.T) {
 				prevFilesSentProgress = fi.FilesSentProgress
 
 				// current progress tests
-				So(fi.Current.Total, ShouldBeGreaterThan, 0)
-				So(fi.Current.Sent, ShouldEqual, fi.Current.Total)
+				So(fi.ActiveFileSize.Total, ShouldBeGreaterThan, 0)
+				So(fi.ActiveFileSize.Sent, ShouldEqual, fi.ActiveFileSize.Total)
 
-				So(fi.Current.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
-				prevCurrentSentProgress = fi.Current.Progress
+				So(fi.ActiveFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
+				prevCurrentSentProgress = fi.ActiveFileSize.Progress
 
 				// bulk progress tests
-				So(fi.Bulk.Total, ShouldEqual, 0)
-				So(fi.Bulk.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
-				prevBulkSent = fi.Bulk.Sent
+				So(fi.BulkFileSize.Total, ShouldEqual, 0)
+				So(fi.BulkFileSize.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
+				prevBulkSent = fi.BulkFileSize.Sent
 
-				So(fi.Bulk.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
-				prevBulkSentProgress = fi.Bulk.Progress
+				So(fi.BulkFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
+				prevBulkSentProgress = fi.BulkFileSize.Progress
 
 				status = fi.Status
 				return nil
@@ -289,19 +289,19 @@ func TestUploadFiles(t *testing.T) {
 				prevFilesSentProgress = fi.FilesSentProgress
 
 				// current progress tests
-				So(fi.Current.Total, ShouldBeGreaterThan, 0)
-				So(fi.Current.Sent, ShouldEqual, fi.Current.Total)
+				So(fi.ActiveFileSize.Total, ShouldBeGreaterThan, 0)
+				So(fi.ActiveFileSize.Sent, ShouldEqual, fi.ActiveFileSize.Total)
 
-				So(fi.Current.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
-				prevCurrentSentProgress = fi.Current.Progress
+				So(fi.ActiveFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
+				prevCurrentSentProgress = fi.ActiveFileSize.Progress
 
 				// bulk progress tests
-				So(fi.Bulk.Total, ShouldEqual, 0)
-				So(fi.Bulk.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
-				prevBulkSent = fi.Bulk.Sent
+				So(fi.BulkFileSize.Total, ShouldEqual, 0)
+				So(fi.BulkFileSize.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
+				prevBulkSent = fi.BulkFileSize.Sent
 
-				So(fi.Bulk.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
-				prevBulkSentProgress = fi.Bulk.Progress
+				So(fi.BulkFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
+				prevBulkSentProgress = fi.BulkFileSize.Progress
 
 				status = fi.Status
 				return nil
@@ -423,19 +423,19 @@ func TestUploadFiles(t *testing.T) {
 				prevFilesSentProgress = fi.FilesSentProgress
 
 				// current progress tests
-				So(fi.Current.Total, ShouldBeGreaterThan, 0)
-				So(fi.Current.Sent, ShouldEqual, fi.Current.Total)
+				So(fi.ActiveFileSize.Total, ShouldBeGreaterThan, 0)
+				So(fi.ActiveFileSize.Sent, ShouldEqual, fi.ActiveFileSize.Total)
 
-				So(fi.Current.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
-				prevCurrentSentProgress = fi.Current.Progress
+				So(fi.ActiveFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
+				prevCurrentSentProgress = fi.ActiveFileSize.Progress
 
 				// bulk progress tests
-				So(fi.Bulk.Total, ShouldEqual, 0)
-				So(fi.Bulk.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
-				prevBulkSent = fi.Bulk.Sent
+				So(fi.BulkFileSize.Total, ShouldEqual, 0)
+				So(fi.BulkFileSize.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
+				prevBulkSent = fi.BulkFileSize.Sent
 
-				So(fi.Bulk.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
-				prevBulkSentProgress = fi.Bulk.Progress
+				So(fi.BulkFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
+				prevBulkSentProgress = fi.BulkFileSize.Progress
 
 				status = fi.Status
 				return nil
@@ -540,19 +540,19 @@ func TestUploadFiles(t *testing.T) {
 				prevFilesSentProgress = fi.FilesSentProgress
 
 				// current progress tests
-				So(fi.Current.Total, ShouldBeGreaterThan, 0)
-				So(fi.Current.Sent, ShouldEqual, fi.Current.Total)
+				So(fi.ActiveFileSize.Total, ShouldBeGreaterThan, 0)
+				So(fi.ActiveFileSize.Sent, ShouldEqual, fi.ActiveFileSize.Total)
 
-				So(fi.Current.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
-				prevCurrentSentProgress = fi.Current.Progress
+				So(fi.ActiveFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
+				prevCurrentSentProgress = fi.ActiveFileSize.Progress
 
 				// bulk progress tests
-				So(fi.Bulk.Total, ShouldEqual, 0)
-				So(fi.Bulk.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
-				prevBulkSent = fi.Bulk.Sent
+				So(fi.BulkFileSize.Total, ShouldEqual, 0)
+				So(fi.BulkFileSize.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
+				prevBulkSent = fi.BulkFileSize.Sent
 
-				So(fi.Bulk.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
-				prevBulkSentProgress = fi.Bulk.Progress
+				So(fi.BulkFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
+				prevBulkSentProgress = fi.BulkFileSize.Progress
 
 				status = fi.Status
 				return nil
@@ -634,19 +634,19 @@ func TestUploadFiles(t *testing.T) {
 				prevFilesSentProgress = fi.FilesSentProgress
 
 				// current progress tests
-				So(fi.Current.Total, ShouldBeGreaterThan, 0)
-				So(fi.Current.Sent, ShouldEqual, fi.Current.Total)
+				So(fi.ActiveFileSize.Total, ShouldBeGreaterThan, 0)
+				So(fi.ActiveFileSize.Sent, ShouldEqual, fi.ActiveFileSize.Total)
 
-				So(fi.Current.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
-				prevCurrentSentProgress = fi.Current.Progress
+				So(fi.ActiveFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
+				prevCurrentSentProgress = fi.ActiveFileSize.Progress
 
 				// bulk progress tests
-				So(fi.Bulk.Total, ShouldEqual, 0)
-				So(fi.Bulk.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
-				prevBulkSent = fi.Bulk.Sent
+				So(fi.BulkFileSize.Total, ShouldEqual, 0)
+				So(fi.BulkFileSize.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
+				prevBulkSent = fi.BulkFileSize.Sent
 
-				So(fi.Bulk.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
-				prevBulkSentProgress = fi.Bulk.Progress
+				So(fi.BulkFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
+				prevBulkSentProgress = fi.BulkFileSize.Progress
 
 				status = fi.Status
 				return nil
@@ -727,19 +727,19 @@ func TestUploadFiles(t *testing.T) {
 				prevFilesSentProgress = fi.FilesSentProgress
 
 				// current progress tests
-				So(fi.Current.Total, ShouldBeGreaterThan, 0)
-				So(fi.Current.Sent, ShouldEqual, fi.Current.Total)
+				So(fi.ActiveFileSize.Total, ShouldBeGreaterThan, 0)
+				So(fi.ActiveFileSize.Sent, ShouldEqual, fi.ActiveFileSize.Total)
 
-				So(fi.Current.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
-				prevCurrentSentProgress = fi.Current.Progress
+				So(fi.ActiveFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
+				prevCurrentSentProgress = fi.ActiveFileSize.Progress
 
 				// bulk progress tests
-				So(fi.Bulk.Total, ShouldEqual, 0)
-				So(fi.Bulk.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
-				prevBulkSent = fi.Bulk.Sent
+				So(fi.BulkFileSize.Total, ShouldEqual, 0)
+				So(fi.BulkFileSize.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
+				prevBulkSent = fi.BulkFileSize.Sent
 
-				So(fi.Bulk.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
-				prevBulkSentProgress = fi.Bulk.Progress
+				So(fi.BulkFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
+				prevBulkSentProgress = fi.BulkFileSize.Progress
 
 				status = fi.Status
 
@@ -826,19 +826,19 @@ func TestUploadFiles(t *testing.T) {
 				prevFilesSentProgress = fi.FilesSentProgress
 
 				// current progress tests
-				So(fi.Current.Total, ShouldBeGreaterThan, 0)
-				So(fi.Current.Sent, ShouldEqual, fi.Current.Total)
+				So(fi.ActiveFileSize.Total, ShouldBeGreaterThan, 0)
+				So(fi.ActiveFileSize.Sent, ShouldEqual, fi.ActiveFileSize.Total)
 
-				So(fi.Current.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
-				prevCurrentSentProgress = fi.Current.Progress
+				So(fi.ActiveFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
+				prevCurrentSentProgress = fi.ActiveFileSize.Progress
 
 				// bulk progress tests
-				So(fi.Bulk.Total, ShouldEqual, 0)
-				So(fi.Bulk.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
-				prevBulkSent = fi.Bulk.Sent
+				So(fi.BulkFileSize.Total, ShouldEqual, 0)
+				So(fi.BulkFileSize.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
+				prevBulkSent = fi.BulkFileSize.Sent
 
-				So(fi.Bulk.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
-				prevBulkSentProgress = fi.Bulk.Progress
+				So(fi.BulkFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
+				prevBulkSentProgress = fi.BulkFileSize.Progress
 
 				status = fi.Status
 
@@ -921,19 +921,19 @@ func TestUploadFiles(t *testing.T) {
 				prevFilesSentProgress = fi.FilesSentProgress
 
 				// current progress tests
-				So(fi.Current.Total, ShouldBeGreaterThan, 0)
-				So(fi.Current.Sent, ShouldEqual, fi.Current.Total)
+				So(fi.ActiveFileSize.Total, ShouldBeGreaterThan, 0)
+				So(fi.ActiveFileSize.Sent, ShouldEqual, fi.ActiveFileSize.Total)
 
-				So(fi.Current.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
-				prevCurrentSentProgress = fi.Current.Progress
+				So(fi.ActiveFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
+				prevCurrentSentProgress = fi.ActiveFileSize.Progress
 
 				// bulk progress tests
-				So(fi.Bulk.Total, ShouldEqual, 0)
-				So(fi.Bulk.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
-				prevBulkSent = fi.Bulk.Sent
+				So(fi.BulkFileSize.Total, ShouldEqual, 0)
+				So(fi.BulkFileSize.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
+				prevBulkSent = fi.BulkFileSize.Sent
 
-				So(fi.Bulk.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
-				prevBulkSentProgress = fi.Bulk.Progress
+				So(fi.BulkFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
+				prevBulkSentProgress = fi.BulkFileSize.Progress
 
 				status = fi.Status
 
@@ -1022,20 +1022,20 @@ func TestUploadFiles(t *testing.T) {
 				prevFilesSentProgress = fi.FilesSentProgress
 
 				// current progress tests
-				So(fi.Current.Total, ShouldBeGreaterThan, 0)
-				So(fi.Current.Sent, ShouldBeLessThanOrEqualTo, fi.Current.Total)
-				So(fi.Current.Sent, ShouldBeGreaterThan, 0)
+				So(fi.ActiveFileSize.Total, ShouldBeGreaterThan, 0)
+				So(fi.ActiveFileSize.Sent, ShouldBeLessThanOrEqualTo, fi.ActiveFileSize.Total)
+				So(fi.ActiveFileSize.Sent, ShouldBeGreaterThan, 0)
 
-				So(fi.Current.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
-				prevCurrentSentProgress = fi.Current.Progress
+				So(fi.ActiveFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
+				prevCurrentSentProgress = fi.ActiveFileSize.Progress
 
 				// bulk progress tests
-				So(fi.Bulk.Total, ShouldEqual, 0)
-				So(fi.Bulk.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
-				prevBulkSent = fi.Bulk.Sent
+				So(fi.BulkFileSize.Total, ShouldEqual, 0)
+				So(fi.BulkFileSize.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
+				prevBulkSent = fi.BulkFileSize.Sent
 
-				So(fi.Bulk.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
-				prevBulkSentProgress = fi.Bulk.Progress
+				So(fi.BulkFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
+				prevBulkSentProgress = fi.BulkFileSize.Progress
 
 				status = fi.Status
 
@@ -1146,22 +1146,22 @@ func TestUploadFiles(t *testing.T) {
 				prevFilesSentProgress = fi.FilesSentProgress
 
 				// current progress tests
-				So(fi.Current.Total, ShouldBeGreaterThan, 0)
-				So(fi.Current.Sent, ShouldBeLessThanOrEqualTo, fi.Current.Total)
-				So(fi.Current.Sent, ShouldBeGreaterThan, 0)
+				So(fi.ActiveFileSize.Total, ShouldBeGreaterThan, 0)
+				So(fi.ActiveFileSize.Sent, ShouldBeLessThanOrEqualTo, fi.ActiveFileSize.Total)
+				So(fi.ActiveFileSize.Sent, ShouldBeGreaterThan, 0)
 
 				if prevObjectId == fi.FileInfo.ObjectId {
-					So(fi.Current.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
+					So(fi.ActiveFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
 				}
-				prevCurrentSentProgress = fi.Current.Progress
+				prevCurrentSentProgress = fi.ActiveFileSize.Progress
 
 				// bulk progress tests
-				So(fi.Bulk.Total, ShouldEqual, 0)
-				So(fi.Bulk.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
-				prevBulkSent = fi.Bulk.Sent
+				So(fi.BulkFileSize.Total, ShouldEqual, 0)
+				So(fi.BulkFileSize.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
+				prevBulkSent = fi.BulkFileSize.Sent
 
-				So(fi.Bulk.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
-				prevBulkSentProgress = fi.Bulk.Progress
+				So(fi.BulkFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
+				prevBulkSentProgress = fi.BulkFileSize.Progress
 
 				status = fi.Status
 
@@ -1289,22 +1289,22 @@ func TestUploadFiles(t *testing.T) {
 				prevFilesSentProgress = fi.FilesSentProgress
 
 				// current progress tests
-				So(fi.Current.Total, ShouldBeGreaterThan, 0)
-				So(fi.Current.Sent, ShouldBeLessThanOrEqualTo, fi.Current.Total)
-				So(fi.Current.Sent, ShouldBeGreaterThan, 0)
+				So(fi.ActiveFileSize.Total, ShouldBeGreaterThan, 0)
+				So(fi.ActiveFileSize.Sent, ShouldBeLessThanOrEqualTo, fi.ActiveFileSize.Total)
+				So(fi.ActiveFileSize.Sent, ShouldBeGreaterThan, 0)
 
 				if prevObjectId == fi.FileInfo.ObjectId {
-					So(fi.Current.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
+					So(fi.ActiveFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
 				}
-				prevCurrentSentProgress = fi.Current.Progress
+				prevCurrentSentProgress = fi.ActiveFileSize.Progress
 
 				// bulk progress tests
-				So(fi.Bulk.Total, ShouldEqual, 0)
-				So(fi.Bulk.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
-				prevBulkSent = fi.Bulk.Sent
+				So(fi.BulkFileSize.Total, ShouldEqual, 0)
+				So(fi.BulkFileSize.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
+				prevBulkSent = fi.BulkFileSize.Sent
 
-				So(fi.Bulk.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
-				prevBulkSentProgress = fi.Bulk.Progress
+				So(fi.BulkFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
+				prevBulkSentProgress = fi.BulkFileSize.Progress
 
 				status = fi.Status
 
@@ -1431,19 +1431,19 @@ func TestUploadFiles(t *testing.T) {
 				prevFilesSentProgress = fi.FilesSentProgress
 
 				// current progress tests
-				So(fi.Current.Total, ShouldBeGreaterThan, 0)
-				So(fi.Current.Sent, ShouldEqual, fi.Current.Total)
+				So(fi.ActiveFileSize.Total, ShouldBeGreaterThan, 0)
+				So(fi.ActiveFileSize.Sent, ShouldEqual, fi.ActiveFileSize.Total)
 
-				So(fi.Current.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
-				prevCurrentSentProgress = fi.Current.Progress
+				So(fi.ActiveFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
+				prevCurrentSentProgress = fi.ActiveFileSize.Progress
 
 				// bulk progress tests
-				So(fi.Bulk.Total, ShouldEqual, 35)
-				So(fi.Bulk.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
-				prevBulkSent = fi.Bulk.Sent
+				So(fi.BulkFileSize.Total, ShouldEqual, 35)
+				So(fi.BulkFileSize.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
+				prevBulkSent = fi.BulkFileSize.Sent
 
-				So(fi.Bulk.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
-				prevBulkSentProgress = fi.Bulk.Progress
+				So(fi.BulkFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
+				prevBulkSentProgress = fi.BulkFileSize.Progress
 
 				status = fi.Status
 				return nil
@@ -1585,22 +1585,22 @@ func TestUploadFiles(t *testing.T) {
 				prevFilesSentProgress = fi.FilesSentProgress
 
 				// current progress tests
-				So(fi.Current.Total, ShouldBeGreaterThan, 0)
-				So(fi.Current.Sent, ShouldBeLessThanOrEqualTo, fi.Current.Total)
-				So(fi.Current.Sent, ShouldBeGreaterThan, 0)
+				So(fi.ActiveFileSize.Total, ShouldBeGreaterThan, 0)
+				So(fi.ActiveFileSize.Sent, ShouldBeLessThanOrEqualTo, fi.ActiveFileSize.Total)
+				So(fi.ActiveFileSize.Sent, ShouldBeGreaterThan, 0)
 
 				if prevObjectId == fi.FileInfo.ObjectId {
-					So(fi.Current.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
+					So(fi.ActiveFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
 				}
-				prevCurrentSentProgress = fi.Current.Progress
+				prevCurrentSentProgress = fi.ActiveFileSize.Progress
 
 				// bulk progress tests
-				So(fi.Bulk.Total, ShouldEqual, 8388652)
-				So(fi.Bulk.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
-				prevBulkSent = fi.Bulk.Sent
+				So(fi.BulkFileSize.Total, ShouldEqual, 8388652)
+				So(fi.BulkFileSize.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
+				prevBulkSent = fi.BulkFileSize.Sent
 
-				So(fi.Bulk.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
-				prevBulkSentProgress = fi.Bulk.Progress
+				So(fi.BulkFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
+				prevBulkSentProgress = fi.BulkFileSize.Progress
 
 				status = fi.Status
 				prevObjectId = fi.FileInfo.ObjectId
@@ -1708,19 +1708,19 @@ func TestUploadFiles(t *testing.T) {
 				prevFilesSentProgress = fi.FilesSentProgress
 
 				// current progress tests
-				So(fi.Current.Total, ShouldBeGreaterThan, 0)
-				So(fi.Current.Sent, ShouldEqual, fi.Current.Total)
+				So(fi.ActiveFileSize.Total, ShouldBeGreaterThan, 0)
+				So(fi.ActiveFileSize.Sent, ShouldEqual, fi.ActiveFileSize.Total)
 
-				So(fi.Current.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
-				prevCurrentSentProgress = fi.Current.Progress
+				So(fi.ActiveFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
+				prevCurrentSentProgress = fi.ActiveFileSize.Progress
 
 				// bulk progress tests
-				So(fi.Bulk.Total, ShouldEqual, 0)
-				So(fi.Bulk.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
-				prevBulkSent = fi.Bulk.Sent
+				So(fi.BulkFileSize.Total, ShouldEqual, 0)
+				So(fi.BulkFileSize.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
+				prevBulkSent = fi.BulkFileSize.Sent
 
-				So(fi.Bulk.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
-				prevBulkSentProgress = fi.Bulk.Progress
+				So(fi.BulkFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
+				prevBulkSentProgress = fi.BulkFileSize.Progress
 
 				return nil
 			},
@@ -1786,19 +1786,19 @@ func TestUploadFiles(t *testing.T) {
 				prevFilesSentProgress = fi.FilesSentProgress
 
 				// current progress tests
-				So(fi.Current.Total, ShouldBeGreaterThan, 0)
-				So(fi.Current.Sent, ShouldEqual, fi.Current.Total)
+				So(fi.ActiveFileSize.Total, ShouldBeGreaterThan, 0)
+				So(fi.ActiveFileSize.Sent, ShouldEqual, fi.ActiveFileSize.Total)
 
-				So(fi.Current.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
-				prevCurrentSentProgress = fi.Current.Progress
+				So(fi.ActiveFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
+				prevCurrentSentProgress = fi.ActiveFileSize.Progress
 
 				// bulk progress tests
-				So(fi.Bulk.Total, ShouldEqual, 0)
-				So(fi.Bulk.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
-				prevBulkSent = fi.Bulk.Sent
+				So(fi.BulkFileSize.Total, ShouldEqual, 0)
+				So(fi.BulkFileSize.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
+				prevBulkSent = fi.BulkFileSize.Sent
 
-				So(fi.Bulk.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
-				prevBulkSentProgress = fi.Bulk.Progress
+				So(fi.BulkFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
+				prevBulkSentProgress = fi.BulkFileSize.Progress
 
 				return nil
 			},
@@ -1861,19 +1861,19 @@ func TestUploadFiles(t *testing.T) {
 				prevFilesSentProgress = fi.FilesSentProgress
 
 				// current progress tests
-				So(fi.Current.Total, ShouldBeGreaterThan, 0)
-				So(fi.Current.Sent, ShouldEqual, fi.Current.Total)
+				So(fi.ActiveFileSize.Total, ShouldBeGreaterThan, 0)
+				So(fi.ActiveFileSize.Sent, ShouldEqual, fi.ActiveFileSize.Total)
 
-				So(fi.Current.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
-				prevCurrentSentProgress = fi.Current.Progress
+				So(fi.ActiveFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
+				prevCurrentSentProgress = fi.ActiveFileSize.Progress
 
 				// bulk progress tests
-				So(fi.Bulk.Total, ShouldEqual, 0)
-				So(fi.Bulk.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
-				prevBulkSent = fi.Bulk.Sent
+				So(fi.BulkFileSize.Total, ShouldEqual, 0)
+				So(fi.BulkFileSize.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
+				prevBulkSent = fi.BulkFileSize.Sent
 
-				So(fi.Bulk.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
-				prevBulkSentProgress = fi.Bulk.Progress
+				So(fi.BulkFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
+				prevBulkSentProgress = fi.BulkFileSize.Progress
 
 				return FileTransferError{error: fmt.Errorf("some error occured")}
 			},
