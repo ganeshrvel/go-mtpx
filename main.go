@@ -12,7 +12,6 @@ import (
 
 // todo: work on documentations
 // todo: hotplug
-// todo: get device info
 
 // initialize the mtp device
 // returns mtp device
