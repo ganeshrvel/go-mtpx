@@ -94,13 +94,13 @@ type FileProp struct {
 }
 
 type processDownloadFilesProps struct {
-	sourceParentPath, destination                      string
-	bulkFilesSent, bulkSizeSent, totalFiles, totalSize int64
+	destinationFileParentPath, destinationFilePath, sourceParentPath string
+	bulkFilesSent, bulkSizeSent, totalFiles, totalSize               int64
 }
 
-type downloadFilesObjectCache map[uint32]downloadFilesObjectCacheContainer
+type downloadFilesObjectCache map[string]downloadFilesObjectCacheContainer
 
 type downloadFilesObjectCacheContainer struct {
-	fileInfo         *FileInfo
-	sourceParentPath string
+	fileInfo                                                         *FileInfo
+	destinationFileParentPath, destinationFilePath, sourceParentPath string
 }

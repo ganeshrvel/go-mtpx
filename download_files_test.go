@@ -1509,10 +1509,10 @@ func TestDownloadFiles(t *testing.T) {
 
 		So(err, ShouldBeNil)
 		So(status, ShouldEqual, Completed)
-		So(prevFilesSent, ShouldEqual, 7)
-		So(totalFiles, ShouldEqual, 7)
+		So(prevFilesSent, ShouldEqual, 4*2)
+		So(totalFiles, ShouldEqual, 4*2)
 		So(totalFiles, ShouldEqual, prevFilesSent)
-		So(totalSize, ShouldEqual, 8388643)
+		So(totalSize, ShouldEqual, 8388652)
 
 		// walk the destination directory on device and verify
 		dirList1 := []string{

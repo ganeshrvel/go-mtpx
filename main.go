@@ -564,9 +564,16 @@ func DownloadFiles(dev *mtp.Device, storageId uint32, sources []string, destinat
 						return err
 					}
 
-					cache[objectId] = downloadFilesObjectCacheContainer{
-						fileInfo:         fi,
-						sourceParentPath: filepath.Dir(_source),
+					sourceParentPath := filepath.Dir(_source)
+					destinationFileParentPath, destinationFilePath := mapSourcePathToDestinationPath(
+						fi.FullPath, sourceParentPath, _destination,
+					)
+
+					cache[destinationFilePath] = downloadFilesObjectCacheContainer{
+						fileInfo:                  fi,
+						sourceParentPath:          sourceParentPath,
+						destinationFileParentPath: destinationFileParentPath,
+						destinationFilePath:       destinationFilePath,
 					}
 
 					if fi.IsDir {
@@ -601,7 +608,6 @@ func DownloadFiles(dev *mtp.Device, storageId uint32, sources []string, destinat
 	pInfo.BulkFileSize.Total = totalSize
 
 	dfProps := &processDownloadFilesProps{
-		destination:   _destination,
 		bulkFilesSent: bulkFilesSent,
 		bulkSizeSent:  bulkSizeSent,
 		totalFiles:    totalFiles,
@@ -611,6 +617,9 @@ func DownloadFiles(dev *mtp.Device, storageId uint32, sources []string, destinat
 	if len(cache) > 0 {
 		for _, c := range cache {
 			dfProps.sourceParentPath = c.sourceParentPath
+			dfProps.destinationFileParentPath = c.destinationFileParentPath
+			dfProps.destinationFilePath = c.destinationFilePath
+
 			err := processDownloadFiles(dev, &pInfo, c.fileInfo, progressCb, dfProps)
 
 			if err != nil {
@@ -620,7 +629,6 @@ func DownloadFiles(dev *mtp.Device, storageId uint32, sources []string, destinat
 	} else {
 		for _, source := range sources {
 			_source := fixSlash(source)
-			dfProps.sourceParentPath = filepath.Dir(_source)
 
 			_, err := GetObjectFromPath(dev, storageId, _source)
 			if err != nil {
@@ -632,6 +640,14 @@ func DownloadFiles(dev *mtp.Device, storageId uint32, sources []string, destinat
 					if err != nil {
 						return err
 					}
+
+					sourceParentPath := filepath.Dir(_source)
+					destinationFileParentPath, destinationFilePath := mapSourcePathToDestinationPath(
+						fi.FullPath, sourceParentPath, _destination,
+					)
+					dfProps.sourceParentPath = sourceParentPath
+					dfProps.destinationFileParentPath = destinationFileParentPath
+					dfProps.destinationFilePath = destinationFilePath
 
 					return processDownloadFiles(dev, &pInfo, fi, progressCb, dfProps)
 				})

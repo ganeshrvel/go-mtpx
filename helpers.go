@@ -458,9 +458,6 @@ func walkLocalFiles(sources []string, cb LocalWalkCb) (totalFiles, totalDirector
 }
 
 func processDownloadFiles(dev *mtp.Device, pInfo *ProgressInfo, fi *FileInfo, progressCb ProgressCb, dfProps *processDownloadFilesProps) (err error) {
-	destinationFileParentPath, destinationFilePath := mapSourcePathToDestinationPath(
-		fi.FullPath, dfProps.sourceParentPath, dfProps.destination,
-	)
 
 	// filter out disallowed files
 	if isDisallowedFiles(fi.Name) {
@@ -469,7 +466,7 @@ func processDownloadFiles(dev *mtp.Device, pInfo *ProgressInfo, fi *FileInfo, pr
 
 	// if the object is a directory then create a local directory
 	if fi.IsDir {
-		err := makeLocalDirectory(destinationFilePath)
+		err := makeLocalDirectory(dfProps.destinationFilePath)
 		if err != nil {
 			return err
 		}
@@ -479,8 +476,8 @@ func processDownloadFiles(dev *mtp.Device, pInfo *ProgressInfo, fi *FileInfo, pr
 
 	/// if the object is a file then create one
 	// if the local parent directory does not exists then create one
-	if !fileExistsLocal(destinationFileParentPath) {
-		err := makeLocalDirectory(destinationFileParentPath)
+	if !fileExistsLocal(dfProps.destinationFileParentPath) {
+		err := makeLocalDirectory(dfProps.destinationFileParentPath)
 		if err != nil {
 			return err
 		}
@@ -497,7 +494,7 @@ func processDownloadFiles(dev *mtp.Device, pInfo *ProgressInfo, fi *FileInfo, pr
 
 	// create the local file
 	var prevSentSize int64 = 0
-	err = handleMakeLocalFile(dev, fi, destinationFilePath,
+	err = handleMakeLocalFile(dev, fi, dfProps.destinationFilePath,
 		func(total, sent int64, _ uint32, err error) error {
 			if err != nil {
 				return err
