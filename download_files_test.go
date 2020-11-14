@@ -133,225 +133,6 @@ func TestDownloadFiles(t *testing.T) {
 		So(err, ShouldBeNil)
 	})
 
-	Convey("Single Large file | DownloadFiles", t, func() {
-		// test directories: '4mb_txt_file'
-		destination := newTempMocksDir("test_DownloadTest", true)
-		sourceFile1 := "/mtp-test-files/4mb_txt_file"
-		sources := []string{sourceFile1}
-
-		dirList := []string{"/mtp-test-files/4mb_txt_file"}
-
-		var prevLatestSentTime int64
-		var prevFilesSent int64
-		var prevFilesSentProgress float32
-		var prevCurrentSentProgress float32
-		var prevBulkSentProgress float32
-		var prevBulkSent int64
-		var status TransferStatus
-		var prevSentFileFullPath string
-		totalFiles, totalSize, err := DownloadFiles(dev, sid,
-			sources,
-			destination,
-			false,
-			func(fi *FileInfo, err error) error {
-				if err != nil {
-					return err
-				}
-
-				// this function should not be called
-				count := 0
-				So(count, ShouldNotEqual, count)
-
-				return nil
-			},
-			func(fi *ProgressInfo, err error) error {
-				So(err, ShouldBeNil)
-				So(fi, ShouldNotBeNil)
-
-				So(fi.StartTime.Year(), ShouldBeGreaterThanOrEqualTo, 2020)
-				So(fi.LatestSentTime.UnixNano(), ShouldBeGreaterThan, prevLatestSentTime)
-				prevLatestSentTime = fi.LatestSentTime.UnixNano()
-
-				So(fi.Speed, ShouldBeGreaterThanOrEqualTo, 0)
-				if prevSentFileFullPath != fi.FileInfo.FullPath {
-					So(fi.FilesSent, ShouldEqual, prevFilesSent)
-
-					if fi.Status == InProgress {
-						contains, index := StringContains(dirList, fi.FileInfo.FullPath)
-						So(contains, ShouldEqual, true)
-						dirList = RemoveIndex(dirList, index)
-
-						prevFilesSent += 1
-					}
-
-				}
-				prevSentFileFullPath = fi.FileInfo.FullPath
-
-				So(fi.TotalDirectories, ShouldEqual, 0)
-
-				So(fi.FileInfo.ParentId, ShouldBeGreaterThan, 0)
-				So(fi.FileInfo.FullPath, ShouldStartWith, sources[0])
-
-				So(fi.FilesSentProgress, ShouldBeGreaterThanOrEqualTo, prevFilesSentProgress)
-				prevFilesSentProgress = fi.FilesSentProgress
-
-				// current progress tests
-				So(fi.ActiveFileSize.Total, ShouldBeGreaterThan, 0)
-				So(fi.ActiveFileSize.Sent, ShouldBeLessThanOrEqualTo, fi.ActiveFileSize.Total)
-
-				So(fi.ActiveFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
-				prevCurrentSentProgress = fi.ActiveFileSize.Progress
-
-				// bulk progress tests
-				So(fi.BulkFileSize.Total, ShouldEqual, 0)
-				So(fi.BulkFileSize.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
-				prevBulkSent = fi.BulkFileSize.Sent
-
-				So(fi.BulkFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
-				prevBulkSentProgress = fi.BulkFileSize.Progress
-
-				status = fi.Status
-
-				return nil
-			},
-		)
-
-		So(status, ShouldEqual, Completed)
-		So(err, ShouldBeNil)
-		So(prevFilesSent, ShouldEqual, 1)
-		So(totalFiles, ShouldEqual, 1)
-		So(totalFiles, ShouldEqual, prevFilesSent)
-		So(totalSize, ShouldEqual, 4194304)
-
-		// walk the destination directory on device and verify
-		dirList1 := []string{
-			"4mb_txt_file",
-		}
-
-		_count := 0
-		err = filepath.Walk(getFullPath(destination, "4mb_txt_file"), func(path string, info os.FileInfo, err error) error {
-			So(path, ShouldEndWith, dirList1[_count])
-
-			_count += 1
-			return nil
-		})
-
-		So(err, ShouldBeNil)
-	})
-
-	Convey("Multiple Large files | DownloadFiles", t, func() {
-		// test directories: '4mb_txt_file'
-		destination := newTempMocksDir("test_DownloadTest", true)
-		sourceFile1 := "/mtp-test-files/4mb_txt_file"
-		sourceFile2 := "/mtp-test-files/4mb_txt_file_2"
-		sources := []string{sourceFile1, sourceFile2}
-
-		dirList := []string{
-			"/mtp-test-files/4mb_txt_file",
-			"/mtp-test-files/4mb_txt_file_2",
-		}
-
-		var prevLatestSentTime int64
-		var prevFilesSent int64
-		var prevFilesSentProgress float32
-		var prevCurrentSentProgress float32
-		var prevBulkSentProgress float32
-		var prevBulkSent int64
-		var status TransferStatus
-		var prevSentFileFullPath string
-		totalFiles, totalSize, err := DownloadFiles(dev, sid,
-			sources,
-			destination,
-			false,
-			func(fi *FileInfo, err error) error {
-				if err != nil {
-					return err
-				}
-
-				// this function should not be called
-				count := 0
-				So(count, ShouldNotEqual, count)
-
-				return nil
-			},
-			func(fi *ProgressInfo, err error) error {
-				So(err, ShouldBeNil)
-				So(fi, ShouldNotBeNil)
-
-				So(fi.StartTime.Year(), ShouldBeGreaterThanOrEqualTo, 2020)
-				So(fi.LatestSentTime.UnixNano(), ShouldBeGreaterThan, prevLatestSentTime)
-				prevLatestSentTime = fi.LatestSentTime.UnixNano()
-
-				So(fi.Speed, ShouldBeGreaterThanOrEqualTo, 0)
-				if prevSentFileFullPath != fi.FileInfo.FullPath {
-					So(fi.FilesSent, ShouldEqual, prevFilesSent)
-
-					if fi.Status == InProgress {
-						contains, index := StringContains(dirList, fi.FileInfo.FullPath)
-						So(contains, ShouldEqual, true)
-						dirList = RemoveIndex(dirList, index)
-
-						prevFilesSent += 1
-					}
-
-				}
-				prevSentFileFullPath = fi.FileInfo.FullPath
-
-				So(fi.TotalDirectories, ShouldEqual, 0)
-
-				So(fi.FileInfo.ParentId, ShouldBeGreaterThan, 0)
-				So(fi.FileInfo.FullPath, ShouldStartWith, sources[0])
-
-				So(fi.FilesSentProgress, ShouldBeGreaterThanOrEqualTo, prevFilesSentProgress)
-				prevFilesSentProgress = fi.FilesSentProgress
-
-				// current progress tests
-				So(fi.ActiveFileSize.Total, ShouldBeGreaterThan, 0)
-				So(fi.ActiveFileSize.Sent, ShouldBeLessThanOrEqualTo, fi.ActiveFileSize.Total)
-
-				if prevSentFileFullPath != fi.FileInfo.FullPath {
-					So(fi.ActiveFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
-				}
-				prevCurrentSentProgress = fi.ActiveFileSize.Progress
-
-				// bulk progress tests
-				So(fi.BulkFileSize.Total, ShouldEqual, 0)
-				So(fi.BulkFileSize.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
-				prevBulkSent = fi.BulkFileSize.Sent
-
-				So(fi.BulkFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
-				prevBulkSentProgress = fi.BulkFileSize.Progress
-
-				status = fi.Status
-
-				return nil
-			},
-		)
-
-		So(status, ShouldEqual, Completed)
-		So(err, ShouldBeNil)
-		So(prevFilesSent, ShouldEqual, 2)
-		So(totalFiles, ShouldEqual, 2)
-		So(totalFiles, ShouldEqual, prevFilesSent)
-		So(totalSize, ShouldEqual, 4194304*2)
-
-		// walk the destination directory on device and verify
-		dirList1 := []string{
-			"4mb_txt_file",
-			"4mb_txt_file_2",
-		}
-
-		_count := 0
-		err = filepath.Walk(getFullPath(destination, "4mb_txt_file"), func(path string, info os.FileInfo, err error) error {
-			So(path, ShouldEndWith, dirList1[_count])
-
-			_count += 1
-			return nil
-		})
-
-		So(err, ShouldBeNil)
-	})
-
 	Convey("Multiple directories | Random destination | DownloadFiles", t, func() {
 		// test directories: '/mtp-test-files/mock_dir1' and '/mtp-test-files/mock_dir2'
 
@@ -925,6 +706,225 @@ func TestDownloadFiles(t *testing.T) {
 		So(err, ShouldBeNil)
 	})
 
+	Convey("Single Large file | DownloadFiles", t, func() {
+		// test directories: '4mb_txt_file'
+		destination := newTempMocksDir("test_DownloadTest", true)
+		sourceFile1 := "/mtp-test-files/4mb_txt_file"
+		sources := []string{sourceFile1}
+
+		dirList := []string{"/mtp-test-files/4mb_txt_file"}
+
+		var prevLatestSentTime int64
+		var prevFilesSent int64
+		var prevFilesSentProgress float32
+		var prevCurrentSentProgress float32
+		var prevBulkSentProgress float32
+		var prevBulkSent int64
+		var status TransferStatus
+		var prevSentFileFullPath string
+		totalFiles, totalSize, err := DownloadFiles(dev, sid,
+			sources,
+			destination,
+			false,
+			func(fi *FileInfo, err error) error {
+				if err != nil {
+					return err
+				}
+
+				// this function should not be called
+				count := 0
+				So(count, ShouldNotEqual, count)
+
+				return nil
+			},
+			func(fi *ProgressInfo, err error) error {
+				So(err, ShouldBeNil)
+				So(fi, ShouldNotBeNil)
+
+				So(fi.StartTime.Year(), ShouldBeGreaterThanOrEqualTo, 2020)
+				So(fi.LatestSentTime.UnixNano(), ShouldBeGreaterThan, prevLatestSentTime)
+				prevLatestSentTime = fi.LatestSentTime.UnixNano()
+
+				So(fi.Speed, ShouldBeGreaterThanOrEqualTo, 0)
+				if prevSentFileFullPath != fi.FileInfo.FullPath {
+					So(fi.FilesSent, ShouldEqual, prevFilesSent)
+
+					if fi.Status == InProgress {
+						contains, index := StringContains(dirList, fi.FileInfo.FullPath)
+						So(contains, ShouldEqual, true)
+						dirList = RemoveIndex(dirList, index)
+
+						prevFilesSent += 1
+					}
+
+				}
+				prevSentFileFullPath = fi.FileInfo.FullPath
+
+				So(fi.TotalDirectories, ShouldEqual, 0)
+
+				So(fi.FileInfo.ParentId, ShouldBeGreaterThan, 0)
+				So(fi.FileInfo.FullPath, ShouldStartWith, sources[0])
+
+				So(fi.FilesSentProgress, ShouldBeGreaterThanOrEqualTo, prevFilesSentProgress)
+				prevFilesSentProgress = fi.FilesSentProgress
+
+				// current progress tests
+				So(fi.ActiveFileSize.Total, ShouldBeGreaterThan, 0)
+				So(fi.ActiveFileSize.Sent, ShouldBeLessThanOrEqualTo, fi.ActiveFileSize.Total)
+
+				So(fi.ActiveFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
+				prevCurrentSentProgress = fi.ActiveFileSize.Progress
+
+				// bulk progress tests
+				So(fi.BulkFileSize.Total, ShouldEqual, 0)
+				So(fi.BulkFileSize.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
+				prevBulkSent = fi.BulkFileSize.Sent
+
+				So(fi.BulkFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
+				prevBulkSentProgress = fi.BulkFileSize.Progress
+
+				status = fi.Status
+
+				return nil
+			},
+		)
+
+		So(status, ShouldEqual, Completed)
+		So(err, ShouldBeNil)
+		So(prevFilesSent, ShouldEqual, 1)
+		So(totalFiles, ShouldEqual, 1)
+		So(totalFiles, ShouldEqual, prevFilesSent)
+		So(totalSize, ShouldEqual, 4194304)
+
+		// walk the destination directory on device and verify
+		dirList1 := []string{
+			"4mb_txt_file",
+		}
+
+		_count := 0
+		err = filepath.Walk(getFullPath(destination, "4mb_txt_file"), func(path string, info os.FileInfo, err error) error {
+			So(path, ShouldEndWith, dirList1[_count])
+
+			_count += 1
+			return nil
+		})
+
+		So(err, ShouldBeNil)
+	})
+
+	Convey("Multiple Large files | DownloadFiles", t, func() {
+		// test directories: '4mb_txt_file'
+		destination := newTempMocksDir("test_DownloadTest", true)
+		sourceFile1 := "/mtp-test-files/4mb_txt_file"
+		sourceFile2 := "/mtp-test-files/4mb_txt_file_2"
+		sources := []string{sourceFile1, sourceFile2}
+
+		dirList := []string{
+			"/mtp-test-files/4mb_txt_file",
+			"/mtp-test-files/4mb_txt_file_2",
+		}
+
+		var prevLatestSentTime int64
+		var prevFilesSent int64
+		var prevFilesSentProgress float32
+		var prevCurrentSentProgress float32
+		var prevBulkSentProgress float32
+		var prevBulkSent int64
+		var status TransferStatus
+		var prevSentFileFullPath string
+		totalFiles, totalSize, err := DownloadFiles(dev, sid,
+			sources,
+			destination,
+			false,
+			func(fi *FileInfo, err error) error {
+				if err != nil {
+					return err
+				}
+
+				// this function should not be called
+				count := 0
+				So(count, ShouldNotEqual, count)
+
+				return nil
+			},
+			func(fi *ProgressInfo, err error) error {
+				So(err, ShouldBeNil)
+				So(fi, ShouldNotBeNil)
+
+				So(fi.StartTime.Year(), ShouldBeGreaterThanOrEqualTo, 2020)
+				So(fi.LatestSentTime.UnixNano(), ShouldBeGreaterThan, prevLatestSentTime)
+				prevLatestSentTime = fi.LatestSentTime.UnixNano()
+
+				So(fi.Speed, ShouldBeGreaterThanOrEqualTo, 0)
+				if prevSentFileFullPath != fi.FileInfo.FullPath {
+					So(fi.FilesSent, ShouldEqual, prevFilesSent)
+
+					if fi.Status == InProgress {
+						contains, index := StringContains(dirList, fi.FileInfo.FullPath)
+						So(contains, ShouldEqual, true)
+						dirList = RemoveIndex(dirList, index)
+
+						prevFilesSent += 1
+					}
+
+				}
+				prevSentFileFullPath = fi.FileInfo.FullPath
+
+				So(fi.TotalDirectories, ShouldEqual, 0)
+
+				So(fi.FileInfo.ParentId, ShouldBeGreaterThan, 0)
+				So(fi.FileInfo.FullPath, ShouldStartWith, sources[0])
+
+				So(fi.FilesSentProgress, ShouldBeGreaterThanOrEqualTo, prevFilesSentProgress)
+				prevFilesSentProgress = fi.FilesSentProgress
+
+				// current progress tests
+				So(fi.ActiveFileSize.Total, ShouldBeGreaterThan, 0)
+				So(fi.ActiveFileSize.Sent, ShouldBeLessThanOrEqualTo, fi.ActiveFileSize.Total)
+
+				if prevSentFileFullPath != fi.FileInfo.FullPath {
+					So(fi.ActiveFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevCurrentSentProgress)
+				}
+				prevCurrentSentProgress = fi.ActiveFileSize.Progress
+
+				// bulk progress tests
+				So(fi.BulkFileSize.Total, ShouldEqual, 0)
+				So(fi.BulkFileSize.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
+				prevBulkSent = fi.BulkFileSize.Sent
+
+				So(fi.BulkFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
+				prevBulkSentProgress = fi.BulkFileSize.Progress
+
+				status = fi.Status
+
+				return nil
+			},
+		)
+
+		So(status, ShouldEqual, Completed)
+		So(err, ShouldBeNil)
+		So(prevFilesSent, ShouldEqual, 2)
+		So(totalFiles, ShouldEqual, 2)
+		So(totalFiles, ShouldEqual, prevFilesSent)
+		So(totalSize, ShouldEqual, 4194304*2)
+
+		// walk the destination directory on device and verify
+		dirList1 := []string{
+			"4mb_txt_file",
+			"4mb_txt_file_2",
+		}
+
+		_count := 0
+		err = filepath.Walk(getFullPath(destination, "4mb_txt_file"), func(path string, info os.FileInfo, err error) error {
+			So(path, ShouldEndWith, dirList1[_count])
+
+			_count += 1
+			return nil
+		})
+
+		So(err, ShouldBeNil)
+	})
+
 	var _destination string
 	Convey("Directories and Files | DownloadFiles", t, func() {
 		// test directories: '/mtp-test-files/mock_dir1/' and '/mtp-test-files/mock_dir1/1/a.txt'
@@ -1307,7 +1307,9 @@ func TestDownloadFiles(t *testing.T) {
 					return err
 				}
 
-				So((*fi).FullPath, ShouldEndWith, preprocessingDirList[preprocessingIndex])
+				contains, index := StringContains(preprocessingDirList, (*fi).FullPath)
+				So(contains, ShouldEqual, true)
+				preprocessingDirList = RemoveIndex(preprocessingDirList, index)
 
 				preprocessingIndex += 1
 
@@ -1427,38 +1429,6 @@ func TestDownloadFiles(t *testing.T) {
 			"/mtp-test-files/mock_dir1/2/b.txt",
 		}
 
-		// /mtp-test-files/mock_dir1/3/b.txt
-		//...............
-		// /mtp-test-files/mock_dir1/3/2/b.txt
-		//...............
-		// /mtp-test-files/mock_dir1/a.txt
-		//...............
-		// /mtp-test-files/mock_dir1/2/b.txt
-		//...............
-		// /mtp-test-files/4mb_txt_file
-		// /mtp-test-files/4mb_txt_file_2
-		// /mtp-test-files/mock_dir1/1/a.txt
-		//.............
-		// /mtp-test-files/mock_dir1/1/a.txt
-
-		// /mtp-test-files/4mb_txt_file
-		//
-		// /mtp-test-files/4mb_txt_file_2
-		//
-		// /mtp-test-files/mock_dir1/a.txt
-		//...............
-		// /mtp-test-files/mock_dir1/1/a.txt
-		//...............
-		// /mtp-test-files/mock_dir1/a.txt
-		//...............
-		// /mtp-test-files/mock_dir1/3/b.txt
-		//...............
-		// /mtp-test-files/mock_dir1/3/2/b.txt
-		//...............
-		// /mtp-test-files/mock_dir1/2/b.txt
-		//.............
-		// /mtp-test-files/mock_dir1/2/b.txt
-
 		var prevLatestSentTime int64
 		var prevFilesSent int64
 		var prevFilesSentProgress float32
@@ -1477,7 +1447,9 @@ func TestDownloadFiles(t *testing.T) {
 					return err
 				}
 
-				So((*fi).FullPath, ShouldEndWith, preprocessingDirList[preprocessingIndex])
+				contains, index := StringContains(preprocessingDirList, (*fi).FullPath)
+				So(contains, ShouldEqual, true)
+				preprocessingDirList = RemoveIndex(preprocessingDirList, index)
 
 				preprocessingIndex += 1
 

@@ -7,7 +7,7 @@ import (
 )
 
 //todo remove
-func TestRun(t *testing.T) {
+func testRun(t *testing.T) {
 	dev, err := Initialize(Init{DebugMode: false})
 
 	if err != nil {
@@ -18,6 +18,8 @@ func TestRun(t *testing.T) {
 	if err != nil {
 		log.Panic(err)
 	}
+
+	//pretty.Println(inf)
 
 	storages, err := FetchStorages(dev)
 	if err != nil {

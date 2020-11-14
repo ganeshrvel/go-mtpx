@@ -13,7 +13,6 @@ import (
 // todo: work on documentations
 // todo: hotplug
 // todo: get device info
-//todo : setup download caching
 
 // initialize the mtp device
 // returns mtp device
