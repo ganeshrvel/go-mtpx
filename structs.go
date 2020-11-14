@@ -92,3 +92,15 @@ type FileProp struct {
 	ObjectId uint32
 	FullPath string
 }
+
+type processDownloadFilesProps struct {
+	sourceParentPath, destination                      string
+	bulkFilesSent, bulkSizeSent, totalFiles, totalSize int64
+}
+
+type downloadFilesObjectCache map[uint32]downloadFilesObjectCacheContainer
+
+type downloadFilesObjectCacheContainer struct {
+	fileInfo         *FileInfo
+	sourceParentPath string
+}

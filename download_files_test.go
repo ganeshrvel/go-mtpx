@@ -1427,6 +1427,38 @@ func TestDownloadFiles(t *testing.T) {
 			"/mtp-test-files/mock_dir1/2/b.txt",
 		}
 
+		// /mtp-test-files/mock_dir1/3/b.txt
+		//...............
+		// /mtp-test-files/mock_dir1/3/2/b.txt
+		//...............
+		// /mtp-test-files/mock_dir1/a.txt
+		//...............
+		// /mtp-test-files/mock_dir1/2/b.txt
+		//...............
+		// /mtp-test-files/4mb_txt_file
+		// /mtp-test-files/4mb_txt_file_2
+		// /mtp-test-files/mock_dir1/1/a.txt
+		//.............
+		// /mtp-test-files/mock_dir1/1/a.txt
+
+		// /mtp-test-files/4mb_txt_file
+		//
+		// /mtp-test-files/4mb_txt_file_2
+		//
+		// /mtp-test-files/mock_dir1/a.txt
+		//...............
+		// /mtp-test-files/mock_dir1/1/a.txt
+		//...............
+		// /mtp-test-files/mock_dir1/a.txt
+		//...............
+		// /mtp-test-files/mock_dir1/3/b.txt
+		//...............
+		// /mtp-test-files/mock_dir1/3/2/b.txt
+		//...............
+		// /mtp-test-files/mock_dir1/2/b.txt
+		//.............
+		// /mtp-test-files/mock_dir1/2/b.txt
+
 		var prevLatestSentTime int64
 		var prevFilesSent int64
 		var prevFilesSentProgress float32
@@ -1505,10 +1537,10 @@ func TestDownloadFiles(t *testing.T) {
 
 		So(err, ShouldBeNil)
 		So(status, ShouldEqual, Completed)
-		So(prevFilesSent, ShouldEqual, 2*4)
-		So(totalFiles, ShouldEqual, 2*4)
+		So(prevFilesSent, ShouldEqual, 7)
+		So(totalFiles, ShouldEqual, 7)
 		So(totalFiles, ShouldEqual, prevFilesSent)
-		So(totalSize, ShouldEqual, 8388652)
+		So(totalSize, ShouldEqual, 8388643)
 
 		// walk the destination directory on device and verify
 		dirList1 := []string{

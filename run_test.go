@@ -1,15 +1,13 @@
 package mtpx
 
 import (
-	"fmt"
 	"github.com/kr/pretty"
 	"log"
-	"os"
 	"testing"
 )
 
 //todo remove
-func testRun(t *testing.T) {
+func TestRun(t *testing.T) {
 	dev, err := Initialize(Init{DebugMode: false})
 
 	if err != nil {
@@ -172,37 +170,37 @@ func testRun(t *testing.T) {
 
 	//UploadFiles
 	//start := time.Now()
-	uploadFile1 := getTestMocksAsset("")
-	sources := []string{uploadFile1}
-	destination := "/mtp-test-files/"
-	_, _, _, err = UploadFiles(dev, sid,
-		sources,
-		destination,
-		true,
-		func(fi *os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-
-			fmt.Printf("Preprocessing File name: %s\n", (*fi).Name())
-
-			return nil
-		},
-		func(pi *ProgressInfo, err error) error {
-			fmt.Printf("File name: %s\n", pi.FileInfo.FullPath)
-			fmt.Printf("Total size: %d\n", pi.ActiveFileSize.Total)
-			fmt.Printf("Size sent: %d\n", pi.ActiveFileSize.Sent)
-			fmt.Printf("Speed: %f\n", pi.Speed)
-			//fmt.Printf("Object Id: %d\n", pi.FileInfo.ObjectId)
-			fmt.Printf("ActiveFileSize progress: %f\n", pi.ActiveFileSize.Progress)
-			fmt.Printf("TotalFiles: %d\n", pi.TotalFiles)
-			fmt.Printf("totalDirectories: %d\n", pi.TotalDirectories)
-			fmt.Printf("FilesSent: %d\n", pi.FilesSent)
-			fmt.Printf("FilesSentProgress: %f\n\n\n", pi.FilesSentProgress)
-
-			return nil
-		},
-	)
+	//uploadFile1 := getTestMocksAsset("")
+	//sources := []string{uploadFile1}
+	//destination := "/mtp-test-files/mock_dir1"
+	//_, _, _, err = UploadFiles(dev, sid,
+	//	sources,
+	//	destination,
+	//	true,
+	//	func(fi *os.FileInfo, err error) error {
+	//		if err != nil {
+	//			return err
+	//		}
+	//
+	//		fmt.Printf("Preprocessing File name: %s\n", (*fi).Name())
+	//
+	//		return nil
+	//	},
+	//	func(pi *ProgressInfo, err error) error {
+	//		fmt.Printf("File name: %s\n", pi.FileInfo.FullPath)
+	//		fmt.Printf("Total size: %d\n", pi.ActiveFileSize.Total)
+	//		fmt.Printf("Size sent: %d\n", pi.ActiveFileSize.Sent)
+	//		fmt.Printf("Speed: %f\n", pi.Speed)
+	//		//fmt.Printf("Object Id: %d\n", pi.FileInfo.ObjectId)
+	//		fmt.Printf("ActiveFileSize progress: %f\n", pi.ActiveFileSize.Progress)
+	//		fmt.Printf("TotalFiles: %d\n", pi.TotalFiles)
+	//		fmt.Printf("totalDirectories: %d\n", pi.TotalDirectories)
+	//		fmt.Printf("FilesSent: %d\n", pi.FilesSent)
+	//		fmt.Printf("FilesSentProgress: %f\n\n\n", pi.FilesSentProgress)
+	//
+	//		return nil
+	//	},
+	//)
 
 	//pretty.Println(objectIdDest)
 	//pretty.Println(totalFiles)

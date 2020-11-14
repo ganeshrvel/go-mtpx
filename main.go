@@ -554,6 +554,7 @@ func DownloadFiles(dev *mtp.Device, storageId uint32, sources []string, destinat
 	// if [preprocessFiles] is false then [totalDirectories] is 0
 	var totalSize int64 = 0
 
+	var cache = downloadFilesObjectCache{}
 	if preprocessFiles {
 		for _, source := range sources {
 			_source := fixSlash(source)
@@ -562,6 +563,11 @@ func DownloadFiles(dev *mtp.Device, storageId uint32, sources []string, destinat
 				func(objectId uint32, fi *FileInfo, err error) error {
 					if err != nil {
 						return err
+					}
+
+					cache[objectId] = downloadFilesObjectCacheContainer{
+						fileInfo:         fi,
+						sourceParentPath: filepath.Dir(_source),
 					}
 
 					if fi.IsDir {
@@ -595,120 +601,54 @@ func DownloadFiles(dev *mtp.Device, storageId uint32, sources []string, destinat
 	pInfo.TotalDirectories = totalDirectories
 	pInfo.BulkFileSize.Total = totalSize
 
-	for _, source := range sources {
-		_source := fixSlash(source)
-		sourceParentPath := filepath.Dir(_source)
+	dfProps := &processDownloadFilesProps{
+		destination:   _destination,
+		bulkFilesSent: bulkFilesSent,
+		bulkSizeSent:  bulkSizeSent,
+		totalFiles:    totalFiles,
+		totalSize:     totalSize,
+	}
 
-		_, err := GetObjectFromPath(dev, storageId, _source)
-		if err != nil {
-			return bulkFilesSent, bulkSizeSent, err
+	if len(cache) > 0 {
+		for _, c := range cache {
+			dfProps.sourceParentPath = c.sourceParentPath
+			err := processDownloadFiles(dev, &pInfo, c.fileInfo, progressCb, dfProps)
+
+			if err != nil {
+				return processDownloadFilesError(dfProps, err)
+			}
 		}
+	} else {
+		for _, source := range sources {
+			_source := fixSlash(source)
+			dfProps.sourceParentPath = filepath.Dir(_source)
 
-		_, _, _, err = Walk(dev, storageId, _source, true, false,
-			func(objectId uint32, fi *FileInfo, err error) error {
-				destinationFileParentPath, destinationFilePath := mapSourcePathToDestinationPath(
-					fi.FullPath, sourceParentPath, _destination,
-				)
+			_, err := GetObjectFromPath(dev, storageId, _source)
+			if err != nil {
+				return dfProps.bulkFilesSent, dfProps.bulkSizeSent, err
+			}
 
-				if err != nil {
-					return err
-				}
-
-				// filter out disallowed files
-				if isDisallowedFiles(fi.Name) {
-					return nil
-				}
-
-				// if the object is a directory then create a local directory
-				if fi.IsDir {
-					err := makeLocalDirectory(destinationFilePath)
+			_, _, _, wErr := Walk(dev, storageId, _source, true, false,
+				func(objectId uint32, fi *FileInfo, err error) error {
 					if err != nil {
 						return err
 					}
 
-					return nil
-				}
+					return processDownloadFiles(dev, &pInfo, fi, progressCb, dfProps)
+				})
 
-				/// if the object is a file then create one
-				// if the local parent directory does not exists then create one
-				if !fileExistsLocal(destinationFileParentPath) {
-					err := makeLocalDirectory(destinationFileParentPath)
-					if err != nil {
-						return err
-					}
-				}
-
-				// keep track of [bulkFilesSent]
-				bulkFilesSent += 1
-
-				// keep track of [bulkSizeSent]
-				bulkSizeSent += fi.Size
-
-				pInfo.LatestSentTime = time.Now()
-				pInfo.FileInfo = fi
-
-				// create the local file
-				var prevSentSize int64 = 0
-				err = handleMakeLocalFile(dev, fi, destinationFilePath,
-					func(total, sent int64, _ uint32, err error) error {
-						if err != nil {
-							return err
-						}
-
-						pInfo.ActiveFileSize.Total = total
-						pInfo.ActiveFileSize.Sent = sent
-						pInfo.ActiveFileSize.Progress = Percent(float32(sent), float32(total))
-
-						pInfo.Speed = transferRate(sent-prevSentSize, pInfo.LatestSentTime)
-						if err = progressCb(&pInfo, nil); err != nil {
-							return err
-						}
-
-						pInfo.LatestSentTime = time.Now()
-						prevSentSize = sent
-
-						return nil
-					})
-				if err != nil {
-					return err
-				}
-
-				pInfo.FilesSent = bulkFilesSent
-				pInfo.FilesSentProgress = Percent(float32(bulkFilesSent), float32(totalFiles))
-				pInfo.BulkFileSize.Sent = bulkSizeSent
-				pInfo.BulkFileSize.Progress = Percent(float32(bulkSizeSent), float32(totalSize))
-
-				return nil
-			})
-
-		if err != nil {
-			switch err.(type) {
-			case InvalidPathError:
-				return bulkFilesSent, bulkSizeSent, err
-
-			case *os.PathError:
-				if errors.Is(err, os.ErrPermission) {
-					return bulkFilesSent, bulkSizeSent, FilePermissionError{error: err}
-				}
-
-				if errors.Is(err, os.ErrNotExist) {
-					return bulkFilesSent, bulkSizeSent, InvalidPathError{error: err}
-				}
-
-				return bulkFilesSent, bulkSizeSent, LocalFileError{error: err}
-			default:
-				return bulkFilesSent, bulkSizeSent,
-					FileTransferError{error: fmt.Errorf("an error occured while downloading the files. %+v", err.Error())}
+			if wErr != nil {
+				return processDownloadFilesError(dfProps, wErr)
 			}
 		}
 	}
 
 	pInfo.Status = Completed
 	if err := progressCb(&pInfo, nil); err != nil {
-		return bulkFilesSent, bulkSizeSent, err
+		return dfProps.bulkFilesSent, dfProps.bulkSizeSent, err
 	}
 
-	return bulkFilesSent, bulkSizeSent, nil
+	return dfProps.bulkFilesSent, dfProps.bulkSizeSent, nil
 }
 
 func main() {}

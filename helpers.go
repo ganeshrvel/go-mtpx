@@ -456,3 +456,100 @@ func walkLocalFiles(sources []string, cb LocalWalkCb) (totalFiles, totalDirector
 
 	return totalFiles, totalDirectories, totalSize, nil
 }
+
+func processDownloadFiles(dev *mtp.Device, pInfo *ProgressInfo, fi *FileInfo, progressCb ProgressCb, dfProps *processDownloadFilesProps) (err error) {
+	destinationFileParentPath, destinationFilePath := mapSourcePathToDestinationPath(
+		fi.FullPath, dfProps.sourceParentPath, dfProps.destination,
+	)
+
+	// filter out disallowed files
+	if isDisallowedFiles(fi.Name) {
+		return nil
+	}
+
+	// if the object is a directory then create a local directory
+	if fi.IsDir {
+		err := makeLocalDirectory(destinationFilePath)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	/// if the object is a file then create one
+	// if the local parent directory does not exists then create one
+	if !fileExistsLocal(destinationFileParentPath) {
+		err := makeLocalDirectory(destinationFileParentPath)
+		if err != nil {
+			return err
+		}
+	}
+
+	// keep track of [bulkFilesSent]
+	dfProps.bulkFilesSent += 1
+
+	// keep track of [bulkSizeSent]
+	dfProps.bulkSizeSent += fi.Size
+
+	pInfo.LatestSentTime = time.Now()
+	pInfo.FileInfo = fi
+
+	// create the local file
+	var prevSentSize int64 = 0
+	err = handleMakeLocalFile(dev, fi, destinationFilePath,
+		func(total, sent int64, _ uint32, err error) error {
+			if err != nil {
+				return err
+			}
+
+			pInfo.ActiveFileSize.Total = total
+			pInfo.ActiveFileSize.Sent = sent
+			pInfo.ActiveFileSize.Progress = Percent(float32(sent), float32(total))
+
+			pInfo.Speed = transferRate(sent-prevSentSize, pInfo.LatestSentTime)
+			if err = progressCb(pInfo, nil); err != nil {
+				return err
+			}
+
+			pInfo.LatestSentTime = time.Now()
+			prevSentSize = sent
+
+			return nil
+		})
+	if err != nil {
+		return err
+	}
+
+	pInfo.FilesSent = dfProps.bulkFilesSent
+	pInfo.FilesSentProgress = Percent(float32(dfProps.bulkFilesSent), float32(dfProps.totalFiles))
+	pInfo.BulkFileSize.Sent = dfProps.bulkSizeSent
+	pInfo.BulkFileSize.Progress = Percent(float32(dfProps.bulkSizeSent), float32(dfProps.totalSize))
+
+	return nil
+}
+
+func processDownloadFilesError(dfProps *processDownloadFilesProps, err error) (bulkFilesSent, bulkSizeSent int64, error error) {
+	if err != nil {
+		switch err.(type) {
+		case InvalidPathError:
+			return dfProps.bulkFilesSent, dfProps.bulkSizeSent, err
+
+		case *os.PathError:
+			if errors.Is(err, os.ErrPermission) {
+				return dfProps.bulkFilesSent, dfProps.bulkSizeSent, FilePermissionError{error: err}
+			}
+
+			if errors.Is(err, os.ErrNotExist) {
+				return dfProps.bulkFilesSent, dfProps.bulkSizeSent, InvalidPathError{error: err}
+			}
+
+			return dfProps.bulkFilesSent, dfProps.bulkSizeSent, LocalFileError{error: err}
+		default:
+			return dfProps.bulkFilesSent, dfProps.bulkSizeSent,
+				FileTransferError{error: fmt.Errorf("an error occured while downloading the files. %+v", err.Error())}
+		}
+	}
+
+	return bulkFilesSent, bulkSizeSent, err
+}
