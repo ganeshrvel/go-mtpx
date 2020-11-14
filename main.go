@@ -12,8 +12,8 @@ import (
 
 // todo: work on documentations
 // todo: hotplug
-// todo update go.mod
 // todo: get device info
+//todo : setup download caching
 
 // initialize the mtp device
 // returns mtp device
@@ -279,6 +279,10 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 		_totalFiles, _totalDirectories, _totalSize, err := walkLocalFiles(sources, func(fi *os.FileInfo, err error) error {
 			if err != nil {
 				return err
+			}
+
+			if (*fi).IsDir() {
+				return nil
 			}
 
 			if err = preprocessCb(fi, nil); err != nil {
@@ -560,6 +564,15 @@ func DownloadFiles(dev *mtp.Device, storageId uint32, sources []string, destinat
 						return err
 					}
 
+					if fi.IsDir {
+						return nil
+					}
+
+					// filter out disallowed files
+					if isDisallowedFiles(fi.Name) {
+						return nil
+					}
+
 					if err = preprocessCb(fi, nil); err != nil {
 						return err
 					}
@@ -632,7 +645,7 @@ func DownloadFiles(dev *mtp.Device, storageId uint32, sources []string, destinat
 				bulkSizeSent += fi.Size
 
 				pInfo.LatestSentTime = time.Now()
-				pInfo.FileInfo.ObjectId = fi.ObjectId
+				pInfo.FileInfo = fi
 
 				// create the local file
 				var prevSentSize int64 = 0

@@ -1371,16 +1371,12 @@ func TestUploadFiles(t *testing.T) {
 		dirList := []string{"/mock_dir1/1/a.txt", "/mock_dir1/2/b.txt", "/mock_dir1/3/2/b.txt", "/mock_dir1/3/b.txt", "/mock_dir1/a.txt"}
 
 		preprocessingDirList := []string{
-			"mock_dir1",
-			"1",
 			"a.txt",
-			"2",
-			"b.txt",
-			"3",
-			"2",
 			"b.txt",
 			"b.txt",
-			"a.txt"}
+			"b.txt",
+			"a.txt",
+		}
 		var prevLatestSentTime int64
 		var prevFilesSent int64
 		var prevFilesSentProgress float32
@@ -1521,13 +1517,8 @@ func TestUploadFiles(t *testing.T) {
 			"4mb_txt_file",
 			"4mb_txt_file_2",
 			"a.txt",
-			"mock_dir1",
-			"1",
 			"a.txt",
-			"2",
 			"b.txt",
-			"3",
-			"2",
 			"b.txt",
 			"b.txt",
 			"a.txt"}

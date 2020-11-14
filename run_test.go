@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"github.com/kr/pretty"
 	"log"
+	"os"
 	"testing"
 )
 
-func TestRun(t *testing.T) {
+//todo remove
+func testRun(t *testing.T) {
 	dev, err := Initialize(Init{DebugMode: false})
 
 	if err != nil {
@@ -170,69 +172,67 @@ func TestRun(t *testing.T) {
 
 	//UploadFiles
 	//start := time.Now()
-	//uploadFile1 := getTestMocksAsset("")
-	////uploadFile2 := getTestMocksAsset("mock_dir2")
-	//sources := []string{uploadFile1}
-	//destination := "/mtp-test-files/temp_dir/test_UploadFiles"
-	//_, _, _, err = UploadFiles(dev, sid,
-	//	sources,
-	//	destination,
-	//	true,
-	//	func(fi *os.FileInfo, err error) error {
-	//		if err != nil {
-	//			return err
-	//		}
-	//
-	//		fmt.Printf("Preprocessing File name: %s\n", (*fi).Name())
-	//
-	//		return nil
-	//	},
-	//	func(pi *ProgressInfo, err error) error {
-	//		fmt.Printf("File name: %s\n", pi.FileInfo.FullPath)
-	//		//fmt.Printf("Total size: %d\n", pi.ActiveFileSize.Total)
-	//		//fmt.Printf("Size sent: %d\n", pi.ActiveFileSize.Sent)
-	//		//fmt.Printf("Speed: %f\n", pi.Speed)
-	//		//fmt.Printf("Object Id: %d\n", pi.FileInfo.ObjectId)
-	//		//fmt.Printf("ActiveFileSize progress: %f\n", pi.ActiveFileSize.Progress)
-	//		fmt.Printf("TotalFiles: %d\n", pi.TotalFiles)
-	//		fmt.Printf("totalDirectories: %d\n", pi.TotalDirectories)
-	//		fmt.Printf("FilesSent: %d\n", pi.FilesSent)
-	//		fmt.Printf("FilesSentProgress: %f\n\n\n", pi.FilesSentProgress)
-	//
-	//		return nil
-	//	},
-	//)
+	uploadFile1 := getTestMocksAsset("")
+	sources := []string{uploadFile1}
+	destination := "/mtp-test-files/"
+	_, _, _, err = UploadFiles(dev, sid,
+		sources,
+		destination,
+		true,
+		func(fi *os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("Preprocessing File name: %s\n", (*fi).Name())
+
+			return nil
+		},
+		func(pi *ProgressInfo, err error) error {
+			fmt.Printf("File name: %s\n", pi.FileInfo.FullPath)
+			fmt.Printf("Total size: %d\n", pi.ActiveFileSize.Total)
+			fmt.Printf("Size sent: %d\n", pi.ActiveFileSize.Sent)
+			fmt.Printf("Speed: %f\n", pi.Speed)
+			//fmt.Printf("Object Id: %d\n", pi.FileInfo.ObjectId)
+			fmt.Printf("ActiveFileSize progress: %f\n", pi.ActiveFileSize.Progress)
+			fmt.Printf("TotalFiles: %d\n", pi.TotalFiles)
+			fmt.Printf("totalDirectories: %d\n", pi.TotalDirectories)
+			fmt.Printf("FilesSent: %d\n", pi.FilesSent)
+			fmt.Printf("FilesSentProgress: %f\n\n\n", pi.FilesSentProgress)
+
+			return nil
+		},
+	)
 
 	//pretty.Println(objectIdDest)
 	//pretty.Println(totalFiles)
 	//pretty.Println(totalSize)
 	//pretty.Println("time elapsed: ", time.Since(start).Seconds())
 
-	sourceFile1 := "/mtp-test-files/mock_dir2"
-	destination := newTempMocksAsset("mock_dir2")
-	//totalFiles, totalSize, err := DownloadFiles(dev, sid,
-	_, _, err = DownloadFiles(dev, sid,
-		[]string{sourceFile1}, destination, true,
-		func(fi *FileInfo, err error) error {
-			fmt.Printf("Preprocessing files 'FullPath': %s\n", fi.FullPath)
-			fmt.Printf("Preprocessing files 'Size': %d\n", fi.Size)
-
-			return nil
-		},
-		func(fi *ProgressInfo, err error) error {
-			fmt.Printf("Current filepath: %s\n", fi.FileInfo.FullPath)
-			fmt.Printf("%f MB/s\n", fi.Speed)
-			fmt.Printf("BulkFileSize Total: %d\n", fi.BulkFileSize.Total)
-			fmt.Printf("BulkFileSize Sent: %d\n", fi.BulkFileSize.Sent)
-			fmt.Printf("ActiveFileSize Total: %d\n", fi.ActiveFileSize.Total)
-			fmt.Printf("ActiveFileSize Sent: %d\n\n", fi.ActiveFileSize.Sent)
-
-			return nil
-		},
-	)
-	if err != nil {
-		log.Panic(err)
-	}
+	//sourceFile1 := "/mtp-test-files/mock_dir2"
+	//destination := newTempMocksAsset("mock_dir2")
+	//_, _, err = DownloadFiles(dev, sid,
+	//	[]string{sourceFile1}, destination, true,
+	//	func(fi *FileInfo, err error) error {
+	//		fmt.Printf("Preprocessing files 'FullPath': %s\n", fi.FullPath)
+	//		fmt.Printf("Preprocessing files 'Size': %d\n", fi.Size)
+	//
+	//		return nil
+	//	},
+	//	func(fi *ProgressInfo, err error) error {
+	//		fmt.Printf("Current filepath: %s\n", fi.FileInfo.FullPath)
+	//		fmt.Printf("%f MB/s\n", fi.Speed)
+	//		fmt.Printf("BulkFileSize Total: %d\n", fi.BulkFileSize.Total)
+	//		fmt.Printf("BulkFileSize Sent: %d\n", fi.BulkFileSize.Sent)
+	//		fmt.Printf("ActiveFileSize Total: %d\n", fi.ActiveFileSize.Total)
+	//		fmt.Printf("ActiveFileSize Sent: %d\n\n", fi.ActiveFileSize.Sent)
+	//
+	//		return nil
+	//	},
+	//)
+	//if err != nil {
+	//	log.Panic(err)
+	//}
 
 	Dispose(dev)
 }
