@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+type allowedSecondExtMap map[string]string
+
 type Init struct {
 	DebugMode bool
 }

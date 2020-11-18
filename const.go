@@ -16,3 +16,5 @@ const newLocalDirectoryMode = 0755
 const disallowedFileName = ":*?\"<>|"
 
 var disallowedFiles = []string{".DS_Store", "[-----DS_Store.mtp.test----].txt"}
+
+var allowedSecondExtensions allowedSecondExtMap = map[string]string{"tar": "tar"}
