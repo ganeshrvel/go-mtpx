@@ -65,10 +65,11 @@ func TestMakeDirectory(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(objectId, ShouldBeGreaterThan, 0)
 
-		exists, fi := FileExists(dev, sid, []FileProp{{0, fullpath}})
-
+		fc, err := FileExists(dev, sid, []FileProp{{0, fullpath}})
 		So(err, ShouldBeNil)
-		So(exists, ShouldEqual, true)
+
+		fi := fc[0].FileInfo
+		So(fc[0].Exists, ShouldEqual, true)
 		So(fi.ObjectId, ShouldEqual, objectId)
 		So(fi.IsDir, ShouldEqual, true)
 	})

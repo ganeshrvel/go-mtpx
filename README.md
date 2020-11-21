@@ -12,7 +12,7 @@ Install and setup libusb
 Method 1:
 ```shell script
 # build the binary
-CGO_CFLAGS='-Wno-deprecated-declarations' go build -o build/mtpx .
+CGO_CFLAGS='-Wno-deprecated-declarations' go build -gcflags=-trimpath=$(go env GOPATH) -asmflags=-trimpath=$(go env GOPATH) -o build/mtpx .
 
 # copy libusb
 cp lib/libusb-1.0.0.dylib build/libusb-1.0.0.dylib
@@ -51,7 +51,7 @@ go run ./
 
 Build mtpx
 ```shell script
-CGO_CFLAGS='-Wno-deprecated-declarations' go build -o build/mtpx . && cp libusb.dylib build/libusb.dylib
+CGO_CFLAGS='-Wno-deprecated-declarations' go build -gcflags=-trimpath=$(go env GOPATH) -asmflags=-trimpath=$(go env GOPATH) -o build/mtpx . && cp libusb.dylib build/libusb.dylib
 
 ./build/mtpx
 ```

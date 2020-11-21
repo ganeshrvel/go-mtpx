@@ -118,7 +118,7 @@ func GetObjectFromParentIdAndFilename(dev *mtp.Device, storageId uint32, parentI
 // Since the [parentPath] is unavailable here the [fullPath] property of the resulting object [FileInfo] may not be valid.
 func GetObjectFromPath(dev *mtp.Device, storageId uint32, fullPath string) (fInfo *FileInfo, err error) {
 	if fullPath == "" {
-		return nil, InvalidPathError{error: fmt.Errorf("path does not exists. path: %s", fullPath)}
+		return nil, InvalidPathError{error: fmt.Errorf("path does not Exists. path: %s", fullPath)}
 	}
 
 	_filePath := fixSlash(fullPath)
@@ -230,7 +230,7 @@ func handleMakeDirectory(dev *mtp.Device, storageId, parentId uint32, filename s
 func handleMakeFile(dev *mtp.Device, storageId uint32, obj *mtp.ObjectInfo, fInfo *os.FileInfo, fileBuf *os.File, overwriteExisting bool, progressCb SizeProgressCb) (objectId uint32, err error) {
 	fi, err := GetObjectFromParentIdAndFilename(dev, storageId, obj.ParentObject, obj.Filename)
 
-	// file exists
+	// file Exists
 	if err == nil {
 		// if [overwriteExisting] is false then just return existing [objectId] of the exisiting file
 		if !overwriteExisting {
@@ -244,7 +244,7 @@ func handleMakeFile(dev *mtp.Device, storageId uint32, obj *mtp.ObjectInfo, fInf
 		}
 	} else {
 		switch err.(type) {
-		// if the file does not exists then do nothing
+		// if the file does not Exists then do nothing
 		case FileNotFoundError:
 
 		default:
@@ -475,7 +475,7 @@ func processDownloadFiles(dev *mtp.Device, pInfo *ProgressInfo, fi *FileInfo, pr
 	}
 
 	/// if the object is a file then create one
-	// if the local parent directory does not exists then create one
+	// if the local parent directory does not Exists then create one
 	if !fileExistsLocal(dfProps.destinationFileParentPath) {
 		err := makeLocalDirectory(dfProps.destinationFileParentPath)
 		if err != nil {

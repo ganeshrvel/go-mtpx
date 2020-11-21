@@ -106,3 +106,8 @@ type downloadFilesObjectCacheContainer struct {
 	fileInfo                                                         *FileInfo
 	destinationFileParentPath, destinationFilePath, sourceParentPath string
 }
+
+type FileExistsContainer struct {
+	Exists   bool
+	FileInfo *FileInfo
+}

@@ -81,7 +81,7 @@ func FetchStorages(dev *mtp.Device) ([]StorageData, error) {
 }
 
 // create a new directory recursively using [fullPath]
-// The path will be created if it does not exists
+// The path will be created if it does not Exists
 func MakeDirectory(dev *mtp.Device, storageId uint32, fullPath string) (objectId uint32, err error) {
 	_fullPath := fixSlash(fullPath)
 
@@ -100,7 +100,7 @@ func MakeDirectory(dev *mtp.Device, storageId uint32, fullPath string) (objectId
 		if err != nil {
 			switch err.(type) {
 			case FileNotFoundError:
-				// if object does not exists then create a new directory
+				// if object does not Exists then create a new directory
 				_newObjectId, err := handleMakeDirectory(dev, storageId, objectId, fName)
 				if err != nil {
 					return 0, err
@@ -114,7 +114,7 @@ func MakeDirectory(dev *mtp.Device, storageId uint32, fullPath string) (objectId
 			}
 		}
 
-		// if the object exists but if it's a file then throw an error
+		// if the object Exists but if it's a file then throw an error
 		if !fi.IsDir {
 			return 0, InvalidPathError{error: fmt.Errorf("invalid path: %s. The object is not a directory", fName)}
 		}
@@ -168,36 +168,59 @@ func Walk(dev *mtp.Device, storageId uint32, fullPath string, recursive bool, sk
 	return fi.ObjectId, totalFiles, totalDirectories, nil
 }
 
-// check if a file exists
-// returns exists: bool, isDir: bool, objectId: uint32
+// check if a file Exists
+// returns Exists: bool, isDir: bool, objectId: uint32
 // Since the [parentPath] is unavailable here the [fullPath] property of the resulting object [FileInfo] may not be valid.
-func FileExists(dev *mtp.Device, storageId uint32, fileProps []FileProp) (exists bool, fileInfo *FileInfo) {
+func FileExists(dev *mtp.Device, storageId uint32, fileProps []FileProp) (fc []FileExistsContainer, err error) {
 	for _, fileProp := range fileProps {
 		fi, err := GetObjectFromObjectIdOrPath(dev, storageId, fileProp)
-		fileInfo = fi
 
+		c := FileExistsContainer{}
 		if err != nil {
-			return false, nil
+			switch v := err.(type) {
+			case InvalidPathError:
+				c.Exists = false
+
+			case FileObjectError:
+				switch v1 := v.error.(type) {
+				case mtp.RCError:
+					if v1 == 0x2009 {
+						c.Exists = false
+					}
+				}
+
+			default:
+				return []FileExistsContainer{}, nil
+			}
+
+		} else {
+			c.Exists = true
+			c.FileInfo = fi
 		}
+
+		fc = append(fc, c)
 	}
 
-	return true, fileInfo
+	return fc, nil
 }
 
-// Delete an file/directory
+// Delete a file/directory
 // [objectId] and [fullPath] are optional parameters
 // if [objectId] is not available then [fullPath] will be used to fetch the [objectId]
 // dont leave both [objectId] and [fullPath] empty
 // Tip: use [objectId] whenever possible to avoid traversing down the whole file tree to process and find the [objectId]
 func DeleteFile(dev *mtp.Device, storageId uint32, fileProps []FileProp) error {
 	for _, fileProp := range fileProps {
-		exist, fi := FileExists(dev, storageId, []FileProp{fileProp})
-
-		if !exist {
+		fc, err := FileExists(dev, storageId, []FileProp{fileProp})
+		if err != nil {
 			return nil
 		}
 
-		if err := dev.DeleteObject(fi.ObjectId); err != nil {
+		if !fc[0].Exists {
+			return nil
+		}
+
+		if err := dev.DeleteObject(fc[0].FileInfo.ObjectId); err != nil {
 			return FileObjectError{error: err}
 		}
 	}
@@ -213,11 +236,16 @@ func DeleteFile(dev *mtp.Device, storageId uint32, fileProps []FileProp) error {
 // return
 // [objectId]: objectId of the file/diectory
 func RenameFile(dev *mtp.Device, storageId uint32, fileProp FileProp, newFileName string) (objectId uint32, err error) {
-	exist, fi := FileExists(dev, storageId, []FileProp{fileProp})
+	fc, err := FileExists(dev, storageId, []FileProp{fileProp})
+	if err != nil {
+		return 0, err
+	}
 
-	if !exist {
+	if !fc[0].Exists {
 		return 0, InvalidPathError{error: fmt.Errorf("file not found: %s", fileProp.FullPath)}
 	}
+
+	fi := fc[0].FileInfo
 
 	if err := dev.SetObjectPropValue(fi.ObjectId, mtp.OPC_ObjectFileName, &mtp.StringValue{Value: newFileName}); err != nil {
 		switch v := err.(type) {
@@ -347,7 +375,7 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 
 				// if the object is a directory then create a directory using [MakeDirectory] or [MakeDirectory]
 				if isDir {
-					// if the parent path exists within the [destinationFilesDict] then fetch the [parentId] (value) and make the destination directory
+					// if the parent path Exists within the [destinationFilesDict] then fetch the [parentId] (value) and make the destination directory
 					if _, ok := destinationFilesDict[destinationParentPath]; ok {
 						objId, err := MakeDirectory(dev, storageId, destinationFilePath)
 						if err != nil {
@@ -357,7 +385,7 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 						// append the current objectId to [destinationFilesDict]
 						destinationFilesDict[destinationFilePath] = objId
 
-						// if the parent path DOES NOT exists within the [destinationFilesDict] create a new directory using costlier [MakeDirectory] method
+						// if the parent path DOES NOT Exists within the [destinationFilesDict] create a new directory using costlier [MakeDirectory] method
 						// this is a fallback situation
 					} else {
 						objId, err := MakeDirectory(dev, storageId, _destination)
@@ -377,11 +405,11 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 
 				_parentId, ok := destinationFilesDict[destinationParentPath]
 				if ok {
-					// if [destinationParentPath] exists within [destinationFilesDict] then use the value of the [destinationFilesDict] item as [parentId]
+					// if [destinationParentPath] Exists within [destinationFilesDict] then use the value of the [destinationFilesDict] item as [parentId]
 					fileParentId = _parentId
 
 				} else {
-					// if [destinationParentPath] DOES NOT exists within [destinationFilesDict] then create the parent directory using [MakeDirectory] and use the resulting objId as [parentId]
+					// if [destinationParentPath] DOES NOT Exists within [destinationFilesDict] then create the parent directory using [MakeDirectory] and use the resulting objId as [parentId]
 					objId, err := MakeDirectory(dev, storageId, destinationParentPath)
 
 					if err != nil {

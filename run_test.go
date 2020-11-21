@@ -65,8 +65,8 @@ func testRun(t *testing.T) {
 	//	log.Panicln(err)
 	//}
 	//filePath := getTestMocksAsset("mock_dir1/[-----DS_Store.mtp.test----].txt")
-	//exists, _ := FileExists(dev, sid, 0, filePath)
-	//if !exists {
+	//Exists, _ := FileExists(dev, sid, 0, filePath)
+	//if !Exists {
 	//	destination := "/mtp-test-files/mock_dir1"
 	//	fName := "[-----DS_Store.mtp.test----].txt"
 	//
@@ -85,7 +85,7 @@ func testRun(t *testing.T) {
 	//		ModificationDate: time.Now(),
 	//	}
 	//
-	//	fileInfo, err := os.Lstat(filePath)
+	//	FileInfo, err := os.Lstat(filePath)
 	//	if err != nil {
 	//		log.Fatal(err)
 	//	}
@@ -95,7 +95,7 @@ func testRun(t *testing.T) {
 	//		log.Fatal(err)
 	//	}
 	//
-	//	_, err = handleMakeFile(dev, sid, &fObj, &fileInfo, fileBuf, true, func(total, sent int64, objectId uint32, err error) error {
+	//	_, err = handleMakeFile(dev, sid, &fObj, &FileInfo, fileBuf, true, func(total, sent int64, objectId uint32, err error) error {
 	//
 	//		return nil
 	//	})
@@ -149,10 +149,10 @@ func testRun(t *testing.T) {
 	//
 
 	// FileExists
-	//exists := FileExists(dev, Sid, 0, "/tests/test.txt")
+	//Exists := FileExists(dev, Sid, 0, "/tests/test.txt")
 	//
 	//pretty.Println("======\n")
-	//pretty.Println("Does File exists:", exists)
+	//pretty.Println("Does File Exists:", Exists)
 
 	///DeleteFile
 	//err = DeleteFile(dev, Sid, 0, "/mtp-test-files/temp_dir/this is a test")

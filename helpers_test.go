@@ -238,8 +238,11 @@ func TestFileExists(t *testing.T) {
 
 	Convey("Testing valid file | filepath | FileExists", t, func() {
 		// test the directory '/mtp-test-files'
-		exists, fi := FileExists(dev, sid, []FileProp{{0, "/mtp-test-files/"}})
-		So(exists, ShouldEqual, true)
+		fc, err := FileExists(dev, sid, []FileProp{{0, "/mtp-test-files/"}})
+		So(err, ShouldBeNil)
+		fi := fc[0].FileInfo
+
+		So(fc[0].Exists, ShouldEqual, true)
 		So(fi.ObjectId, ShouldBeGreaterThan, 0)
 		So(fi.IsDir, ShouldEqual, true)
 		if fi.IsDir {
@@ -249,8 +252,11 @@ func TestFileExists(t *testing.T) {
 		}
 
 		// test the file '/mtp-test-files/a.txt'
-		exists, fi = FileExists(dev, sid, []FileProp{{0, "/mtp-test-files/a.txt"}})
-		So(exists, ShouldEqual, true)
+		fc, err = FileExists(dev, sid, []FileProp{{0, "/mtp-test-files/a.txt"}})
+		So(err, ShouldBeNil)
+		fi = fc[0].FileInfo
+
+		So(fc[0].Exists, ShouldEqual, true)
 		So(fi.ObjectId, ShouldBeGreaterThan, 0)
 		So(fi.IsDir, ShouldEqual, false)
 		if fi.IsDir {
@@ -260,8 +266,11 @@ func TestFileExists(t *testing.T) {
 		}
 
 		// test the directory 'mtp-test-files/'
-		exists, fi = FileExists(dev, sid, []FileProp{{0, "mtp-test-files/"}})
-		So(exists, ShouldEqual, true)
+		fc, err = FileExists(dev, sid, []FileProp{{0, "mtp-test-files/"}})
+		So(err, ShouldBeNil)
+		fi = fc[0].FileInfo
+
+		So(fc[0].Exists, ShouldEqual, true)
 		So(fi.ObjectId, ShouldBeGreaterThan, 0)
 		So(fi.IsDir, ShouldEqual, true)
 		if fi.IsDir {
@@ -271,8 +280,11 @@ func TestFileExists(t *testing.T) {
 		}
 
 		// test the directory 'mtp-test-files'
-		exists, fi = FileExists(dev, sid, []FileProp{{0, "mtp-test-files"}})
-		So(exists, ShouldEqual, true)
+		fc, err = FileExists(dev, sid, []FileProp{{0, "mtp-test-files"}})
+		So(err, ShouldBeNil)
+		fi = fc[0].FileInfo
+
+		So(fc[0].Exists, ShouldEqual, true)
 		So(fi.ObjectId, ShouldBeGreaterThan, 0)
 		So(fi.IsDir, ShouldEqual, true)
 		if fi.IsDir {
@@ -282,8 +294,11 @@ func TestFileExists(t *testing.T) {
 		}
 
 		// test the file '/mtp-test-files/a.txt/'
-		exists, fi = FileExists(dev, sid, []FileProp{{0, "/mtp-test-files/a.txt/"}})
-		So(exists, ShouldEqual, true)
+		fc, err = FileExists(dev, sid, []FileProp{{0, "/mtp-test-files/a.txt/"}})
+		So(err, ShouldBeNil)
+		fi = fc[0].FileInfo
+
+		So(fc[0].Exists, ShouldEqual, true)
 		So(fi.ObjectId, ShouldBeGreaterThan, 0)
 		So(fi.IsDir, ShouldEqual, false)
 		if fi.IsDir {
@@ -307,8 +322,11 @@ func TestFileExists(t *testing.T) {
 
 		_objectId := fi.ObjectId
 
-		exists, fi := FileExists(dev, sid, []FileProp{{_objectId, "/mtp-test-files"}})
-		So(exists, ShouldEqual, true)
+		fc, err := FileExists(dev, sid, []FileProp{{_objectId, "/mtp-test-files"}})
+		So(err, ShouldBeNil)
+		fi = fc[0].FileInfo
+
+		So(fc[0].Exists, ShouldEqual, true)
 		So(fi.ObjectId, ShouldEqual, _objectId)
 		So(fi.IsDir, ShouldEqual, true)
 		if fi.IsDir {
@@ -330,8 +348,11 @@ func TestFileExists(t *testing.T) {
 
 		_objectId = fi.ObjectId
 
-		exists, fi = FileExists(dev, sid, []FileProp{{_objectId, "/mtp-test-files/a.txt"}})
-		So(exists, ShouldEqual, true)
+		fc, err = FileExists(dev, sid, []FileProp{{_objectId, "/mtp-test-files/a.txt"}})
+		So(err, ShouldBeNil)
+		fi = fc[0].FileInfo
+
+		So(fc[0].Exists, ShouldEqual, true)
 		So(fi.ObjectId, ShouldEqual, _objectId)
 		So(fi.IsDir, ShouldEqual, false)
 		if fi.IsDir {
@@ -351,8 +372,11 @@ func TestFileExists(t *testing.T) {
 		_objectId1 := fi1.ObjectId
 		_objectId2 := fi2.ObjectId
 
-		exists, _fi1 := FileExists(dev, sid, []FileProp{{ObjectId: _objectId1}})
-		So(exists, ShouldEqual, true)
+		fc, err := FileExists(dev, sid, []FileProp{{ObjectId: _objectId1}})
+		So(err, ShouldBeNil)
+		_fi1 := fc[0].FileInfo
+
+		So(fc[0].Exists, ShouldEqual, true)
 		if fi1.IsDir {
 			So(fi1.Size, ShouldEqual, 0)
 		} else {
@@ -364,8 +388,11 @@ func TestFileExists(t *testing.T) {
 			So(fi2.Size, ShouldBeGreaterThanOrEqualTo, 0)
 		}
 
-		exists, _fi2 := FileExists(dev, sid, []FileProp{{ObjectId: _objectId2}})
-		So(exists, ShouldEqual, true)
+		fc, err = FileExists(dev, sid, []FileProp{{ObjectId: _objectId2}})
+		So(err, ShouldBeNil)
+		_fi2 := fc[0].FileInfo
+
+		So(fc[0].Exists, ShouldEqual, true)
 		if fi1.IsDir {
 			So(fi1.Size, ShouldEqual, 0)
 		} else {
@@ -394,8 +421,11 @@ func TestFileExists(t *testing.T) {
 		_objectId1 := fi1.ObjectId
 		_objectId2 := fi2.ObjectId
 
-		exists, _fi1 := FileExists(dev, sid, []FileProp{{FullPath: "/mtp-test-files/mock_dir1/a.txt"}})
-		So(exists, ShouldEqual, true)
+		fc, err := FileExists(dev, sid, []FileProp{{FullPath: "/mtp-test-files/mock_dir1/a.txt"}})
+		So(err, ShouldBeNil)
+		_fi1 := fc[0].FileInfo
+
+		So(fc[0].Exists, ShouldEqual, true)
 		if fi1.IsDir {
 			So(fi1.Size, ShouldEqual, 0)
 		} else {
@@ -407,8 +437,11 @@ func TestFileExists(t *testing.T) {
 			So(fi2.Size, ShouldBeGreaterThanOrEqualTo, 0)
 		}
 
-		exists, _fi2 := FileExists(dev, sid, []FileProp{{FullPath: "/mtp-test-files/a.txt"}})
-		So(exists, ShouldEqual, true)
+		fc, err = FileExists(dev, sid, []FileProp{{FullPath: "/mtp-test-files/a.txt"}})
+		So(err, ShouldBeNil)
+		_fi2 := fc[0].FileInfo
+
+		So(fc[0].Exists, ShouldEqual, true)
 		if fi1.IsDir {
 			So(fi1.Size, ShouldEqual, 0)
 		} else {
@@ -429,13 +462,19 @@ func TestFileExists(t *testing.T) {
 
 	Convey("Testing non existing file | FileExists | Should throw error", t, func() {
 		// test the directory '/fake'
-		exists, fi := FileExists(dev, sid, []FileProp{{0, "/fake/"}})
-		So(exists, ShouldEqual, false)
+		fc, err := FileExists(dev, sid, []FileProp{{0, "/fake/"}})
+		So(err, ShouldBeNil)
+
+		fi := fc[0].FileInfo
+		So(fc[0].Exists, ShouldEqual, false)
 		So(fi, ShouldBeNil)
 
 		// test the file '/mtp-test-files/fake.txt'
-		exists, fi = FileExists(dev, sid, []FileProp{{0, "/mtp-test-files/fake.txt"}})
-		So(exists, ShouldEqual, false)
+		fc, err = FileExists(dev, sid, []FileProp{{0, "/mtp-test-files/fake.txt"}})
+		So(err, ShouldBeNil)
+
+		fi = fc[0].FileInfo
+		So(fc[0].Exists, ShouldEqual, false)
 		So(fi, ShouldBeNil)
 	})
 
