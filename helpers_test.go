@@ -372,7 +372,7 @@ func TestFileExists(t *testing.T) {
 		_objectId1 := fi1.ObjectId
 		_objectId2 := fi2.ObjectId
 
-		fc, err := FileExists(dev, sid, []FileProp{{ObjectId: _objectId1}})
+		fc, err := FileExists(dev, sid, []FileProp{{ObjectId: _objectId1}, {ObjectId: _objectId2}})
 		So(err, ShouldBeNil)
 		_fi1 := fc[0].FileInfo
 
@@ -388,11 +388,10 @@ func TestFileExists(t *testing.T) {
 			So(fi2.Size, ShouldBeGreaterThanOrEqualTo, 0)
 		}
 
-		fc, err = FileExists(dev, sid, []FileProp{{ObjectId: _objectId2}})
 		So(err, ShouldBeNil)
-		_fi2 := fc[0].FileInfo
+		_fi2 := fc[1].FileInfo
 
-		So(fc[0].Exists, ShouldEqual, true)
+		So(fc[1].Exists, ShouldEqual, true)
 		if fi1.IsDir {
 			So(fi1.Size, ShouldEqual, 0)
 		} else {
@@ -421,7 +420,7 @@ func TestFileExists(t *testing.T) {
 		_objectId1 := fi1.ObjectId
 		_objectId2 := fi2.ObjectId
 
-		fc, err := FileExists(dev, sid, []FileProp{{FullPath: "/mtp-test-files/mock_dir1/a.txt"}})
+		fc, err := FileExists(dev, sid, []FileProp{{FullPath: fi1.FullPath}, {FullPath: fi2.FullPath}})
 		So(err, ShouldBeNil)
 		_fi1 := fc[0].FileInfo
 
@@ -437,11 +436,9 @@ func TestFileExists(t *testing.T) {
 			So(fi2.Size, ShouldBeGreaterThanOrEqualTo, 0)
 		}
 
-		fc, err = FileExists(dev, sid, []FileProp{{FullPath: "/mtp-test-files/a.txt"}})
-		So(err, ShouldBeNil)
-		_fi2 := fc[0].FileInfo
+		_fi2 := fc[1].FileInfo
 
-		So(fc[0].Exists, ShouldEqual, true)
+		So(fc[1].Exists, ShouldEqual, true)
 		if fi1.IsDir {
 			So(fi1.Size, ShouldEqual, 0)
 		} else {
@@ -475,6 +472,90 @@ func TestFileExists(t *testing.T) {
 
 		fi = fc[0].FileInfo
 		So(fc[0].Exists, ShouldEqual, false)
+		So(fi, ShouldBeNil)
+
+		// test a fake objectId
+		fc, err = FileExists(dev, sid, []FileProp{{ObjectId: uint32(987654754)}})
+		So(err, ShouldBeNil)
+
+		fi = fc[0].FileInfo
+		So(fc[0].Exists, ShouldEqual, false)
+		So(fi, ShouldBeNil)
+	})
+
+	Convey("Testing non existent and existent files | FileExists | Should throw error", t, func() {
+		// test the a valid file and fake file '/fake' and "/mtp-test-files/mock_dir1/a.txt"
+		fc, err := FileExists(dev, sid, []FileProp{{FullPath: "/fake/"}, {FullPath: "/mtp-test-files/mock_dir1/a.txt"}})
+		So(err, ShouldBeNil)
+
+		fi := fc[0].FileInfo
+		So(fc[0].Exists, ShouldEqual, false)
+		So(fi, ShouldBeNil)
+
+		fi = fc[1].FileInfo
+		So(fc[1].Exists, ShouldEqual, true)
+		So(fi, ShouldNotBeNil)
+
+		// test the a valid file and fake file  "/mtp-test-files/mock_dir1" && '/fake'
+		fc, err = FileExists(dev, sid, []FileProp{{FullPath: "/mtp-test-files/mock_dir1/a.txt"}, {FullPath: "/fake/"}})
+		So(err, ShouldBeNil)
+
+		fi = fc[0].FileInfo
+		So(fc[0].Exists, ShouldEqual, true)
+		So(fi, ShouldNotBeNil)
+
+		fi = fc[1].FileInfo
+		So(fc[1].Exists, ShouldEqual, false)
+		So(fi, ShouldBeNil)
+
+		// test the a valid file and fake object id: "/mtp-test-files/mock_dir1" and uint32('987654754')
+		fc, err = FileExists(dev, sid, []FileProp{{FullPath: "/mtp-test-files/mock_dir1/a.txt"}, {ObjectId: uint32(987654754)}})
+		So(err, ShouldBeNil)
+
+		fi = fc[0].FileInfo
+		So(fc[0].Exists, ShouldEqual, true)
+		So(fi, ShouldNotBeNil)
+
+		fi = fc[1].FileInfo
+		So(fc[1].Exists, ShouldEqual, false)
+		So(fi, ShouldBeNil)
+	})
+
+	Convey("Testing multiple non existent files | FileExists | Should throw error", t, func() {
+		// test the files '/fake' and "/mtp-test-files/fake.txt"
+		fc, err := FileExists(dev, sid, []FileProp{{FullPath: "/fake/"}, {FullPath: "/mtp-test-files/fake.txt"}})
+		So(err, ShouldBeNil)
+
+		fi := fc[0].FileInfo
+		So(fc[0].Exists, ShouldEqual, false)
+		So(fi, ShouldBeNil)
+
+		fi = fc[1].FileInfo
+		So(fc[1].Exists, ShouldEqual, false)
+		So(fi, ShouldBeNil)
+
+		//// test the file '/mtp-test-files/fake.txt' and a fake ObjectId
+		fc, err = FileExists(dev, sid, []FileProp{{ObjectId: uint32(987654754)}, {FullPath: "/mtp-test-files/fake.txt"}})
+		So(err, ShouldBeNil)
+
+		fi = fc[0].FileInfo
+		So(fc[0].Exists, ShouldEqual, false)
+		So(fi, ShouldBeNil)
+
+		fi = fc[1].FileInfo
+		So(fc[1].Exists, ShouldEqual, false)
+		So(fi, ShouldBeNil)
+
+		//// test the multiple fake ObjectIds
+		fc, err = FileExists(dev, sid, []FileProp{{ObjectId: uint32(987654754)}, {ObjectId: uint32(987654700)}})
+		So(err, ShouldBeNil)
+
+		fi = fc[0].FileInfo
+		So(fc[0].Exists, ShouldEqual, false)
+		So(fi, ShouldBeNil)
+
+		fi = fc[1].FileInfo
+		So(fc[1].Exists, ShouldEqual, false)
 		So(fi, ShouldBeNil)
 	})
 
