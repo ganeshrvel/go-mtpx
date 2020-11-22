@@ -1031,7 +1031,9 @@ func TestUploadFiles(t *testing.T) {
 
 				// bulk progress tests
 				So(fi.BulkFileSize.Total, ShouldEqual, 0)
-				So(fi.BulkFileSize.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
+
+				So(fi.BulkFileSize.Sent, ShouldEqual, fi.ActiveFileSize.Sent)
+
 				prevBulkSent = fi.BulkFileSize.Sent
 
 				So(fi.BulkFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
@@ -1048,6 +1050,7 @@ func TestUploadFiles(t *testing.T) {
 		So(totalFiles, ShouldEqual, 1)
 		So(totalFiles, ShouldEqual, prevFilesSent)
 		So(totalSize, ShouldEqual, 4194304)
+		So(totalSize, ShouldEqual, prevBulkSent)
 		So(status, ShouldEqual, Completed)
 
 		//walk the directory on device and verify
@@ -1157,7 +1160,8 @@ func TestUploadFiles(t *testing.T) {
 
 				// bulk progress tests
 				So(fi.BulkFileSize.Total, ShouldEqual, 0)
-				So(fi.BulkFileSize.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
+
+				So(fi.BulkFileSize.Sent, ShouldBeGreaterThanOrEqualTo, fi.ActiveFileSize.Sent)
 				prevBulkSent = fi.BulkFileSize.Sent
 
 				So(fi.BulkFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
@@ -1176,6 +1180,7 @@ func TestUploadFiles(t *testing.T) {
 		So(totalFiles, ShouldEqual, 1*2)
 		So(totalFiles, ShouldEqual, prevFilesSent)
 		So(totalSize, ShouldEqual, 4194304*2)
+		So(totalSize, ShouldEqual, prevBulkSent)
 		So(status, ShouldEqual, Completed)
 
 		//walk the directory on device and verify
@@ -1319,6 +1324,7 @@ func TestUploadFiles(t *testing.T) {
 		So(totalFiles, ShouldEqual, 1*8)
 		So(totalFiles, ShouldEqual, prevFilesSent)
 		So(totalSize, ShouldEqual, 8388652)
+		So(totalSize, ShouldEqual, prevBulkSent)
 		So(status, ShouldEqual, Completed)
 
 		//walk the directory on device and verify
@@ -1453,6 +1459,7 @@ func TestUploadFiles(t *testing.T) {
 		So(totalFiles, ShouldEqual, 5)
 		So(totalFiles, ShouldEqual, prevFilesSent)
 		So(totalSize, ShouldEqual, 35)
+		So(totalSize, ShouldEqual, prevBulkSent)
 		So(status, ShouldEqual, Completed)
 
 		fi, err := GetObjectFromPath(dev, sid, destination)
@@ -1609,6 +1616,7 @@ func TestUploadFiles(t *testing.T) {
 		So(totalFiles, ShouldEqual, 1*8)
 		So(totalFiles, ShouldEqual, prevFilesSent)
 		So(totalSize, ShouldEqual, 8388652)
+		So(totalSize, ShouldEqual, prevBulkSent)
 		So(status, ShouldEqual, Completed)
 
 		//walk the directory on device and verify

@@ -301,6 +301,9 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 	// if [preprocessFiles] is false then [totalDirectories] is 0
 	var totalSize int64 = 0
 
+	// keep track of [bulkSizeSent]
+	bulkSizeSent = 0
+
 	if preprocessFiles {
 		_totalFiles, _totalDirectories, _totalSize, err := walkLocalFiles(sources, func(fi *os.FileInfo, fullPath string, err error) error {
 			if err != nil {
@@ -450,9 +453,6 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 				// keep track of [bulkFilesSent]
 				bulkFilesSent += 1
 
-				// keep track of [bulkSizeSent]
-				bulkSizeSent += size
-
 				pInfo.FileInfo = &FileInfo{
 					Info:       &fObj,
 					Size:       size,
@@ -481,7 +481,13 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 						pInfo.ActiveFileSize.Sent = sent
 						pInfo.ActiveFileSize.Progress = Percent(float32(sent), float32(total))
 
-						pInfo.Speed = transferRate(sent-prevSentSize, pInfo.LatestSentTime)
+						chunkSize := sent - prevSentSize
+						bulkSizeSent += chunkSize
+
+						pInfo.BulkFileSize.Sent = bulkSizeSent
+						pInfo.BulkFileSize.Progress = Percent(float32(bulkSizeSent), float32(totalSize))
+
+						pInfo.Speed = transferRate(chunkSize, pInfo.LatestSentTime)
 						if err = progressCb(&pInfo, nil); err != nil {
 							return err
 						}
@@ -499,8 +505,6 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 
 				pInfo.FilesSent = bulkFilesSent
 				pInfo.FilesSentProgress = Percent(float32(bulkFilesSent), float32(totalFiles))
-				pInfo.BulkFileSize.Sent = bulkSizeSent
-				pInfo.BulkFileSize.Progress = Percent(float32(bulkSizeSent), float32(totalSize))
 
 				pInfo.FileInfo.ObjectId = objId
 
