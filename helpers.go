@@ -485,9 +485,6 @@ func processDownloadFiles(dev *mtp.Device, pInfo *ProgressInfo, fi *FileInfo, pr
 	// keep track of [bulkFilesSent]
 	dfProps.bulkFilesSent += 1
 
-	// keep track of [bulkSizeSent]
-	dfProps.bulkSizeSent += fi.Size
-
 	pInfo.LatestSentTime = time.Now()
 	pInfo.FileInfo = fi
 
@@ -503,7 +500,13 @@ func processDownloadFiles(dev *mtp.Device, pInfo *ProgressInfo, fi *FileInfo, pr
 			pInfo.ActiveFileSize.Sent = sent
 			pInfo.ActiveFileSize.Progress = Percent(float32(sent), float32(total))
 
-			pInfo.Speed = transferRate(sent-prevSentSize, pInfo.LatestSentTime)
+			chunkSize := sent - prevSentSize
+			dfProps.bulkSizeSent += chunkSize
+
+			pInfo.BulkFileSize.Sent = dfProps.bulkSizeSent
+			pInfo.BulkFileSize.Progress = Percent(float32(dfProps.bulkSizeSent), float32(dfProps.totalSize))
+
+			pInfo.Speed = transferRate(chunkSize, pInfo.LatestSentTime)
 			if err = progressCb(pInfo, nil); err != nil {
 				return err
 			}
@@ -519,8 +522,6 @@ func processDownloadFiles(dev *mtp.Device, pInfo *ProgressInfo, fi *FileInfo, pr
 
 	pInfo.FilesSent = dfProps.bulkFilesSent
 	pInfo.FilesSentProgress = Percent(float32(dfProps.bulkFilesSent), float32(dfProps.totalFiles))
-	pInfo.BulkFileSize.Sent = dfProps.bulkSizeSent
-	pInfo.BulkFileSize.Progress = Percent(float32(dfProps.bulkSizeSent), float32(dfProps.totalSize))
 
 	return nil
 }

@@ -777,7 +777,7 @@ func TestDownloadFiles(t *testing.T) {
 
 				// bulk progress tests
 				So(fi.BulkFileSize.Total, ShouldEqual, 0)
-				So(fi.BulkFileSize.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
+				So(fi.BulkFileSize.Sent, ShouldEqual, fi.ActiveFileSize.Sent)
 				prevBulkSent = fi.BulkFileSize.Sent
 
 				So(fi.BulkFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
@@ -795,6 +795,7 @@ func TestDownloadFiles(t *testing.T) {
 		So(totalFiles, ShouldEqual, 1)
 		So(totalFiles, ShouldEqual, prevFilesSent)
 		So(totalSize, ShouldEqual, 4194304)
+		So(totalSize, ShouldEqual, prevBulkSent)
 
 		// walk the destination directory on device and verify
 		dirList1 := []string{
@@ -890,6 +891,7 @@ func TestDownloadFiles(t *testing.T) {
 				// bulk progress tests
 				So(fi.BulkFileSize.Total, ShouldEqual, 0)
 				So(fi.BulkFileSize.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
+
 				prevBulkSent = fi.BulkFileSize.Sent
 
 				So(fi.BulkFileSize.Progress, ShouldBeGreaterThanOrEqualTo, prevBulkSentProgress)
