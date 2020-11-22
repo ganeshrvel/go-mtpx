@@ -95,18 +95,17 @@ func GetObjectFromParentIdAndFilename(dev *mtp.Device, storageId uint32, parentI
 
 		// if the ObjectFileName doesn't match the [filename] then skip the current iteration
 		// this will avoid fetching the whole object properties and improve the performance a bit.
-		if val.Value != filename {
+		if !strings.EqualFold(val.Value, filename) {
 			continue
 		}
 
 		fi, err := GetObjectFromObjectId(dev, objectId, "")
-
 		if err != nil {
 			return nil, FileObjectError{error: err}
 		}
 
 		// return the current objectId if the filename == fi.Name
-		if fi.Name == filename {
+		if strings.EqualFold(fi.Name, filename) {
 			return fi, nil
 		}
 	}
