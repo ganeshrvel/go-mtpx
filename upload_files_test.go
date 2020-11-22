@@ -40,7 +40,7 @@ func TestUploadFiles(t *testing.T) {
 			sources,
 			destination,
 			false,
-			func(fi *os.FileInfo, err error) error {
+			func(fi *os.FileInfo, fullPath string, err error) error {
 				if err != nil {
 					return err
 				}
@@ -127,7 +127,7 @@ func TestUploadFiles(t *testing.T) {
 			sources,
 			destination,
 			false,
-			func(fi *os.FileInfo, err error) error {
+			func(fi *os.FileInfo, fullPath string, err error) error {
 				if err != nil {
 					return err
 				}
@@ -251,7 +251,7 @@ func TestUploadFiles(t *testing.T) {
 			sources,
 			destination,
 			false,
-			func(fi *os.FileInfo, err error) error {
+			func(fi *os.FileInfo, fullPath string, err error) error {
 				if err != nil {
 					return err
 				}
@@ -385,7 +385,7 @@ func TestUploadFiles(t *testing.T) {
 			sources,
 			destination,
 			false,
-			func(fi *os.FileInfo, err error) error {
+			func(fi *os.FileInfo, fullPath string, err error) error {
 				if err != nil {
 					return err
 				}
@@ -502,7 +502,7 @@ func TestUploadFiles(t *testing.T) {
 			sources,
 			destination,
 			false,
-			func(fi *os.FileInfo, err error) error {
+			func(fi *os.FileInfo, fullPath string, err error) error {
 				if err != nil {
 					return err
 				}
@@ -596,7 +596,7 @@ func TestUploadFiles(t *testing.T) {
 			sources,
 			destination,
 			false,
-			func(fi *os.FileInfo, err error) error {
+			func(fi *os.FileInfo, fullPath string, err error) error {
 				if err != nil {
 					return err
 				}
@@ -689,7 +689,7 @@ func TestUploadFiles(t *testing.T) {
 			sources,
 			destination,
 			false,
-			func(fi *os.FileInfo, err error) error {
+			func(fi *os.FileInfo, fullPath string, err error) error {
 				if err != nil {
 					return err
 				}
@@ -788,7 +788,7 @@ func TestUploadFiles(t *testing.T) {
 			sources,
 			_destination,
 			false,
-			func(fi *os.FileInfo, err error) error {
+			func(fi *os.FileInfo, fullPath string, err error) error {
 				if err != nil {
 					return err
 				}
@@ -883,7 +883,7 @@ func TestUploadFiles(t *testing.T) {
 			sources,
 			_destination,
 			false,
-			func(fi *os.FileInfo, err error) error {
+			func(fi *os.FileInfo, fullPath string, err error) error {
 				if err != nil {
 					return err
 				}
@@ -979,7 +979,7 @@ func TestUploadFiles(t *testing.T) {
 			sources,
 			destination,
 			false,
-			func(fi *os.FileInfo, err error) error {
+			func(fi *os.FileInfo, fullPath string, err error) error {
 				if err != nil {
 					return err
 				}
@@ -1104,7 +1104,7 @@ func TestUploadFiles(t *testing.T) {
 			sources,
 			destination,
 			false,
-			func(fi *os.FileInfo, err error) error {
+			func(fi *os.FileInfo, fullPath string, err error) error {
 				if err != nil {
 					return err
 				}
@@ -1243,7 +1243,7 @@ func TestUploadFiles(t *testing.T) {
 			sources,
 			destination,
 			false,
-			func(fi *os.FileInfo, err error) error {
+			func(fi *os.FileInfo, fullPath string, err error) error {
 				if err != nil {
 					return err
 				}
@@ -1389,7 +1389,7 @@ func TestUploadFiles(t *testing.T) {
 			sources,
 			destination,
 			true,
-			func(fi *os.FileInfo, err error) error {
+			func(fi *os.FileInfo, fullPath string, err error) error {
 				if err != nil {
 					return err
 				}
@@ -1397,6 +1397,8 @@ func TestUploadFiles(t *testing.T) {
 				So((*fi).Name(), ShouldEndWith, preprocessingDirList[preprocessingIndex])
 
 				preprocessingIndex += 1
+
+				So(fullPath, ShouldEndWith, (*fi).Name())
 
 				return nil
 			},
@@ -1536,7 +1538,7 @@ func TestUploadFiles(t *testing.T) {
 			sources,
 			destination,
 			true,
-			func(fi *os.FileInfo, err error) error {
+			func(fi *os.FileInfo, fullPath string, err error) error {
 				if err != nil {
 					return err
 				}
@@ -1544,6 +1546,8 @@ func TestUploadFiles(t *testing.T) {
 				So((*fi).Name(), ShouldEndWith, preprocessingDirList[preprocessingIndex])
 
 				preprocessingIndex += 1
+
+				So(fullPath, ShouldEndWith, (*fi).Name())
 
 				return nil
 			},
@@ -1664,7 +1668,7 @@ func TestUploadFiles(t *testing.T) {
 			sources,
 			destination,
 			false,
-			func(fi *os.FileInfo, err error) error {
+			func(fi *os.FileInfo, fullPath string, err error) error {
 				if err != nil {
 					return err
 				}
@@ -1672,6 +1676,8 @@ func TestUploadFiles(t *testing.T) {
 				// this function should not be called
 				count := 0
 				So(count, ShouldNotEqual, count)
+
+				So(fullPath, ShouldEndWith, (*fi).Name())
 
 				return nil
 			},
@@ -1746,7 +1752,7 @@ func TestUploadFiles(t *testing.T) {
 			sources,
 			destination,
 			true,
-			func(fi *os.FileInfo, err error) error {
+			func(fi *os.FileInfo, fullPath string, err error) error {
 				if err != nil {
 					return err
 				}
@@ -1821,10 +1827,12 @@ func TestUploadFiles(t *testing.T) {
 			sources,
 			destination,
 			false,
-			func(fi *os.FileInfo, err error) error {
+			func(fi *os.FileInfo, fullPath string, err error) error {
 				if err != nil {
 					return err
 				}
+
+				So(fullPath, ShouldEndWith, (*fi).Name())
 
 				return nil
 			},

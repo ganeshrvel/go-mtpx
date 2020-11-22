@@ -302,7 +302,7 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 	var totalSize int64 = 0
 
 	if preprocessFiles {
-		_totalFiles, _totalDirectories, _totalSize, err := walkLocalFiles(sources, func(fi *os.FileInfo, err error) error {
+		_totalFiles, _totalDirectories, _totalSize, err := walkLocalFiles(sources, func(fi *os.FileInfo, fullPath string, err error) error {
 			if err != nil {
 				return err
 			}
@@ -311,7 +311,7 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 				return nil
 			}
 
-			if err = preprocessCb(fi, nil); err != nil {
+			if err = preprocessCb(fi, fullPath, nil); err != nil {
 				return err
 			}
 

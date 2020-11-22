@@ -82,11 +82,11 @@ type ProgressInfo struct {
 
 type SizeProgressCb func(total, sent int64, objectId uint32, err error) error
 
-type LocalWalkCb func(fi *os.FileInfo, err error) error
+type LocalWalkCb func(fi *os.FileInfo, fullPath string, err error) error
 
 type ProgressCb func(fi *ProgressInfo, err error) error
 
-type LocalPreprocessCb func(fi *os.FileInfo, err error) error
+type LocalPreprocessCb func(fi *os.FileInfo, fullPath string, err error) error
 
 type MtpPreprocessCb func(fi *FileInfo, err error) error
 

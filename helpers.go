@@ -407,7 +407,7 @@ func walkLocalFiles(sources []string, cb LocalWalkCb) (totalFiles, totalDirector
 	for _, source := range sources {
 		// walk through the source
 		err := filepath.Walk(source,
-			func(path string, fInfo os.FileInfo, err error) error {
+			func(fullPath string, fInfo os.FileInfo, err error) error {
 				if err != nil {
 					return err
 				}
@@ -424,7 +424,7 @@ func walkLocalFiles(sources []string, cb LocalWalkCb) (totalFiles, totalDirector
 					return nil
 				}
 
-				if err := cb(&fInfo, nil); err != nil {
+				if err := cb(&fInfo, fullPath, nil); err != nil {
 					return err
 				}
 
