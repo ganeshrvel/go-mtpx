@@ -311,6 +311,7 @@ func handleMakeLocalFile(dev *mtp.Device, fi *FileInfo, destination string, prog
 // dont leave both [objectId] and [fullPath] empty
 // Tips: use [objectId] whenever possible to avoid traversing down the whole file tree to process and find the [objectId]
 // if [skipDisallowedFiles] is true then files matching the [disallowedFiles] list will be ignored
+// if [skipHiddenFiles] is true then hidden files (unix style) will be ignored
 // return:
 // [totalFiles]: total number of files
 // [totalDirectories]: total number of directories
