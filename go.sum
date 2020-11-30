@@ -10,11 +10,15 @@ github.com/ganeshrvel/go-mtpfs v1.0.4-0.20201129082334-ba933857b413 h1:UaHb8LM1V
 github.com/ganeshrvel/go-mtpfs v1.0.4-0.20201129082334-ba933857b413/go.mod h1:A+sww7odx28j9XL04FPW4KE6W7jqig8OmUwk1Pjz4p4=
 github.com/ganeshrvel/go-mtpfs v1.0.4-0.20201129082750-2cc3cac9e5bb h1:53qhpfWdSfLnHj0ZMTpWtS1yujIOMpHxNntHKyk1bQk=
 github.com/ganeshrvel/go-mtpfs v1.0.4-0.20201129082750-2cc3cac9e5bb/go.mod h1:KczLJi3+u3aMVH6qX/gCVTV6ep0hohMgMoBx5PZqOHk=
+github.com/ganeshrvel/go-mtpfs v1.0.4-0.20201130204609-0ff5359e5ddb h1:VhkExMVHRwU5wWPNli+heiLo2PsBP4cfr5/05R6qGLI=
+github.com/ganeshrvel/go-mtpfs v1.0.4-0.20201130204609-0ff5359e5ddb/go.mod h1:Cdf7Vcu46FY+xP9TaMmdGEAzP7xDIHNU7unN0zVah5s=
 github.com/ganeshrvel/usb v0.0.0-20141217151552-69aee4530ac7/go.mod h1:AMdtAmQ3vs0oAAzIgXhlKZSc51WcsaFQUTgHkIvBewU=
 github.com/ganeshrvel/usb v0.0.0-20201118154726-c8106553e091 h1:4SteLj9MGalmSCH8nJqfy8rQ4WrdCaZRrNklnLRW0QA=
 github.com/ganeshrvel/usb v0.0.0-20201118154726-c8106553e091/go.mod h1:2UUL4RuHDu1vhgX8t/QkPZqj2GaW/SCtTYdhx+Gxv5c=
 github.com/ganeshrvel/usb v0.0.0-20201129082049-b90de8e0558d h1:enmxOdGQx56j7BEx26D/IIVmN3TiiHINycGfJll5W4Q=
 github.com/ganeshrvel/usb v0.0.0-20201129082049-b90de8e0558d/go.mod h1:2UUL4RuHDu1vhgX8t/QkPZqj2GaW/SCtTYdhx+Gxv5c=
+github.com/ganeshrvel/usb v0.0.0-20201130204447-29e43d6461a3 h1:XKZvH8dyyZyPTSFJZGJrONEPVci3zy/L3SqPCXW5HoU=
+github.com/ganeshrvel/usb v0.0.0-20201130204447-29e43d6461a3/go.mod h1:2UUL4RuHDu1vhgX8t/QkPZqj2GaW/SCtTYdhx+Gxv5c=
 github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1 h1:EGx4pi6eqNxGaHF6qqu48+N2wcFQ5qg5FXgOdqsJ5d8=
 github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1/go.mod h1:wJfORRmW1u3UXTncJ5qlYoELFm8eSnnEO6hX4iZ3EWY=
 github.com/hanwen/go-fuse v1.0.0 h1:GxS9Zrn6c35/BnfiVsZVWmsG803xwE7eVRDvcf/BEVc=
