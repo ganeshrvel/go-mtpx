@@ -247,3 +247,7 @@ func transferRate(size int64, lastSentTime time.Time) float64 {
 
 	return math.Round(rate*100) / 100
 }
+
+func isHiddenFile(filename string) bool {
+	return len(filename) > 0 && filename[0:1] == "."
+}

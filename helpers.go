@@ -314,7 +314,7 @@ func handleMakeLocalFile(dev *mtp.Device, fi *FileInfo, destination string, prog
 // return:
 // [totalFiles]: total number of files
 // [totalDirectories]: total number of directories
-func proccessWalk(dev *mtp.Device, storageId uint32, fileProp FileProp, recursive, skipDisallowedFiles bool, cb WalkCb) (totalFiles, totalDirectories int64, err error) {
+func proccessWalk(dev *mtp.Device, storageId uint32, fileProp FileProp, recursive, skipDisallowedFiles, skipHiddenFiles bool, cb WalkCb) (totalFiles, totalDirectories int64, err error) {
 	fi, err := GetObjectFromObjectIdOrPath(dev, storageId, FileProp{fileProp.ObjectId, fileProp.FullPath})
 
 	if err != nil {
@@ -334,13 +334,16 @@ func proccessWalk(dev *mtp.Device, storageId uint32, fileProp FileProp, recursiv
 			continue
 		}
 
-		// if the object file name matches [disallowedFiles] list then ignore it
-		if skipDisallowedFiles {
-			fName := (*fi).Name
+		fName := (*fi).Name
 
-			if ok := isDisallowedFiles(fName); ok {
-				continue
-			}
+		// skip the object if it's a hidden file
+		if skipHiddenFiles && isHiddenFile(fName) {
+			continue
+		}
+
+		// if the object file name matches [disallowedFiles] list then ignore it
+		if skipDisallowedFiles && isDisallowedFiles(fName) {
+			continue
 		}
 
 		if fi.IsDir {
@@ -365,7 +368,7 @@ func proccessWalk(dev *mtp.Device, storageId uint32, fileProp FileProp, recursiv
 		}
 
 		_totalFiles, _totalDirectories, err := proccessWalk(
-			dev, storageId, FileProp{objId, fi.FullPath}, recursive, skipDisallowedFiles, cb,
+			dev, storageId, FileProp{objId, fi.FullPath}, recursive, skipDisallowedFiles, skipHiddenFiles, cb,
 		)
 		if err != nil {
 			return totalFiles, totalDirectories, err

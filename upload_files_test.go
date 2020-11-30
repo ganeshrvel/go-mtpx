@@ -209,7 +209,7 @@ func TestUploadFiles(t *testing.T) {
 			"/mock_dir1/3/b.txt",
 			"/mock_dir1/a.txt"}
 
-		objectId, totalListFiles, totalDirectories, err := Walk(dev, sid, destination, true, true, func(objectId uint32, fi *FileInfo, err error) error {
+		objectId, totalListFiles, totalDirectories, err := Walk(dev, sid, destination, true, true, false, func(objectId uint32, fi *FileInfo, err error) error {
 			So(err, ShouldBeNil)
 
 			contains, index := StringContains(dirList1, strings.TrimPrefix(fi.FullPath, destination))
@@ -339,7 +339,7 @@ func TestUploadFiles(t *testing.T) {
 			"/mock_dir2/a.txt",
 		}
 
-		objectId, totalListFiles, totalDirectories, err := Walk(dev, sid, destination, true, true, func(objectId uint32, fi *FileInfo, err error) error {
+		objectId, totalListFiles, totalDirectories, err := Walk(dev, sid, destination, true, true, false, func(objectId uint32, fi *FileInfo, err error) error {
 			So(err, ShouldBeNil)
 
 			contains, index := StringContains(dirList1, strings.TrimPrefix(fi.FullPath, destination))
@@ -462,7 +462,7 @@ func TestUploadFiles(t *testing.T) {
 			"/mock_dir1/a.txt",
 		}
 
-		objectId, totalListFiles, totalDirectories, err := Walk(dev, sid, destination, true, true, func(objectId uint32, fi *FileInfo, err error) error {
+		objectId, totalListFiles, totalDirectories, err := Walk(dev, sid, destination, true, true, false, func(objectId uint32, fi *FileInfo, err error) error {
 			So(err, ShouldBeNil)
 
 			contains, index := StringContains(dirList1, strings.TrimPrefix(fi.FullPath, destination))
@@ -1058,7 +1058,7 @@ func TestUploadFiles(t *testing.T) {
 			"/4mb_txt_file",
 		}
 
-		objectId, totalListFiles, totalDirectories, err := Walk(dev, sid, destination, true, true, func(objectId uint32, fi *FileInfo, err error) error {
+		objectId, totalListFiles, totalDirectories, err := Walk(dev, sid, destination, true, true, false, func(objectId uint32, fi *FileInfo, err error) error {
 			So(err, ShouldBeNil)
 
 			contains, index := StringContains(dirList1, strings.TrimPrefix(fi.FullPath, destination))
@@ -1189,7 +1189,7 @@ func TestUploadFiles(t *testing.T) {
 			"/4mb_txt_file_2",
 		}
 
-		objectId, totalListFiles, totalDirectories, err := Walk(dev, sid, destination, true, true, func(objectId uint32, fi *FileInfo, err error) error {
+		objectId, totalListFiles, totalDirectories, err := Walk(dev, sid, destination, true, true, false, func(objectId uint32, fi *FileInfo, err error) error {
 			So(err, ShouldBeNil)
 
 			contains, index := StringContains(dirList1, strings.TrimPrefix(fi.FullPath, destination))
@@ -1344,7 +1344,7 @@ func TestUploadFiles(t *testing.T) {
 			"/mock_dir1/a.txt",
 		}
 
-		objectId, totalListFiles, totalDirectories, err := Walk(dev, sid, destination, true, true, func(objectId uint32, fi *FileInfo, err error) error {
+		objectId, totalListFiles, totalDirectories, err := Walk(dev, sid, destination, true, true, false, func(objectId uint32, fi *FileInfo, err error) error {
 			So(err, ShouldBeNil)
 
 			contains, index := StringContains(dirList1, strings.TrimPrefix(fi.FullPath, destination))
@@ -1480,7 +1480,7 @@ func TestUploadFiles(t *testing.T) {
 			"/mock_dir1/3/b.txt",
 			"/mock_dir1/a.txt"}
 
-		objectId, totalListFiles, totalDirectories, err := Walk(dev, sid, destination, true, true, func(objectId uint32, fi *FileInfo, err error) error {
+		objectId, totalListFiles, totalDirectories, err := Walk(dev, sid, destination, true, true, false, func(objectId uint32, fi *FileInfo, err error) error {
 			So(err, ShouldBeNil)
 
 			contains, index := StringContains(dirList1, strings.TrimPrefix(fi.FullPath, destination))
@@ -1636,7 +1636,7 @@ func TestUploadFiles(t *testing.T) {
 			"/mock_dir1/a.txt",
 		}
 
-		objectId, totalListFiles, totalDirectories, err := Walk(dev, sid, destination, true, true, func(objectId uint32, fi *FileInfo, err error) error {
+		objectId, totalListFiles, totalDirectories, err := Walk(dev, sid, destination, true, true, false, func(objectId uint32, fi *FileInfo, err error) error {
 			So(err, ShouldBeNil)
 
 			contains, index := StringContains(dirList1, strings.TrimPrefix(fi.FullPath, destination))

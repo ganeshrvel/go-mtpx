@@ -129,11 +129,13 @@ func MakeDirectory(dev *mtp.Device, storageId uint32, fullPath string) (objectId
 // use [recursive] to fetch the whole nested tree
 // Tip: use [objectId] whenever possible to avoid traversing down the whole file tree to process and find the [objectId]
 // if [skipDisallowedFiles] is true then files matching the [disallowedFiles] list will be ignored
+// if [skipHiddenFiles] is true then hidden files (unix style) will be ignored
 // return:
 // [objectId]: objectId of the file/diectory
 // [totalFiles]: total number of files
 // [totalDirectories]: total number of directories
-func Walk(dev *mtp.Device, storageId uint32, fullPath string, recursive bool, skipDisallowedFiles bool, cb WalkCb) (objectId uint32, totalFiles, totalDirectories int64, err error) {
+func Walk(dev *mtp.Device, storageId uint32, fullPath string, recursive, skipDisallowedFiles,
+	skipHiddenFiles bool, cb WalkCb) (objectId uint32, totalFiles, totalDirectories int64, err error) {
 	// fetch the objectId from [objectId] and/or [fullPath] parameters
 	fi, err := GetObjectFromPath(dev, storageId, fullPath)
 	if err != nil {
@@ -160,7 +162,7 @@ func Walk(dev *mtp.Device, storageId uint32, fullPath string, recursive bool, sk
 		return fi.ObjectId, 1, totalDirectories, nil
 	}
 
-	totalFiles, totalDirectories, err = proccessWalk(dev, storageId, FileProp{fi.ObjectId, fullPath}, recursive, skipDisallowedFiles, cb)
+	totalFiles, totalDirectories, err = proccessWalk(dev, storageId, FileProp{fi.ObjectId, fullPath}, recursive, skipDisallowedFiles, skipHiddenFiles, cb)
 	if err != nil {
 		return 0, totalFiles, totalDirectories, err
 	}
@@ -589,7 +591,7 @@ func DownloadFiles(dev *mtp.Device, storageId uint32, sources []string, destinat
 		for _, source := range sources {
 			_source := fixSlash(source)
 
-			_, _totalFiles, _totalDirectories, err := Walk(dev, storageId, _source, true, false,
+			_, _totalFiles, _totalDirectories, err := Walk(dev, storageId, _source, true, false, false,
 				func(objectId uint32, fi *FileInfo, err error) error {
 					if err != nil {
 						return err
@@ -666,7 +668,7 @@ func DownloadFiles(dev *mtp.Device, storageId uint32, sources []string, destinat
 				return dfProps.bulkFilesSent, dfProps.bulkSizeSent, err
 			}
 
-			_, _, _, wErr := Walk(dev, storageId, _source, true, false,
+			_, _, _, wErr := Walk(dev, storageId, _source, true, false, false,
 				func(objectId uint32, fi *FileInfo, err error) error {
 					if err != nil {
 						return err
