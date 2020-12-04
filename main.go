@@ -72,7 +72,7 @@ func FetchStorages(dev *mtp.Device) ([]StorageData, error) {
 		}
 
 		result = append(result, StorageData{
-			Sid:  sids.Values[0],
+			Sid:  sid,
 			Info: info,
 		})
 	}
