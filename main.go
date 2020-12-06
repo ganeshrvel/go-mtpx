@@ -16,7 +16,7 @@ import (
 // initialize the mtp device
 // returns mtp device
 func Initialize(init Init) (*mtp.Device, error) {
-	dev, err := mtp.SelectDevice("")
+	dev, err := mtp.SelectDeviceWithDebugging("", init.DebugMode)
 
 	if err != nil {
 		return nil, MtpDetectFailedError{error: err}
