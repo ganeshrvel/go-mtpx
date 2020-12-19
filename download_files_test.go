@@ -1412,7 +1412,8 @@ func TestDownloadFiles(t *testing.T) {
 		sourceFile2 := "/mtp-test-files/4mb_txt_file_2"
 		sourceFile3 := "/mtp-test-files/mock_dir1/a.txt"
 		sourceFile4 := "/mtp-test-files/mock_dir1"
-		sources := []string{sourceFile1, sourceFile2, sourceFile3, sourceFile4}
+		sourceFile5 := "/mtp-test-files/mock_dir2"
+		sources := []string{sourceFile1, sourceFile2, sourceFile3, sourceFile4, sourceFile5}
 
 		dirList := []string{
 			"/mtp-test-files/4mb_txt_file",
@@ -1423,6 +1424,11 @@ func TestDownloadFiles(t *testing.T) {
 			"/mtp-test-files/mock_dir1/3/2/b.txt",
 			"/mtp-test-files/mock_dir1/3/b.txt",
 			"/mtp-test-files/mock_dir1/a.txt",
+			"/mtp-test-files/mock_dir2/1/a.txt",
+			"/mtp-test-files/mock_dir2/2/b.txt",
+			"/mtp-test-files/mock_dir2/3/2/b.txt",
+			"/mtp-test-files/mock_dir2/3/b.txt",
+			"/mtp-test-files/mock_dir2/a.txt",
 		}
 
 		preprocessingDirList := []string{
@@ -1434,6 +1440,11 @@ func TestDownloadFiles(t *testing.T) {
 			"/mtp-test-files/mock_dir1/3/b.txt",
 			"/mtp-test-files/mock_dir1/3/2/b.txt",
 			"/mtp-test-files/mock_dir1/2/b.txt",
+			"/mtp-test-files/mock_dir2/1/a.txt",
+			"/mtp-test-files/mock_dir2/2/b.txt",
+			"/mtp-test-files/mock_dir2/3/2/b.txt",
+			"/mtp-test-files/mock_dir2/3/b.txt",
+			"/mtp-test-files/mock_dir2/a.txt",
 		}
 
 		var prevLatestSentTime int64
@@ -1486,8 +1497,8 @@ func TestDownloadFiles(t *testing.T) {
 				}
 				prevSentFileFullPath = fi.FileInfo.FullPath
 
-				So(fi.TotalDirectories, ShouldEqual, 4)
-				So(fi.TotalFiles, ShouldEqual, 8)
+				So(fi.TotalDirectories, ShouldEqual, 8)
+				So(fi.TotalFiles, ShouldEqual, 13)
 				pTotalFiles = fi.TotalFiles
 
 				So(fi.FileInfo.ParentId, ShouldBeGreaterThan, 0)
@@ -1505,7 +1516,7 @@ func TestDownloadFiles(t *testing.T) {
 				prevCurrentSentProgress = fi.ActiveFileSize.Progress
 
 				// bulk progress tests
-				So(fi.BulkFileSize.Total, ShouldEqual, 8388652)
+				So(fi.BulkFileSize.Total, ShouldEqual, 8388687)
 				So(fi.BulkFileSize.Sent, ShouldBeGreaterThanOrEqualTo, prevBulkSent)
 				prevBulkSent = fi.BulkFileSize.Sent
 
@@ -1520,11 +1531,11 @@ func TestDownloadFiles(t *testing.T) {
 
 		So(err, ShouldBeNil)
 		So(status, ShouldEqual, Completed)
-		So(prevFilesSent, ShouldEqual, 4*2)
-		So(totalFiles, ShouldEqual, 4*2)
+		So(prevFilesSent, ShouldEqual, 13)
+		So(totalFiles, ShouldEqual, 13)
 		So(totalFiles, ShouldEqual, prevFilesSent)
-		So(totalSize, ShouldEqual, 8388652)
-		So(pTotalFiles, ShouldEqual, 4*2)
+		So(totalSize, ShouldEqual, 8388687)
+		So(pTotalFiles, ShouldEqual, 13)
 
 		// walk the destination directory on device and verify
 		dirList1 := []string{
@@ -1538,6 +1549,13 @@ func TestDownloadFiles(t *testing.T) {
 			"mock_dir1/2/b.txt",
 			"mock_dir1/1/a.txt",
 			"mock_dir1/a.txt",
+			"mock_dir2/1/a.txt",
+			"mock_dir2/a.txt",
+			"mock_dir2/3/b.txt",
+			"mock_dir2/3/2/b.txt",
+			"mock_dir2/2/b.txt",
+			"mock_dir2/1/a.txt",
+			"mock_dir2/a.txt",
 		}
 
 		_count := 0
