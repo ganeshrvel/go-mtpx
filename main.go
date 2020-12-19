@@ -631,8 +631,8 @@ func DownloadFiles(dev *mtp.Device, storageId uint32, sources []string, destinat
 				return bulkFilesSent, bulkSizeSent, err
 			}
 
-			totalFiles = _totalFiles
-			totalDirectories = _totalDirectories
+			totalFiles += _totalFiles
+			totalDirectories += _totalDirectories
 		}
 	}
 

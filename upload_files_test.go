@@ -36,6 +36,7 @@ func TestUploadFiles(t *testing.T) {
 		var prevCurrentSentProgress float32
 		var prevBulkSentProgress float32
 		var prevBulkSent int64
+		var pTotalFiles int64
 		objectIdDest, totalFiles, totalSize, err := UploadFiles(dev, sid,
 			sources,
 			destination,
@@ -67,6 +68,7 @@ func TestUploadFiles(t *testing.T) {
 				}
 
 				So(fi.TotalDirectories, ShouldEqual, 0)
+				pTotalFiles = fi.TotalFiles
 
 				So(fi.FileInfo.ParentId, ShouldBeGreaterThan, 0)
 				So(fi.FileInfo.FullPath, ShouldStartWith, destination)
@@ -95,6 +97,7 @@ func TestUploadFiles(t *testing.T) {
 
 		So(err, ShouldBeNil)
 		So(prevFilesSent, ShouldEqual, 5)
+		So(pTotalFiles, ShouldEqual, 0)
 		So(totalFiles, ShouldEqual, 5)
 		So(totalFiles, ShouldEqual, prevFilesSent)
 		So(totalSize, ShouldEqual, 35)
@@ -123,6 +126,7 @@ func TestUploadFiles(t *testing.T) {
 		var prevBulkSentProgress float32
 		var prevBulkSent int64
 		var status TransferStatus
+		var pTotalFiles int64
 		objectIdDest, totalFiles, totalSize, err := UploadFiles(dev, sid,
 			sources,
 			destination,
@@ -153,6 +157,7 @@ func TestUploadFiles(t *testing.T) {
 				}
 
 				So(fi.TotalDirectories, ShouldEqual, 0)
+				pTotalFiles = fi.TotalFiles
 
 				So(fi.FileInfo.ParentId, ShouldBeGreaterThan, 0)
 				So(fi.FileInfo.FullPath, ShouldStartWith, destination)
@@ -187,6 +192,7 @@ func TestUploadFiles(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(prevFilesSent, ShouldEqual, 5)
 		So(totalFiles, ShouldEqual, 5)
+		So(pTotalFiles, ShouldEqual, 0)
 		So(totalFiles, ShouldEqual, prevFilesSent)
 		So(totalSize, ShouldEqual, 35)
 		So(status, ShouldEqual, Completed)
@@ -247,6 +253,7 @@ func TestUploadFiles(t *testing.T) {
 		var prevBulkSentProgress float32
 		var prevBulkSent int64
 		var status TransferStatus
+		var pTotalFiles int64
 		objectIdDest, totalFiles, totalSize, err := UploadFiles(dev, sid,
 			sources,
 			destination,
@@ -277,6 +284,7 @@ func TestUploadFiles(t *testing.T) {
 				}
 
 				So(fi.TotalDirectories, ShouldEqual, 0)
+				pTotalFiles = fi.TotalFiles
 
 				So(fi.FileInfo.ParentId, ShouldBeGreaterThan, 0)
 				So(fi.FileInfo.FullPath, ShouldStartWith, destination)
@@ -309,6 +317,7 @@ func TestUploadFiles(t *testing.T) {
 		)
 		So(err, ShouldBeNil)
 		So(err, ShouldBeNil)
+		So(pTotalFiles, ShouldEqual, 0)
 		So(prevFilesSent, ShouldEqual, 5*2)
 		So(totalFiles, ShouldEqual, 5*2)
 		So(totalFiles, ShouldEqual, prevFilesSent)
@@ -381,6 +390,7 @@ func TestUploadFiles(t *testing.T) {
 		var prevBulkSentProgress float32
 		var prevBulkSent int64
 		var status TransferStatus
+		var pTotalFiles int64
 		objectIdDest, totalFiles, totalSize, err := UploadFiles(dev, sid,
 			sources,
 			destination,
@@ -411,6 +421,7 @@ func TestUploadFiles(t *testing.T) {
 				}
 
 				So(fi.TotalDirectories, ShouldEqual, 0)
+				pTotalFiles = fi.TotalFiles
 
 				So(fi.FileInfo.ParentId, ShouldBeGreaterThan, 0)
 				So(fi.FileInfo.FullPath, ShouldStartWith, destination)
@@ -447,6 +458,7 @@ func TestUploadFiles(t *testing.T) {
 		So(totalFiles, ShouldEqual, 5*2)
 		So(totalSize, ShouldEqual, 35*2)
 		So(status, ShouldEqual, Completed)
+		So(pTotalFiles, ShouldEqual, 0)
 
 		////walk the directory on device and verify
 		dirList1 := []string{
@@ -1391,6 +1403,7 @@ func TestUploadFiles(t *testing.T) {
 		var prevBulkSent int64
 		var status TransferStatus
 		preprocessingIndex := 0
+		var pTotalFiles int64
 		objectIdDest, totalFiles, totalSize, err := UploadFiles(dev, sid,
 			sources,
 			destination,
@@ -1423,6 +1436,8 @@ func TestUploadFiles(t *testing.T) {
 				}
 
 				So(fi.TotalDirectories, ShouldEqual, 5)
+				So(fi.TotalFiles, ShouldEqual, 5)
+				pTotalFiles = fi.TotalFiles
 
 				So(fi.FileInfo.ParentId, ShouldBeGreaterThan, 0)
 				So(fi.FileInfo.FullPath, ShouldStartWith, destination)
@@ -1461,6 +1476,7 @@ func TestUploadFiles(t *testing.T) {
 		So(totalSize, ShouldEqual, 35)
 		So(totalSize, ShouldEqual, prevBulkSent)
 		So(status, ShouldEqual, Completed)
+		So(pTotalFiles, ShouldEqual, 5)
 
 		fi, err := GetObjectFromPath(dev, sid, destination)
 		So(err, ShouldBeNil)
@@ -1541,6 +1557,7 @@ func TestUploadFiles(t *testing.T) {
 		var prevBulkSent int64
 		var status TransferStatus
 		preprocessingIndex := 0
+		var pTotalFiles int64
 		objectIdDest, totalFiles, totalSize, err := UploadFiles(dev, sid,
 			sources,
 			destination,
@@ -1575,6 +1592,8 @@ func TestUploadFiles(t *testing.T) {
 					}
 				}
 				So(fi.TotalDirectories, ShouldEqual, 5)
+				So(fi.TotalFiles, ShouldEqual, 8)
+				pTotalFiles = fi.TotalFiles
 
 				So(fi.FileInfo.ParentId, ShouldBeGreaterThan, 0)
 				So(fi.FileInfo.FullPath, ShouldStartWith, destination)
@@ -1618,6 +1637,7 @@ func TestUploadFiles(t *testing.T) {
 		So(totalSize, ShouldEqual, 8388652)
 		So(totalSize, ShouldEqual, prevBulkSent)
 		So(status, ShouldEqual, Completed)
+		So(pTotalFiles, ShouldEqual, 1*8)
 
 		//walk the directory on device and verify
 		dirList1 := []string{
@@ -1756,6 +1776,7 @@ func TestUploadFiles(t *testing.T) {
 		var prevCurrentSentProgress float32
 		var prevBulkSentProgress float32
 		var prevBulkSent int64
+		var pTotalFiles int64
 		_, totalFiles, totalSize, err := UploadFiles(dev, sid,
 			sources,
 			destination,
@@ -1783,6 +1804,8 @@ func TestUploadFiles(t *testing.T) {
 				}
 
 				So(fi.TotalDirectories, ShouldEqual, 0)
+				So(fi.TotalFiles, ShouldEqual, 0)
+				pTotalFiles = fi.TotalFiles
 
 				So(fi.FileInfo.ParentId, ShouldBeGreaterThan, 0)
 				So(fi.FileInfo.FullPath, ShouldStartWith, destination)
@@ -1812,6 +1835,7 @@ func TestUploadFiles(t *testing.T) {
 		So(err, ShouldHaveSameTypeAs, SendObjectError{})
 		So(totalFiles, ShouldEqual, 0)
 		So(totalSize, ShouldEqual, 0)
+		So(pTotalFiles, ShouldEqual, totalFiles)
 
 		_, err = GetObjectFromPath(dev, sid, destination)
 		So(err, ShouldBeError)

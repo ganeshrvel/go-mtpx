@@ -1300,6 +1300,7 @@ func TestDownloadFiles(t *testing.T) {
 		var prevBulkSent int64
 		var status TransferStatus
 		preprocessingIndex := 0
+		var pTotalFiles int64
 		totalFiles, totalSize, err := DownloadFiles(dev, sid,
 			sources,
 			destination,
@@ -1333,6 +1334,9 @@ func TestDownloadFiles(t *testing.T) {
 				}
 
 				So(fi.TotalDirectories, ShouldEqual, 4)
+				So(fi.TotalFiles, ShouldEqual, 5)
+				pTotalFiles = fi.TotalFiles
+
 				So(fi.FileInfo.ParentId, ShouldBeGreaterThan, 0)
 
 				if fi.Status == InProgress {
@@ -1367,6 +1371,7 @@ func TestDownloadFiles(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(prevFilesSent, ShouldEqual, 5)
 		So(totalFiles, ShouldEqual, 5)
+		So(pTotalFiles, ShouldEqual, 5)
 		So(totalFiles, ShouldEqual, prevFilesSent)
 		So(totalSize, ShouldEqual, 35)
 		So(status, ShouldEqual, Completed)
@@ -1440,6 +1445,7 @@ func TestDownloadFiles(t *testing.T) {
 		var status TransferStatus
 		var prevSentFileFullPath string
 		preprocessingIndex := 0
+		var pTotalFiles int64
 		totalFiles, totalSize, err := DownloadFiles(dev, sid,
 			sources,
 			destination,
@@ -1481,6 +1487,9 @@ func TestDownloadFiles(t *testing.T) {
 				prevSentFileFullPath = fi.FileInfo.FullPath
 
 				So(fi.TotalDirectories, ShouldEqual, 4)
+				So(fi.TotalFiles, ShouldEqual, 8)
+				pTotalFiles = fi.TotalFiles
+
 				So(fi.FileInfo.ParentId, ShouldBeGreaterThan, 0)
 
 				So(fi.FilesSentProgress, ShouldBeGreaterThanOrEqualTo, prevFilesSentProgress)
@@ -1515,6 +1524,7 @@ func TestDownloadFiles(t *testing.T) {
 		So(totalFiles, ShouldEqual, 4*2)
 		So(totalFiles, ShouldEqual, prevFilesSent)
 		So(totalSize, ShouldEqual, 8388652)
+		So(pTotalFiles, ShouldEqual, 4*2)
 
 		// walk the destination directory on device and verify
 		dirList1 := []string{
@@ -1559,6 +1569,7 @@ func TestDownloadFiles(t *testing.T) {
 		var prevCurrentSentProgress float32
 		var prevBulkSentProgress float32
 		var prevBulkSent int64
+		var pTotalFiles int64
 		totalFiles, totalSize, err := DownloadFiles(dev, sid,
 			sources,
 			destination,
@@ -1586,6 +1597,9 @@ func TestDownloadFiles(t *testing.T) {
 				}
 
 				So(fi.TotalDirectories, ShouldEqual, 0)
+				So(fi.TotalFiles, ShouldEqual, 0)
+				pTotalFiles = fi.TotalFiles
+
 				So(fi.FileInfo.ParentId, ShouldBeGreaterThan, 0)
 
 				if fi.Status == InProgress {
@@ -1621,6 +1635,7 @@ func TestDownloadFiles(t *testing.T) {
 		So(totalFiles, ShouldEqual, 0)
 		So(totalFiles, ShouldEqual, prevFilesSent)
 		So(totalSize, ShouldEqual, 0)
+		So(pTotalFiles, ShouldEqual, 0)
 
 		//walk the destination directory on device and verify
 		_count := 0
