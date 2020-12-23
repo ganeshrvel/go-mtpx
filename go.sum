@@ -18,6 +18,8 @@ github.com/ganeshrvel/go-mtpfs v1.0.4-0.20201206203157-7193ba2d989c h1:clRlGU5km
 github.com/ganeshrvel/go-mtpfs v1.0.4-0.20201206203157-7193ba2d989c/go.mod h1:Cdf7Vcu46FY+xP9TaMmdGEAzP7xDIHNU7unN0zVah5s=
 github.com/ganeshrvel/go-mtpfs v1.0.4-0.20201223195002-5edb0647f277 h1:97ubF4FeQ9zoOSlJfQqK8IcIJMRdCLGKD3N22Q1ENaM=
 github.com/ganeshrvel/go-mtpfs v1.0.4-0.20201223195002-5edb0647f277/go.mod h1:Cdf7Vcu46FY+xP9TaMmdGEAzP7xDIHNU7unN0zVah5s=
+github.com/ganeshrvel/go-mtpfs v1.0.4-0.20201223202723-3832d572c981 h1:KDmAJ2DfZPdEVIhUgd6d70gsO04oxQr2lX6veg4N+ug=
+github.com/ganeshrvel/go-mtpfs v1.0.4-0.20201223202723-3832d572c981/go.mod h1:Cdf7Vcu46FY+xP9TaMmdGEAzP7xDIHNU7unN0zVah5s=
 github.com/ganeshrvel/usb v0.0.0-20141217151552-69aee4530ac7/go.mod h1:AMdtAmQ3vs0oAAzIgXhlKZSc51WcsaFQUTgHkIvBewU=
 github.com/ganeshrvel/usb v0.0.0-20201118154726-c8106553e091 h1:4SteLj9MGalmSCH8nJqfy8rQ4WrdCaZRrNklnLRW0QA=
 github.com/ganeshrvel/usb v0.0.0-20201118154726-c8106553e091/go.mod h1:2UUL4RuHDu1vhgX8t/QkPZqj2GaW/SCtTYdhx+Gxv5c=
