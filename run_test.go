@@ -5,8 +5,7 @@ import (
 )
 
 func testRun(t *testing.T) {
-	//dev, err := Initialize(Init{DebugMode: false})
-	//
+	//dev, err := Initialize(Init{DebugMode: true})
 	//if err != nil {
 	//	log.Panic(err)
 	//}
@@ -20,11 +19,32 @@ func testRun(t *testing.T) {
 	//
 	//storages, err := FetchStorages(dev)
 	//if err != nil {
-	//	log.Panic(err)
+	//	log.Printf("outer >> error: %+v:", err)
+	//	//Dispose(dev)
+	//
+	//
+	//	time.Sleep(3 * time.Second)
+	//
+	//	dev, err := Initialize(Init{DebugMode: true})
+	//	if err != nil {
+	//		log.Panic(err)
+	//	}
+	//
+	//	storages, err := FetchStorages(dev)
+	//	if err != nil {
+	//		log.Printf("inner >> error: %+v:", err)
+	//
+	//		return
+	//	}
+	//
+	//	sid := storages[0].Sid
+	//	log.Printf("inner >> storage id: %+v\n", sid)
+	//
+	//	return
 	//}
 	//
 	//sid := storages[0].Sid
-	//pretty.Println("storage id: ", sid)
+	//log.Printf("outer >> storage id: %+v\n", sid)
 
 	////////////////////////
 	////////////////////////
