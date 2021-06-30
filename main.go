@@ -35,12 +35,12 @@ func Initialize(init Init) (*mtp.Device, error) {
 	return dev, nil
 }
 
-// close the mtp device
+// Dispose - close the mtp device
 func Dispose(dev *mtp.Device) {
 	dev.Close()
 }
 
-// fetch device Info
+// FetchDeviceInfo - fetch device Info
 func FetchDeviceInfo(dev *mtp.Device) (*mtp.DeviceInfo, error) {
 	info := mtp.DeviceInfo{}
 	err := dev.GetDeviceInfo(&info)
@@ -52,7 +52,7 @@ func FetchDeviceInfo(dev *mtp.Device) (*mtp.DeviceInfo, error) {
 	return &info, nil
 }
 
-// fetch storages
+// FetchStorages - fetch storages
 func FetchStorages(dev *mtp.Device) ([]StorageData, error) {
 	sids := mtp.Uint32Array{}
 	if err := dev.GetStorageIDs(&sids); err != nil {
@@ -80,7 +80,7 @@ func FetchStorages(dev *mtp.Device) ([]StorageData, error) {
 	return result, nil
 }
 
-// create a new directory recursively using [fullPath]
+// MakeDirectory - create a new directory recursively using [fullPath]
 // The path will be created if it does not Exists
 func MakeDirectory(dev *mtp.Device, storageId uint32, fullPath string) (objectId uint32, err error) {
 	_fullPath := fixSlash(fullPath)
@@ -449,7 +449,7 @@ func UploadFiles(dev *mtp.Device, storageId uint32, sources []string, destinatio
 					ParentObject:     fileParentId,
 					Filename:         name,
 					CompressedSize:   compressedSize,
-					ModificationDate: time.Now(),
+					ModificationDate: fInfo.ModTime(),
 				}
 
 				// keep track of [bulkFilesSent]
@@ -591,7 +591,7 @@ func DownloadFiles(dev *mtp.Device, storageId uint32, sources []string, destinat
 		for _, source := range sources {
 			_source := fixSlash(source)
 
-			_, _totalFiles, _totalDirectories, err := Walk(dev, storageId, _source, true, false, false,
+			_, _totalFiles, _totalDirectories, err := Walk(dev, storageId, _source, true, true, false,
 				func(objectId uint32, fi *FileInfo, err error) error {
 					if err != nil {
 						return err
@@ -668,7 +668,7 @@ func DownloadFiles(dev *mtp.Device, storageId uint32, sources []string, destinat
 				return dfProps.bulkFilesSent, dfProps.bulkSizeSent, err
 			}
 
-			_, _, _, wErr := Walk(dev, storageId, _source, true, false, false,
+			_, _, _, wErr := Walk(dev, storageId, _source, true, true, false,
 				func(objectId uint32, fi *FileInfo, err error) error {
 					if err != nil {
 						return err

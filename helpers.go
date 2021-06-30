@@ -288,6 +288,7 @@ func handleMakeLocalFile(dev *mtp.Device, fi *FileInfo, destination string, prog
 		}
 
 		totalSent = sent
+
 		return nil
 	})
 	if err != nil {
@@ -301,7 +302,7 @@ func handleMakeLocalFile(dev *mtp.Device, fi *FileInfo, destination string, prog
 		}
 	}
 
-	return err
+	return restoreLocalFileTimestamp(destination, fi.ModTime)
 }
 
 // helper function to fetch the contents inside a directory
@@ -383,7 +384,7 @@ func proccessWalk(dev *mtp.Device, storageId uint32, fileProp FileProp, recursiv
 }
 
 // create a local directory
-func makeLocalDirectory(filename string) error {
+func makeLocalDirectory(filename string, modTime time.Time) error {
 	err := os.MkdirAll(filename, os.FileMode(newLocalDirectoryMode))
 	if err != nil {
 		switch err.(type) {
@@ -399,7 +400,7 @@ func makeLocalDirectory(filename string) error {
 		}
 	}
 
-	return nil
+	return restoreLocalFileTimestamp(filename, modTime)
 }
 
 // walks through the local files
@@ -469,7 +470,8 @@ func processDownloadFiles(dev *mtp.Device, pInfo *ProgressInfo, fi *FileInfo, pr
 
 	// if the object is a directory then create a local directory
 	if fi.IsDir {
-		err := makeLocalDirectory(dfProps.destinationFilePath)
+		// since the object is a directory we pass down it's modification time
+		err := makeLocalDirectory(dfProps.destinationFilePath, fi.ModTime)
 		if err != nil {
 			return err
 		}
@@ -480,7 +482,9 @@ func processDownloadFiles(dev *mtp.Device, pInfo *ProgressInfo, fi *FileInfo, pr
 	/// if the object is a file then create one
 	// if the local parent directory does not Exists then create one
 	if !fileExistsLocal(dfProps.destinationFileParentPath) {
-		err := makeLocalDirectory(dfProps.destinationFileParentPath)
+		// since the object is a file and we are creating the parent directory without it's original meta information
+		// we are just passing down the current time as modification time
+		err := makeLocalDirectory(dfProps.destinationFileParentPath, time.Now())
 		if err != nil {
 			return err
 		}
@@ -553,4 +557,16 @@ func processDownloadFilesError(dfProps *processDownloadFilesProps, err error) (b
 	}
 
 	return bulkFilesSent, bulkSizeSent, err
+}
+
+//Restore modified timestamp of the file
+func restoreLocalFileTimestamp(destination string, modTime time.Time) (err error) {
+	currentTime := time.Now().Local()
+
+	err = os.Chtimes(destination, currentTime, modTime.Local())
+	if err != nil {
+		return err
+	}
+
+	return err
 }
