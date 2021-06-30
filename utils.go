@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -76,7 +77,7 @@ func indexExists(arr interface{}, index int) bool {
 	return false
 }
 
-// Get Parent path of a list of directories and files
+// GetParentPath - Get Parent path of a list of directories and files
 func GetParentPath(sep byte, paths ...string) string {
 	// Handle special cases.
 	switch len(paths) {
@@ -235,6 +236,12 @@ func SanitizeDosName(name string) string {
 		}
 	}
 	return string(dest)
+}
+
+func sanitizeFilename(filename string) string {
+	re := regexp.MustCompile(`[?"]`)
+
+	return strings.ToLower(re.ReplaceAllString(filename, "-"))
 }
 
 func transferRate(size int64, lastSentTime time.Time) float64 {
