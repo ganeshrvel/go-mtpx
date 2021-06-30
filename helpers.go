@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// fetch the file size of the object
+// GetFileSize - fetch the file size of the object
 func GetFileSize(dev *mtp.Device, obj *mtp.ObjectInfo, objectId uint32, isDir bool) (int64, error) {
 	if isDir {
 		return 0, nil
