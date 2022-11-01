@@ -10,3 +10,8 @@ It should look like:
     - mock_dir4
 ```
 
+- open the Files app on your phone
+- Navigate to `mtp-test-files/mock_dir1`
+- Create a new file by the name: `[-----DS_Store.mtp.test----].txt` 
+- This is a test file and it is required to pass the tests
+

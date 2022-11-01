@@ -1,57 +1,36 @@
-go-mtpx
+# go-mtpx
 
-
-macOS setup
+## macOS setup
 
 ```shell script
 xcode-select --install
 ```
 
-Install and setup libusb
+### Before running the tests:
 
-Method 1:
-```shell script
-# build the binary
-CGO_CFLAGS='-Wno-deprecated-declarations' go build -gcflags=-trimpath=$(go env GOPATH) -asmflags=-trimpath=$(go env GOPATH) -o build/mtpx .
+- Open `tests/README.md`
+- Follow the instructions to copy the `mtp-test-files` to phone
 
-# copy libusb
-cp lib/libusb-1.0.0.dylib build/libusb-1.0.0.dylib
 
-# Run
-DYLD_LIBRARY_PATH=./build ./build/mtpx
-```
+### Install and setup libusb
 
-Method 2:
-```shell script
+```shell
+brew install pkg-config
 brew install libusb
-
-# find the location where libusb is installed
-brew info libusb
-
-# run: sudo install_name_tool -id "@executable_path/libusb.dylib" /usr/local/Cellar/libusb/<version>/lib/libusb-1.0.0.dylib
-
-# eg: /usr/local/Cellar/libusb/1.0.23
-sudo install_name_tool -id "@executable_path/libusb.dylib" /usr/local/Cellar/libusb/1.0.23/lib/libusb-1.0.0.dylib
-
-# copy the dynamic library to the project
-cp /usr/local/Cellar/libusb/1.0.23/lib/libusb-1.0.0.dylib ./libusb.dylib
-
-# confirm whether the libusb.dylib is portable
-otool -L libusb.dylib
-
-# the output should look: libusb.dylib: @executable_path/libusb.dylib 
-
-git add libusb.dylib
 ```
 
-Run mtpx
+
+### Test go-mtpx
+
+- Connect android device via usb and Choose File transfer
+
 ```shell script
-go run ./
+go test
 ```
 
-Build mtpx
-```shell script
-CGO_CFLAGS='-Wno-deprecated-declarations' go build -gcflags=-trimpath=$(go env GOPATH) -asmflags=-trimpath=$(go env GOPATH) -o build/mtpx . && cp libusb.dylib build/libusb.dylib
+##### Upgrade a package
 
-./build/mtpx
+```shell
+# example:
+go get github.com/ganeshrvel/go-mtpfs@<git-commit-hash>
 ```
