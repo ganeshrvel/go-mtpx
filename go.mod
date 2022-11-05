@@ -3,7 +3,7 @@ module github.com/ganeshrvel/go-mtpx
 go 1.15
 
 require (
-	github.com/ganeshrvel/go-mtpfs v1.0.4-0.20221104074511-0d40588840c5
+	github.com/ganeshrvel/go-mtpfs v1.0.4-0.20221105040909-77ef22eca9ca
 	github.com/smartystreets/goconvey v1.6.4
 	golang.org/x/sys v0.0.0-20201231184435-2d18734c6014 // indirect
 )
