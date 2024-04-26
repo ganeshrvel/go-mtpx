@@ -1,89 +1,104 @@
 package mtpx
 
 import (
+	"fmt"
+	"log"
+	"os"
 	"testing"
+	"time"
 )
 
 func testRun(t *testing.T) {
 	//dev, err := Initialize(Init{DebugMode: true})
-	//if err != nil {
-	//	log.Panic(err)
-	//}
-	//
-	//_, err = FetchDeviceInfo(dev)
-	//if err != nil {
-	//	log.Panic(err)
-	//}
-	//
-	////pretty.Println(inf)
-	//
-	//storages, err := FetchStorages(dev)
-	//if err != nil {
-	//	log.Printf("outer >> error: %+v:", err)
-	//	//Dispose(dev)
-	//
-	//
-	//	time.Sleep(3 * time.Second)
-	//
-	//	dev, err := Initialize(Init{DebugMode: true})
-	//	if err != nil {
-	//		log.Panic(err)
-	//	}
-	//
-	//	storages, err := FetchStorages(dev)
-	//	if err != nil {
-	//		log.Printf("inner >> error: %+v:", err)
-	//
-	//		return
-	//	}
-	//
-	//	sid := storages[0].Sid
-	//	log.Printf("inner >> storage id: %+v\n", sid)
-	//
-	//	return
-	//}
-	//
-	//sid := storages[0].Sid
-	//log.Printf("outer >> storage id: %+v\n", sid)
+	dev, err := Initialize(Init{DebugMode: false})
+	if err != nil {
+		log.Panic(err)
+	}
 
-	////////////////////////
-	////////////////////////
-	////////////////////////
-	// copy mock test files
-	//uploadFile1 := getTestMocksAsset("")
-	//sources := []string{uploadFile1}
-	//destination := "/"
-	//_, _, _, err = UploadFiles(dev, sid,
-	//	sources,
-	//	destination,
-	//	true,
-	//	func(fi *os.FileInfo, err error) error {
-	//		if err != nil {
-	//			return err
-	//		}
-	//
-	//		fmt.Printf("Preprocessing File name: %s\n", (*fi).Name())
-	//
-	//		return nil
-	//	},
-	//	func(pi *ProgressInfo, err error) error {
-	//		//fmt.Printf("\nFile name: %s\n", pi.FileInfo.FullPath)
-	//		//fmt.Printf("Total size: %d\n", pi.ActiveFileSize.Total)
-	//		//fmt.Printf("Size sent: %d\n", pi.ActiveFileSize.Sent)
-	//		//fmt.Printf("Speed: %f\n", pi.Speed)
-	//		//fmt.Printf("Object Id: %d\n", pi.FileInfo.ObjectId)
-	//		//fmt.Printf("ActiveFileSize progress: %f\n", pi.ActiveFileSize.Progress)
-	//		//fmt.Printf("TotalFiles: %d\n", pi.TotalFiles)
-	//		//fmt.Printf("totalDirectories: %d\n", pi.TotalDirectories)
-	//		//fmt.Printf("FilesSent: %d\n", pi.FilesSent)
-	//		//fmt.Printf("FilesSentProgress: %f\n\n\n", pi.FilesSentProgress)
-	//
-	//		return nil
-	//	},
-	//)
-	//if err != nil {
-	//	log.Panicln(err)
-	//}
+	_, err = FetchDeviceInfo(dev)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	//pretty.Println(inf)
+
+	storages, err := FetchStorages(dev)
+	if err != nil {
+		log.Printf("outer >> error: %+v:", err)
+		//Dispose(dev)
+
+		time.Sleep(3 * time.Second)
+
+		dev, err := Initialize(Init{DebugMode: true})
+		if err != nil {
+			log.Panic(err)
+		}
+
+		storages, err := FetchStorages(dev)
+		if err != nil {
+			log.Printf("inner >> error: %+v:", err)
+
+			return
+		}
+
+		sid := storages[0].Sid
+		log.Printf("inner >> storage id: %+v\n", sid)
+
+		return
+	}
+
+	sid := storages[0].Sid
+	//log.Printf("outer >> storage id: %+v\n", sid)
+	//////////////////////
+	//////////////////////
+	//////////////////////
+	//copy mock test files
+
+	//uploadFile1 := getTestMocksAsset("a.txt")
+	uploadFile2 := getTestMocksAsset("")
+	//uploadFile3 := getTestMocksAsset("4mb_txt_file_2")
+	sources := []string{uploadFile2}
+	destination := "/test-mtp"
+	_, _, _, err = UploadFiles(dev, sid,
+		sources,
+		destination,
+		true,
+		//func(fi *os.FileInfo, err error) error {
+		//	if err != nil {
+		//		return err
+		//	}
+		//
+		//	fmt.Printf("Preprocessing File name: %s\n", (*fi).Name())
+		//
+		//	return nil
+		//},
+		func(fi *os.FileInfo, fullPath string, err error) error {
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("Preprocessing File name: %s\n", (*fi).Name())
+
+			return nil
+		},
+		func(pi *ProgressInfo, err error) error {
+			fmt.Printf("\nFile name: %s\n", pi.FileInfo.FullPath)
+			//fmt.Printf("Total size: %d\n", pi.ActiveFileSize.Total)
+			fmt.Printf("Size sent: %d\n", pi.ActiveFileSize.Sent)
+			//fmt.Printf("Speed: %f\n", pi.Speed)
+			//fmt.Printf("Object Id: %d\n", pi.FileInfo.ObjectId)
+			//fmt.Printf("ActiveFileSize progress: %f\n", pi.ActiveFileSize.Progress)
+			//fmt.Printf("TotalFiles: %d\n", pi.TotalFiles)
+			//fmt.Printf("totalDirectories: %d\n", pi.TotalDirectories)
+			//fmt.Printf("FilesSent: %d\n", pi.FilesSent)
+			//fmt.Printf("FilesSentProgress: %f\n\n\n", pi.FilesSentProgress)
+
+			return nil
+		},
+	)
+	if err != nil {
+		log.Panicln(err)
+	}
 	//filePath := getTestMocksAsset("mock_dir1/[-----DS_Store.mtp.test----].txt")
 	//Exists, _ := FileExists(dev, sid, 0, filePath)
 	//if !Exists {
