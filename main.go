@@ -263,6 +263,75 @@ func RenameFile(dev *mtp.Device, storageId uint32, fileProp FileProp, newFileNam
 	return fi.ObjectId, nil
 }
 
+// Move a file or directory (identified by [fileProp]) into the directory at
+// [destParentFullPath] on the same storage.
+//
+// The destination parent directory is resolved (and created if missing) via
+// MakeDirectory, so callers may pass an absolute path such as
+// "/Pictures/2024/holidays" and the intermediate directories will be created
+// as needed.
+//
+// The operation is a no-op (and returns the existing objectId) when the source
+// already lives directly under [destParentFullPath].
+//
+// If an object with the same base name already exists under
+// [destParentFullPath] the call returns FileAlreadyExistsError and the source
+// is left untouched.
+//
+// Under the hood this issues the MTP MoveObject (0x1019) operation. If the
+// device does not support MoveObject the call returns MoveNotSupportedError
+// and the caller can fall back to a copy+delete implementation.
+func MoveFile(dev *mtp.Device, storageId uint32, fileProp FileProp, destParentFullPath string) (objectId uint32, err error) {
+	// Resolve the source.
+	fc, err := FileExists(dev, storageId, []FileProp{fileProp})
+	if err != nil {
+		return 0, err
+	}
+	if !fc[0].Exists {
+		return 0, InvalidPathError{error: fmt.Errorf("file not found: %s", fileProp.FullPath)}
+	}
+	fi := fc[0].FileInfo
+
+	// Resolve (or create) the destination parent directory.
+	destParentObjectId, err := MakeDirectory(dev, storageId, destParentFullPath)
+	if err != nil {
+		return 0, InvalidPathError{error: fmt.Errorf("failed to resolve destination parent '%s': %v", destParentFullPath, err)}
+	}
+
+	// No-op if already parented under the destination.
+	if fi.ParentId == destParentObjectId {
+		return fi.ObjectId, nil
+	}
+
+	// Collision check: refuse if an entry with the same base name is already
+	// present under the destination parent. The caller can rename the source
+	// first (via RenameFile) if it wants "move + rename" semantics.
+	baseName := filepath.Base(fi.FullPath)
+	destFullPath := getFullPath(destParentFullPath, baseName)
+	dfc, ferr := FileExists(dev, storageId, []FileProp{{FullPath: destFullPath}})
+	if ferr == nil && dfc[0].Exists {
+		return 0, FileAlreadyExistsError{error: fmt.Errorf("destination already exists: %s", destFullPath)}
+	}
+
+	// Issue MTP MoveObject: [ObjectHandle, StorageID, ParentObjectHandle].
+	var req, rep mtp.Container
+	req.Code = mtp.OC_MoveObject
+	req.Param = []uint32{fi.ObjectId, storageId, destParentObjectId}
+
+	if err := dev.RunTransaction(&req, &rep, nil, nil, 0, mtp.EmptyProgressFunc); err != nil {
+		if rc, ok := err.(mtp.RCError); ok {
+			// 0x2005 = Operation_Not_Supported. Signal the caller so it can
+			// fall back to copy+delete instead of surfacing a generic error.
+			if uint16(rc) == 0x2005 {
+				return 0, MoveNotSupportedError{error: fmt.Errorf("device does not support MoveObject: %v", err)}
+			}
+		}
+		return 0, FileObjectError{error: err}
+	}
+
+	return fi.ObjectId, nil
+}
+
 // Transfer files from the local disk to the device
 // sources: can be the list of files/directories that are to be sent to the device
 // destination: fullPath to the destination directory

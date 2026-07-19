@@ -51,3 +51,16 @@ type FileObjectError struct {
 type SendObjectError struct {
 	error
 }
+
+// FileAlreadyExistsError is returned by MoveFile when the destination parent
+// directory already contains an entry with the same base name as the source.
+type FileAlreadyExistsError struct {
+	error
+}
+
+// MoveNotSupportedError is returned by MoveFile when the device rejects the
+// MTP MoveObject operation with Operation_Not_Supported (0x2005). Callers may
+// fall back to copy+delete in this case.
+type MoveNotSupportedError struct {
+	error
+}
