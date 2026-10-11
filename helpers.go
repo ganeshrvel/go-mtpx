@@ -88,14 +88,16 @@ func GetObjectFromParentIdAndFilename(dev *mtp.Device, storageId uint32, parentI
 
 	for _, objectId := range handles.Values {
 		// fetch the ObjectFileName
-		var val mtp.StringValue
-		if err := dev.GetObjectPropValue(objectId, mtp.OPC_ObjectFileName, &val); err != nil {
+		// some devices (eg: KaiOS phones) reject GetObjectPropValue with MTP_Invalid_ObjectPropCode;
+		// fall back to the filename inside ObjectInfo for those.
+		name, err := getObjectFileName(dev, objectId)
+		if err != nil {
 			return nil, FileObjectError{error: err}
 		}
 
 		// if the ObjectFileName doesn't match the [filename] then skip the current iteration
 		// this will avoid fetching the whole object properties and improve the performance a bit.
-		if !strings.EqualFold(val.Value, filename) {
+		if !strings.EqualFold(name, filename) {
 			continue
 		}
 
@@ -111,6 +113,32 @@ func GetObjectFromParentIdAndFilename(dev *mtp.Device, storageId uint32, parentI
 	}
 
 	return nil, FileNotFoundError{error: fmt.Errorf("file not found: %s", filename)}
+}
+
+// fetch the filename of [objectId], preferring the cheap ObjectFileName property and
+// falling back to ObjectInfo when the device does not support object properties
+func getObjectFileName(dev *mtp.Device, objectId uint32) (string, error) {
+	var val mtp.StringValue
+	err := dev.GetObjectPropValue(objectId, mtp.OPC_ObjectFileName, &val)
+	if err == nil {
+		return val.Value, nil
+	}
+
+	if !isRCError(err, mtp.RC_MTP_Invalid_ObjectPropCode) && !isRCError(err, mtp.RC_OperationNotSupported) {
+		return "", err
+	}
+
+	obj := mtp.ObjectInfo{}
+	if err := dev.GetObjectInfo(objectId, &obj); err != nil {
+		return "", err
+	}
+
+	return obj.Filename, nil
+}
+
+func isRCError(err error, rc uint16) bool {
+	var rcErr mtp.RCError
+	return errors.As(err, &rcErr) && uint16(rcErr) == rc
 }
 
 // fetch the object information using [fullPath]
